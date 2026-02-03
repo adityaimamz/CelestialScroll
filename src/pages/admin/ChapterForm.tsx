@@ -1,0 +1,280 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, ArrowLeft } from "lucide-react";
+
+interface ChapterFormData {
+  chapter_number: number;
+  title: string;
+  content: string;
+  published: boolean;
+}
+
+export default function ChapterForm() {
+  const { novelId, chapterId } = useParams();
+  const isEditing = !!chapterId;
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [novelTitle, setNovelTitle] = useState("");
+  const [formData, setFormData] = useState<ChapterFormData>({
+    chapter_number: 1,
+    title: "",
+    content: "",
+    published: false,
+  });
+
+  useEffect(() => {
+    fetchNovelInfo();
+    if (isEditing) {
+      fetchChapter();
+    } else {
+      fetchNextChapterNumber();
+    }
+  }, [novelId, chapterId]);
+
+  const fetchNovelInfo = async () => {
+    const { data } = await supabase
+      .from("novels")
+      .select("title")
+      .eq("id", novelId)
+      .single();
+
+    if (data) {
+      setNovelTitle(data.title);
+    }
+  };
+
+  const fetchNextChapterNumber = async () => {
+    const { data } = await supabase
+      .from("chapters")
+      .select("chapter_number")
+      .eq("novel_id", novelId)
+      .order("chapter_number", { ascending: false })
+      .limit(1);
+
+    if (data && data.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        chapter_number: data[0].chapter_number + 1,
+      }));
+    }
+  };
+
+  const fetchChapter = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("chapters")
+        .select("*")
+        .eq("id", chapterId)
+        .single();
+
+      if (error) throw error;
+
+      setFormData({
+        chapter_number: data.chapter_number,
+        title: data.title,
+        content: data.content || "",
+        published: !!data.published_at,
+      });
+    } catch (error) {
+      console.error("Error fetching chapter:", error);
+      toast({
+        title: "Error",
+        description: "Gagal memuat data chapter",
+        variant: "destructive",
+      });
+      navigate(`/admin/novels/${novelId}/chapters`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.title.trim()) {
+      toast({
+        title: "Error",
+        description: "Judul chapter harus diisi",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const chapterData = {
+        novel_id: novelId,
+        chapter_number: formData.chapter_number,
+        title: formData.title.trim(),
+        content: formData.content.trim() || null,
+        published_at: formData.published ? new Date().toISOString() : null,
+      };
+
+      if (isEditing) {
+        const { error } = await supabase
+          .from("chapters")
+          .update(chapterData)
+          .eq("id", chapterId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Berhasil",
+          description: "Chapter berhasil diupdate",
+        });
+      } else {
+        const { error } = await supabase.from("chapters").insert(chapterData);
+
+        if (error) throw error;
+
+        toast({
+          title: "Berhasil",
+          description: "Chapter berhasil ditambahkan",
+        });
+      }
+
+      navigate(`/admin/novels/${novelId}/chapters`);
+    } catch (error: any) {
+      console.error("Error saving chapter:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Gagal menyimpan chapter",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" asChild>
+          <Link to={`/admin/novels/${novelId}/chapters`}>
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">
+            {isEditing ? "Edit Chapter" : "Tambah Chapter Baru"}
+          </h2>
+          <p className="text-muted-foreground">Novel: {novelTitle}</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="bg-card/50 border-border/50">
+              <CardHeader>
+                <CardTitle>Konten Chapter</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="chapter_number">Nomor Chapter *</Label>
+                    <Input
+                      id="chapter_number"
+                      type="number"
+                      min={1}
+                      value={formData.chapter_number}
+                      onChange={(e) =>
+                        setFormData({ ...formData, chapter_number: parseInt(e.target.value) || 1 })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Judul Chapter *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Judul chapter"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="content">Isi Chapter</Label>
+                  <Textarea
+                    id="content"
+                    value={formData.content}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    placeholder="Tulis isi chapter di sini..."
+                    rows={20}
+                    className="font-mono"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <Card className="bg-card/50 border-border/50">
+              <CardHeader>
+                <CardTitle>Pengaturan</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="published">Publish</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Publikasikan chapter ini
+                    </p>
+                  </div>
+                  <Switch
+                    id="published"
+                    checked={formData.published}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, published: checked })
+                    }
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => navigate(`/admin/novels/${novelId}/chapters`)}
+              >
+                Batal
+              </Button>
+              <Button type="submit" className="flex-1" disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEditing ? "Update" : "Simpan"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}

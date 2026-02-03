@@ -1,0 +1,244 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode Variables */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 263 70% 58%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 263 70% 58%;
+
+    --radius: 0.625rem;
+
+    --surface: 210 40% 96.1%; /* Slightly off-white for surface in light mode */
+    --surface-hover: 210 40% 93%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Custom gradients - Adjusted for Light Mode */
+    --gradient-primary: linear-gradient(135deg, hsl(263, 70%, 58%) 0%, hsl(280, 80%, 45%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(200, 90%, 50%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(20, 90%, 50%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(210, 40%, 96%) 100%);
+    --gradient-hero: linear-gradient(90deg, hsl(0, 0%, 100%) 0%, transparent 60%);
+    
+    /* Shadows */
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 8px 16px rgba(0, 0, 0, 0.1);
+    --shadow-glow-primary: 0 0 15px hsla(263, 70%, 58%, 0.2);
+    --shadow-glow-accent: 0 0 15px hsla(38, 92%, 50%, 0.2);
+  }
+
+  .dark {
+    /* Dark Mode Variables (Original values) */
+    --background: 220 20% 4%;
+    --foreground: 220 14% 90%;
+
+    --card: 220 20% 8%;
+    --card-foreground: 220 14% 90%;
+
+    --popover: 220 20% 8%;
+    --popover-foreground: 220 14% 90%;
+
+    --primary: 263 70% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 14% 14%;
+    --muted-foreground: 220 9% 60%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 18%;
+    --input: 220 13% 18%;
+    --ring: 263 70% 58%;
+
+    --surface: 220 20% 10%;
+    --surface-hover: 220 20% 14%;
+    
+    --sidebar-background: 220 20% 6%;
+    --sidebar-foreground: 220 14% 90%;
+    --sidebar-primary: 263 70% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 14%;
+    --sidebar-accent-foreground: 220 14% 90%;
+    --sidebar-border: 220 13% 18%;
+    --sidebar-ring: 263 70% 58%;
+
+    /* Gradients for Dark Mode */
+    --gradient-card: linear-gradient(180deg, hsl(220, 20%, 12%) 0%, hsl(220, 20%, 8%) 100%);
+    --gradient-hero: linear-gradient(90deg, hsl(220, 20%, 4%) 0%, transparent 60%);
+
+    /* Shadows for Dark Mode */
+    --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.5);
+    --shadow-glow-primary: 0 0 20px hsla(263, 70%, 58%, 0.3);
+    --shadow-glow-accent: 0 0 20px hsla(38, 92%, 50%, 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .novel-card {
+    @apply relative overflow-hidden rounded-xl bg-card transition-all duration-300;
+    box-shadow: var(--shadow-card);
+  }
+
+  .novel-card:hover {
+    @apply scale-[1.02];
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .novel-card-image {
+    @apply w-full object-cover transition-transform duration-300;
+  }
+
+  .novel-card:hover .novel-card-image {
+    @apply scale-105;
+  }
+
+  .section-container {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-spacing {
+    @apply py-12 md:py-16;
+  }
+
+  .text-gradient-primary {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .text-gradient-warm {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-warm);
+  }
+
+  .btn-glow {
+    box-shadow: var(--shadow-glow-primary);
+  }
+
+  .btn-glow:hover {
+    box-shadow: 0 0 30px hsla(263, 70%, 58%, 0.5);
+  }
+
+  .genre-pill {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    @apply bg-primary/20 text-primary border border-primary/30;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide;
+  }
+
+  .status-badge-ongoing {
+    @apply bg-secondary/20 text-secondary border border-secondary/30;
+  }
+
+  .status-badge-completed {
+    @apply bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+  }
+
+  .glass-surface {
+    @apply backdrop-blur-md bg-surface/80;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsla(220, 14%, 90%, 0.1) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+}
