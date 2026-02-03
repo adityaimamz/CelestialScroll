@@ -37,11 +37,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 
-const AVAILABLE_GENRES = [
-  "Wuxia", "Xianxia", "Xuanhuan", "Fantasy", "Romance", "Action",
-  "Adventure", "Drama", "Comedy", "Martial Arts", "Cultivation",
-  "System", "Reincarnation", "Harem", "School Life"
-];
+
+interface Genre {
+  id: string;
+  name: string;
+}
 
 interface NovelFormData {
   title: string;
@@ -49,7 +49,7 @@ interface NovelFormData {
   description: string;
   author: string;
   status: string;
-  genres: string[];
+  genres: string[]; // Stores genre IDs
   cover_url: string;
 }
 
@@ -80,36 +80,60 @@ export default function NovelForm() {
   });
 
   // Chapter Management State
+  const [availableGenres, setAvailableGenres] = useState<Genre[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loadingChapters, setLoadingChapters] = useState(false);
   const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
 
   useEffect(() => {
+    fetchGenres();
     if (isEditing) {
       fetchNovel();
       fetchChapters();
     }
   }, [id]);
 
+  const fetchGenres = async () => {
+    try {
+      const { data, error } = await supabase.from("genres").select("id, name").order("name");
+      if (error) throw error;
+      setAvailableGenres(data || []);
+    } catch (error) {
+      console.error("Error fetching genres:", error);
+    }
+  };
+
   const fetchNovel = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch novel basic data
+      const { data: novelData, error: novelError } = await supabase
         .from("novels")
         .select("*")
         .eq("id", id)
         .single();
 
-      if (error) throw error;
+      if (novelError) throw novelError;
+      if (!novelData) throw new Error("Novel not found");
+
+      // Fetch linked genres
+      const { data: genreData, error: genreError } = await supabase
+        .from("novel_genres")
+        .select("genre_id")
+        .eq("novel_id", id);
+
+      if (genreError) throw genreError;
+
+      const linkedGenreIds = genreData ? genreData.map((g) => g.genre_id) : [];
 
       setFormData({
-        title: data.title,
-        slug: data.slug,
-        description: data.description || "",
-        author: data.author || "",
-        status: data.status,
-        genres: data.genres || [],
-        cover_url: data.cover_url || "",
+        title: novelData.title,
+        slug: novelData.slug,
+        description: novelData.description || "",
+        author: novelData.author || "",
+        status: novelData.status,
+        genres: linkedGenreIds,
+        cover_url: novelData.cover_url || "",
       });
     } catch (error) {
       console.error("Error fetching novel:", error);
@@ -193,15 +217,22 @@ export default function NovelForm() {
     setSaving(true);
 
     try {
+      // Get genre names for the array column
+      const genreNames = availableGenres
+        .filter((g) => formData.genres.includes(g.id))
+        .map((g) => g.name);
+
       const novelData = {
         title: formData.title.trim(),
         slug: formData.slug || generateSlug(formData.title),
         description: formData.description.trim() || null,
         author: formData.author.trim() || null,
         status: formData.status,
-        genres: formData.genres,
+        genres: genreNames, // Save names cache
         cover_url: formData.cover_url.trim() || null,
       };
+
+      let novelId = id;
 
       if (isEditing) {
         const { error } = await supabase
@@ -210,21 +241,46 @@ export default function NovelForm() {
           .eq("id", id);
 
         if (error) throw error;
-
-        toast({
-          title: "Berhasil",
-          description: "Novel berhasil diupdate",
-        });
       } else {
-        const { error } = await supabase.from("novels").insert(novelData);
+        const { data, error } = await supabase
+          .from("novels")
+          .insert(novelData)
+          .select()
+          .single();
 
         if (error) throw error;
-
-        toast({
-          title: "Berhasil",
-          description: "Novel berhasil ditambahkan",
-        });
+        novelId = data.id;
       }
+
+      // Update novel_genres relationships
+      if (novelId) {
+        // First delete existing
+        const { error: deleteError } = await supabase
+          .from("novel_genres")
+          .delete()
+          .eq("novel_id", novelId);
+        
+        if (deleteError) throw deleteError;
+
+        // Then insert new
+        if (formData.genres.length > 0) {
+          const novelGenres = formData.genres.map(genreId => ({
+            novel_id: novelId,
+            genre_id: genreId
+          }));
+          
+          const { error: insertError } = await supabase
+            .from("novel_genres")
+            .insert(novelGenres);
+            
+          if (insertError) throw insertError;
+        }
+      }
+
+      toast({
+        title: "Berhasil",
+        description: "Novel berhasil disimpan",
+      });
 
       navigate("/admin/novels");
     } catch (error: any) {
@@ -367,15 +423,15 @@ export default function NovelForm() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {AVAILABLE_GENRES.map((genre) => (
+                      {availableGenres.map((genre) => (
                         <Badge
-                          key={genre}
-                          variant={formData.genres.includes(genre) ? "default" : "outline"}
+                          key={genre.id}
+                          variant={formData.genres.includes(genre.id) ? "default" : "outline"}
                           className="cursor-pointer transition-colors"
-                          onClick={() => handleGenreToggle(genre)}
+                          onClick={() => handleGenreToggle(genre.id)}
                         >
-                          {genre}
-                          {formData.genres.includes(genre) && (
+                          {genre.name}
+                          {formData.genres.includes(genre.id) && (
                             <X className="ml-1 h-3 w-3" />
                           )}
                         </Badge>

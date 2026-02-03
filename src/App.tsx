@@ -29,6 +29,8 @@ import NovelForm from "./pages/admin/NovelForm";
 import ChapterList from "./pages/admin/ChapterList";
 import ChapterForm from "./pages/admin/ChapterForm";
 import UserList from "./pages/admin/UserList";
+import GenresList from "./pages/admin/GenresList";
+import AnnouncementsList from "./pages/admin/AnnouncementsList";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,8 @@ const App = () => (
                   <Route path="/admin/novels/:novelId/chapters/new" element={<ChapterForm />} />
                   <Route path="/admin/novels/:novelId/chapters/:chapterId/edit" element={<ChapterForm />} />
                   <Route path="/admin/users" element={<UserList />} />
+                  <Route path="/admin/genres" element={<GenresList />} />
+                  <Route path="/admin/announcements" element={<AnnouncementsList />} />
                 </Route>
               </Route>
             </Routes>

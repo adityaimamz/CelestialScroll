@@ -1,4 +1,4 @@
-import { BookOpen, LayoutDashboard, BookText, Users, FileText, Settings } from "lucide-react";
+import { BookOpen, LayoutDashboard, BookText, Users, FileText, Settings, Megaphone, Tags } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Novel", url: "/admin/novels", icon: BookText },
+  { title: "Genres", url: "/admin/genres", icon: Tags },
+  { title: "Announcements", url: "/admin/announcements", icon: Megaphone },
   // { title: "Chapters", url: "/admin/chapters", icon: FileText },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Settings", url: "/admin/settings", icon: Settings },

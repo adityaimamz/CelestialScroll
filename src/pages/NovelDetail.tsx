@@ -369,7 +369,7 @@ const NovelDetail = () => {
                 onClick={toggleBookmark}
               >
                 <Tag className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`} />
-                {isFavorite ? "Saved" : "Library"}
+                {isFavorite ? "Saved" : "Add to Library"}
               </Button>
             </div>
           </div>

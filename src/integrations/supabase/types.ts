@@ -245,6 +245,84 @@ export type Database = {
           },
         ]
       }
+      announcements: {
+        Row: {
+          id: string
+          title: string
+          content: string
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          content: string
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      genres: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      novel_genres: {
+        Row: {
+          novel_id: string
+          genre_id: string
+        }
+        Insert: {
+          novel_id: string
+          genre_id: string
+        }
+        Update: {
+          novel_id?: string
+          genre_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "novel_genres_novel_id_fkey"
+            columns: ["novel_id"]
+            isOneToOne: false
+            referencedRelation: "novels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "novel_genres_genre_id_fkey"
+            columns: ["genre_id"]
+            isOneToOne: false
+            referencedRelation: "genres"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

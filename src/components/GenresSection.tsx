@@ -1,63 +1,84 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import NovelCard from "@/components/NovelCard";
 import SectionHeader from "@/components/SectionHeader";
-import novelCover1 from "@/assets/novel-cover-1.jpg";
-import novelCover2 from "@/assets/novel-cover-2.jpg";
-import novelCover3 from "@/assets/novel-cover-3.jpg";
-import novelCover4 from "@/assets/novel-cover-4.jpg";
-import novelCover5 from "@/assets/novel-cover-5.jpg";
-import novelCover6 from "@/assets/novel-cover-6.jpg";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
+import { Loader2 } from "lucide-react";
 
-const genres = ["Fantasy", "Sci-Fi", "Romance", "Mystery", "Action", "Horror"];
-
-const genreNovels: Record<string, Array<{
-  id: number;
-  title: string;
-  cover: string;
-  rating: number;
-  status: "ongoing" | "completed";
-  chapters: number;
-}>> = {
-  Fantasy: [
-    { id: 1, title: "Realm of Shadows", cover: novelCover1, rating: 4.7, status: "ongoing", chapters: 567 },
-    { id: 2, title: "The Last Immortal", cover: novelCover2, rating: 4.9, status: "completed", chapters: 1200 },
-    { id: 3, title: "Heavenly Demon Path", cover: novelCover3, rating: 4.6, status: "ongoing", chapters: 890 },
-    { id: 4, title: "Spirit Emperor", cover: novelCover4, rating: 4.8, status: "ongoing", chapters: 456 },
-  ],
-  "Sci-Fi": [
-    { id: 5, title: "Galactic Cultivator", cover: novelCover5, rating: 4.5, status: "ongoing", chapters: 234 },
-    { id: 6, title: "Cyber Dao", cover: novelCover6, rating: 4.7, status: "ongoing", chapters: 567 },
-    { id: 7, title: "Star Forger", cover: novelCover1, rating: 4.8, status: "completed", chapters: 890 },
-    { id: 8, title: "Quantum Martial Arts", cover: novelCover2, rating: 4.6, status: "ongoing", chapters: 345 },
-  ],
-  Romance: [
-    { id: 9, title: "Destined Love", cover: novelCover3, rating: 4.9, status: "completed", chapters: 456 },
-    { id: 10, title: "Immortal Hearts", cover: novelCover4, rating: 4.7, status: "ongoing", chapters: 678 },
-    { id: 11, title: "Cultivation of Love", cover: novelCover5, rating: 4.6, status: "ongoing", chapters: 234 },
-    { id: 12, title: "Fated Encounter", cover: novelCover6, rating: 4.8, status: "completed", chapters: 890 },
-  ],
-  Mystery: [
-    { id: 13, title: "Secret Sect", cover: novelCover1, rating: 4.7, status: "ongoing", chapters: 345 },
-    { id: 14, title: "Hidden Realm", cover: novelCover2, rating: 4.8, status: "ongoing", chapters: 567 },
-    { id: 15, title: "Mystic Investigation", cover: novelCover3, rating: 4.5, status: "completed", chapters: 234 },
-    { id: 16, title: "Shadowed Truth", cover: novelCover4, rating: 4.6, status: "ongoing", chapters: 456 },
-  ],
-  Action: [
-    { id: 17, title: "Martial Emperor", cover: novelCover5, rating: 4.9, status: "ongoing", chapters: 1200 },
-    { id: 18, title: "Combat Supremacy", cover: novelCover6, rating: 4.7, status: "ongoing", chapters: 890 },
-    { id: 19, title: "Blade of Glory", cover: novelCover1, rating: 4.8, status: "completed", chapters: 567 },
-    { id: 20, title: "War God's Path", cover: novelCover2, rating: 4.6, status: "ongoing", chapters: 678 },
-  ],
-  Horror: [
-    { id: 21, title: "Demonic Descent", cover: novelCover3, rating: 4.6, status: "ongoing", chapters: 345 },
-    { id: 22, title: "Ghost Cultivator", cover: novelCover4, rating: 4.7, status: "ongoing", chapters: 456 },
-    { id: 23, title: "Nightmare Realm", cover: novelCover5, rating: 4.5, status: "completed", chapters: 234 },
-    { id: 24, title: "Dark Awakening", cover: novelCover6, rating: 4.8, status: "ongoing", chapters: 567 },
-  ],
+type Genre = Tables<"genres">;
+type Novel = Tables<"novels"> & {
+  chapters: { count: number }[];
 };
 
 const GenresSection = () => {
-  const [activeGenre, setActiveGenre] = useState("Fantasy");
+  const [genres, setGenres] = useState<Genre[]>([]);
+  const [activeGenre, setActiveGenre] = useState<string | null>(null);
+  const [novels, setNovels] = useState<Novel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [novelsLoading, setNovelsLoading] = useState(false);
+
+  // Fetch Genres
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("genres")
+          .select("*")
+          .order("name");
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          setGenres(data);
+          setActiveGenre(data[0].id); // Set first genre as active
+        }
+      } catch (error) {
+        console.error("Error fetching genres:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGenres();
+  }, []);
+
+  // Fetch Novels when activeGenre changes
+  useEffect(() => {
+    if (!activeGenre) return;
+
+    const fetchNovelsByGenre = async () => {
+      setNovelsLoading(true);
+      try {
+        // Query novels through the junction table
+        const { data, error } = await supabase
+          .from("novel_genres")
+          .select(`
+            novel:novels (
+              *,
+              chapters (count)
+            )
+          `)
+          .eq("genre_id", activeGenre)
+          .limit(8);
+
+        if (error) throw error;
+
+        // Extract the novel objects from the junction result
+        const formattedNovels = data.map((item: any) => item.novel).filter(Boolean);
+        setNovels(formattedNovels);
+      } catch (error) {
+        console.error("Error fetching novels for genre:", error);
+      } finally {
+        setNovelsLoading(false);
+      }
+    };
+
+    fetchNovelsByGenre();
+  }, [activeGenre]);
+
+  if (loading) return null;
+  if (genres.length === 0) return null;
 
   return (
     <section className="section-spacing section-container">
@@ -68,37 +89,48 @@ const GenresSection = () => {
       />
       
       {/* Genre Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
         {genres.map((genre) => (
           <button
-            key={genre}
-            onClick={() => setActiveGenre(genre)}
+            key={genre.id}
+            onClick={() => setActiveGenre(genre.id)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-              activeGenre === genre
+              activeGenre === genre.id
                 ? "bg-primary text-primary-foreground shadow-glow-primary"
                 : "bg-surface text-muted-foreground hover:bg-surface-hover hover:text-foreground"
             }`}
           >
-            {genre}
+            {genre.name}
           </button>
         ))}
       </div>
 
       {/* Genre Novels Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 animate-fade-in">
-        {genreNovels[activeGenre]?.map((novel) => (
-          <NovelCard
-            key={novel.id}
-            id={novel.id}
-            title={novel.title}
-            cover={novel.cover}
-            rating={novel.rating}
-            status={novel.status}
-            chapters={novel.chapters}
-            size="large"
-          />
-        ))}
-      </div>
+      {novelsLoading ? (
+        <div className="h-64 flex items-center justify-center">
+             <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      ) : novels.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4 animate-fade-in">
+            {novels.map((novel) => (
+            <NovelCard
+                key={novel.id}
+                id={novel.id}
+                title={novel.title}
+                cover={novel.cover_url || ""}
+                rating={novel.rating || 0}
+                status={novel.status as any}
+                chapters={novel.chapters?.[0]?.count || 0}
+                size="large"
+                slug={novel.slug}
+            />
+            ))}
+        </div>
+      ) : (
+        <div className="h-40 flex flex-col items-center justify-center text-muted-foreground">
+            <p>No novels found in this genre yet.</p>
+        </div>
+      )}
     </section>
   );
 };

@@ -118,10 +118,11 @@ const Footer = () => {
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
             © 2024 CelestialScrolls. All rights reserved.
+            All novels and materials available on this website are provided solely for entertainment and educational purposes. The copyrights remain with their respective authors and publishers. We do not assert any ownership over the content shared here. If you are a copyright holder and believe that your work has been posted without authorization, please leave a comment on the corresponding post. We will promptly investigate and remove the material if necessary. Thank you for your understanding and support.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Made with ❤️ for cultivation enthusiasts
-          </p>
+          {/* <p className="text-xs text-muted-foreground">
+            Made for 
+          </p> */}
         </div>
       </div>
     </footer>

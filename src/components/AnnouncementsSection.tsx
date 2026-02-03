@@ -1,24 +1,29 @@
+import { useEffect, useState } from "react";
 import { Megaphone } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
-const announcements = [
-  {
-    id: 1,
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-    text: "New translation team joining! Welcome the Phoenix Gate Sect translators.",
-  },
-  {
-    id: 2,
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
-    text: "Server maintenance scheduled for this weekend. Expect brief downtime.",
-  },
-  {
-    id: 3,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-    text: "Weekly reading challenge: Complete 50 chapters to earn special badges!",
-  },
-];
+type Announcement = Tables<"announcements">;
 
 const AnnouncementsSection = () => {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      const { data } = await supabase
+        .from("announcements")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      
+      if (data) setAnnouncements(data);
+    };
+
+    fetchAnnouncements();
+  }, []);
+
+  if (announcements.length === 0) return null;
+
   return (
     <section className="section-container py-6">
       <div className="flex items-center gap-2 mb-4">
@@ -32,14 +37,20 @@ const AnnouncementsSection = () => {
             key={announcement.id}
             className="flex items-center gap-3 min-w-[300px] p-4 bg-surface rounded-xl border border-border hover:bg-surface-hover transition-colors cursor-pointer"
           >
-            <img
-              src={announcement.avatar}
+            {/* <img
+              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
               alt="Announcer"
               className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-            />
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {announcement.text}
-            </p>
+            /> */}
+             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-bold">
+                !
+             </div>
+            <div>
+                 <h4 className="text-sm font-semibold text-foreground line-clamp-1">{announcement.title}</h4>
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                {announcement.content}
+                </p>
+            </div>
           </div>
         ))}
       </div>

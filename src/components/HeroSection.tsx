@@ -1,43 +1,51 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import heroBanner from "@/assets/hero-banner.jpg";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 type Novel = Tables<"novels"> & {
   chapters_count?: number;
 };
 
 const HeroSection = () => {
-  const [novel, setNovel] = useState<Novel | null>(null);
+  const [novels, setNovels] = useState<Novel[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchFeaturedNovel();
+    fetchFeaturedNovels();
   }, []);
 
-  const fetchFeaturedNovel = async () => {
+  const fetchFeaturedNovels = async () => {
     try {
-      // Fetch the highest rated novel
+      // Fetch a batch of novels to randomize
       const { data, error } = await supabase
         .from("novels")
         .select("*, chapters(count)")
-        .order("rating", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(10); // Fetch top 10 then we can shuffle or just display them
 
       if (error) throw error;
 
       if (data) {
-        setNovel({
-          ...data,
-          chapters_count: data.chapters?.[0]?.count || 0,
-        });
+        // Randomize the order of novels
+        const shuffled = data.sort(() => 0.5 - Math.random());
+        const formattedNovels = shuffled.map((novel: any) => ({
+          ...novel,
+          chapters_count: novel.chapters?.[0]?.count || 0,
+        }));
+        setNovels(formattedNovels.slice(0, 5)); // Take top 5 random ones
       }
     } catch (error) {
-      console.error("Error fetching hero novel:", error);
+      console.error("Error fetching hero novels:", error);
     } finally {
       setLoading(false);
     }
@@ -51,61 +59,92 @@ const HeroSection = () => {
     );
   }
 
-  if (!novel) return null;
+  if (novels.length === 0) return null;
 
   return (
-    <section className="relative min-h-[500px] md:min-h-[600px] overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <img 
-          src={novel.cover_url || heroBanner}
-          alt={novel.title}
-          className="w-full h-full object-cover object-center"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = heroBanner;
-          }}
-        />
-        <div 
-          className="absolute inset-0"
-          style={{ background: "var(--gradient-hero)" }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-      </div>
+    <section className="relative min-h-[500px] md:min-h-[600px] overflow-hidden group">
+      <Carousel
+        opts={{
+          loop: true,
+          duration: 60,
+        }}
+        className="w-full h-full"
+      >
+        <CarouselContent className="-ml-0">
+          {novels.map((novel) => (
+            <CarouselItem key={novel.id} className="pl-0 relative min-h-[500px] md:min-h-[600px]">
+              {/* Background Image - Atmospheric Blur Effect */}
+              <div className="absolute inset-0 overflow-hidden">
+                <img
+                  src={novel.cover_url || heroBanner}
+                  alt={novel.title}
+                  className="w-full h-full object-cover object-center blur-sm scale-110 brightness-[0.4] transition-all duration-700"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = heroBanner;
+                  }}
+                />
+                
+                {/* Texture Overlay (Dot Pattern) */}
+                <div 
+                  className="absolute inset-0 opacity-20"
+                  style={{ 
+                    backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px)",
+                    backgroundSize: "24px 24px"
+                  }} 
+                />
 
-      {/* Content */}
-      <div className="relative section-container h-full flex items-center py-16 md:py-24">
-        <div className="max-w-xl animate-fade-in">
-          <span className="status-badge status-badge-ongoing mb-4 inline-block capitalize">
-            {novel.status}
-          </span>
-          
-          <h1 className="text-3xl md:text-5xl font-extrabold text-foreground mb-4 leading-tight">
-            {novel.title}
-          </h1>
-          
-          <p className="text-muted-foreground text-base md:text-lg mb-6 line-clamp-3">
-            {novel.description}
-          </p>
+                <div
+                  className="absolute inset-0"
+                  style={{ background: "var(--gradient-hero)" }}
+                />
+                 <div 
+                  className="absolute inset-0"
+                  style={{ 
+                    background: "linear-gradient(to top, hsl(var(--background)) 5%, transparent 50%), linear-gradient(to right, hsl(var(--background)) 10%, transparent 60%)" 
+                  }}
+                />
+              </div>
 
-          <div className="flex items-center gap-4 mb-8 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <span className="text-accent font-semibold">{novel.rating || "N/A"}</span>
-              ★ Rating
-            </span>
-            <span className="w-1 h-1 rounded-full bg-muted-foreground" />
-            <span>{novel.chapters_count || 0} Chapters</span>
-          </div>
+              {/* Content */}
+              <div className="relative section-container h-full flex items-center py-16 md:py-24 min-h-[500px] md:min-h-[600px]">
+                <div className="max-w-xl animate-fade-in space-y-4">
+                  <span className="status-badge status-badge-ongoing mb-2 inline-block capitalize">
+                    {novel.status}
+                  </span>
 
-          <div className="flex items-center gap-3">
-            <Button variant="hero" size="lg" asChild>
-              <Link to={`/series/${novel.slug}`}>Start Reading</Link>
-            </Button>
-            <Button variant="surface" size="lg">
-              Add to Library
-            </Button>
-          </div>
+                  <h1 className="text-3xl md:text-5xl font-extrabold text-foreground mb-4 leading-tight">
+                    {novel.title}
+                  </h1>
+
+                  <p className="text-muted-foreground text-base md:text-lg mb-6 line-clamp-3">
+                    {novel.description}
+                  </p>
+
+                  <div className="flex items-center gap-4 mb-8 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <span className="text-accent font-semibold">{novel.rating || "N/A"}</span>
+                      ★ Rating
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-muted-foreground" />
+                    <span>{novel.chapters_count || 0} Chapters</span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <Button variant="hero" size="lg" asChild className="btn-glow">
+                      <Link to={`/series/${novel.slug}`}>Start Reading</Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        {/* Navigation Buttons - Visible on desktop / hover */}
+        <div className="hidden md:block opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+           <CarouselPrevious className="left-4 bg-background/20 hover:bg-background/40 border-none text-white h-12 w-12" />
+           <CarouselNext className="right-4 bg-background/20 hover:bg-background/40 border-none text-white h-12 w-12" />
         </div>
-      </div>
+      </Carousel>
     </section>
   );
 };

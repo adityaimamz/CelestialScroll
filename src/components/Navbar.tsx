@@ -39,8 +39,8 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-primary-foreground" />
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
+              <img src="/favicon.ico" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-xl font-bold text-foreground hidden sm:block">
               Celestial<span className="text-primary">Scrolls</span>

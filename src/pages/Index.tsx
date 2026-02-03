@@ -14,10 +14,10 @@ const Index = () => {
       <HeroSection />
       <AnnouncementsSection />
       <TopSeriesSection />
-      <PopularSection />
+      {/* <PopularSection /> */}
       <NewReleasesSection />
       <GenresSection />
-      <SneakPeeksSection />
+      {/* <SneakPeeksSection /> */}
       <RecentUpdatesSection />
     </main>
   );
