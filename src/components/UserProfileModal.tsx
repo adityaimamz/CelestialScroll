@@ -42,7 +42,7 @@ const UserProfileModal = ({ userId, isOpen, onOpenChange }: UserProfileModalProp
             // Fetch profile
             const { data: profileData, error: profileError } = await supabase
                 .from("profiles")
-                .select("*")
+                .select("id, username, avatar_url, bio, created_at")
                 .eq("id", id)
                 .single();
 
