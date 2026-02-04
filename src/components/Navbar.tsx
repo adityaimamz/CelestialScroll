@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, Menu, X, BookOpen, Bookmark, Home, Layers, User, LogOut, Settings, Shield } from "lucide-react";
+import { Search, Menu, X, BookOpen, Bookmark, Home, Layers, User, LogOut, Settings, Shield, Loader2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,11 +17,65 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-const Navbar = () => {
+
+export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { user, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
+
+  // Search State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<(Tables<"novels"> & { chapters_count: number })[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const delaySearch = setTimeout(async () => {
+      if (searchQuery.trim().length > 0) {
+        setIsSearching(true);
+        setShowResults(true);
+        try {
+          const { data, error } = await supabase
+            .from("novels")
+            .select("*, chapters(count)")
+            .ilike("title", `%${searchQuery}%`)
+            .limit(5);
+
+          if (error) throw error;
+
+          if (data) {
+            const formatted = data.map(novel => ({
+              ...novel,
+              chapters_count: novel.chapters?.[0]?.count || 0
+            }));
+            setSearchResults(formatted);
+          }
+        } catch (error) {
+          console.error("Search error:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setShowResults(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delaySearch);
+  }, [searchQuery]);
+
+  // Close search on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -63,20 +119,61 @@ const Navbar = () => {
           {/* Right Side */}
           <div className="flex items-center gap-2">
             {/* Search - Desktop */}
-            <div className="hidden md:flex items-center">
+            <div className="hidden md:flex items-center relative" ref={searchRef}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search novels..."
                   className="w-64 pl-10 bg-surface border-border focus:border-primary"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => { if (searchQuery) setShowResults(true); }}
                 />
+                {isSearching && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                )}
               </div>
+
+              {/* Search Results Dropdown */}
+              {showResults && (
+                <div className="absolute top-full left-7 right-0 mt-2 w-80 bg-popover border border-border rounded-lg shadow-xl overflow-hidden z-50 -translate-x-8">
+                  {searchResults.length > 0 ? (
+                    <div className="py-2">
+                      {searchResults.map((novel) => (
+                        <Link
+                          key={novel.id}
+                          to={`/series/${novel.slug}`}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                          onClick={() => {
+                            setShowResults(false);
+                            setSearchQuery("");
+                          }}
+                        >
+                          <div className="w-10 h-14 flex-shrink-0 rounded overflow-hidden">
+                            <img src={novel.cover_url || "/placeholder.jpg"} alt={novel.title} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-medium leading-tight line-clamp-2 mb-1">{novel.title}</h4>
+                            <p className="text-xs text-muted-foreground">{novel.chapters_count} chapters</p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    !isSearching && (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        No results found.
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Search Toggle - Mobile */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="md:hidden"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
             >
@@ -115,18 +212,18 @@ const Navbar = () => {
                         </Link>
                     </DropdownMenuItem> */}
                     {isAdmin && (
-                        <DropdownMenuItem asChild>
-                            <Link to="/admin/novels" className="cursor-pointer">
-                                <Shield className="mr-2 h-4 w-4" />
-                                <span>Admin Dashboard</span>
-                            </Link>
-                        </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/novels" className="cursor-pointer">
+                          <Shield className="mr-2 h-4 w-4" />
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
                     )}
                     <DropdownMenuItem asChild>
-                        <Link to="/settings" className="cursor-pointer">
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>Settings</span>
-                        </Link>
+                      <Link to="/settings" className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
@@ -148,9 +245,9 @@ const Navbar = () => {
             </div>
 
             {/* Mobile Menu Toggle */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="md:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
@@ -161,15 +258,48 @@ const Navbar = () => {
 
         {/* Mobile Search */}
         {isSearchOpen && (
-          <div className="md:hidden py-3 border-t border-border animate-fade-in">
+          <div className="md:hidden py-3 border-t border-border animate-fade-in relative">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search novels..."
                 className="w-full pl-10 bg-surface border-border"
                 autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
+              {isSearching && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+              )}
             </div>
+
+            {/* Mobile Search Results */}
+            {showResults && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto">
+                <div className="py-2">
+                  {searchResults.map((novel) => (
+                    <Link
+                      key={novel.id}
+                      to={`/series/${novel.slug}`}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                      onClick={() => {
+                        setShowResults(false);
+                        setSearchQuery("");
+                        setIsSearchOpen(false);
+                      }}
+                    >
+                      <div className="w-10 h-14 flex-shrink-0 rounded overflow-hidden">
+                        <img src={novel.cover_url || "/placeholder.jpg"} alt={novel.title} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium leading-tight line-clamp-2 mb-1">{novel.title}</h4>
+                        <p className="text-xs text-muted-foreground">{novel.chapters_count} chapters</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -191,48 +321,48 @@ const Navbar = () => {
                   </Link>
                 );
               })}
-              
+
               <div className="mt-4 px-4 border-t border-border pt-4">
                 {user ? (
-                   <div className="flex flex-col gap-2">
-                       <div className="flex items-center gap-3 px-2 py-2 mb-2">
-                           <Avatar className="h-8 w-8 border border-border">
-                                <AvatarImage src={user.user_metadata?.avatar_url} />
-                                <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                                <span className="text-sm font-medium">{user.user_metadata?.username || "User"}</span>
-                                <span className="text-xs text-muted-foreground">{user.email}</span>
-                            </div>
-                       </div>
-                       <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
-                           <Button variant="ghost" className="w-full justify-start">
-                               <User className="mr-2 h-4 w-4" />
-                               Profile
-                           </Button>
-                       </Link>
-                        {isAdmin && (
-                            <Link to="/admin/novels" onClick={() => setIsMenuOpen(false)}>
-                                <Button variant="ghost" className="w-full justify-start">
-                                    <Shield className="mr-2 h-4 w-4" />
-                                    Admin
-                                </Button>
-                            </Link>
-                        )}
-                        <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={handleSignOut}>
-                           <LogOut className="mr-2 h-4 w-4" />
-                           Log out
-                        </Button>
-                   </div>
-                ) : (
-                    <div className="flex gap-2">
-                        <Link to="/login" className="flex-1">
-                        <Button variant="outline" className="w-full">Sign In</Button>
-                        </Link>
-                        <Link to="/register" className="flex-1">
-                        <Button className="w-full">Sign Up</Button>
-                        </Link>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3 px-2 py-2 mb-2">
+                      <Avatar className="h-8 w-8 border border-border">
+                        <AvatarImage src={user.user_metadata?.avatar_url} />
+                        <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{user.user_metadata?.username || "User"}</span>
+                        <span className="text-xs text-muted-foreground">{user.email}</span>
+                      </div>
                     </div>
+                    <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <User className="mr-2 h-4 w-4" />
+                        Profile
+                      </Button>
+                    </Link>
+                    {isAdmin && (
+                      <Link to="/admin/novels" onClick={() => setIsMenuOpen(false)}>
+                        <Button variant="ghost" className="w-full justify-start">
+                          <Shield className="mr-2 h-4 w-4" />
+                          Admin
+                        </Button>
+                      </Link>
+                    )}
+                    <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log out
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Link to="/login" className="flex-1">
+                      <Button variant="outline" className="w-full">Sign In</Button>
+                    </Link>
+                    <Link to="/register" className="flex-1">
+                      <Button className="w-full">Sign Up</Button>
+                    </Link>
+                  </div>
                 )}
               </div>
             </div>
@@ -241,6 +371,4 @@ const Navbar = () => {
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}
