@@ -136,9 +136,10 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold text-foreground">Dashboard</h2>
-        <p className="text-muted-foreground">Overview statistik website NovelVerse</p>
+        <span className="text-xl font-bold text-foreground hidden sm:block">
+          Celestial<span className="text-primary">Scrolls</span>
+        </span>
       </div>
-
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard

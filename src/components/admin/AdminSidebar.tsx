@@ -40,10 +40,13 @@ export function AdminSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="border-b border-border p-4">
         <NavLink to="/admin" className="flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-primary shrink-0" />
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
+            <img src="/favicon.ico" alt="Logo" className="w-full h-full object-cover" />
+          </div>
           {!collapsed && (
-            <span className="text-lg font-bold text-foreground">NovelVerse</span>
-          )}
+            <span className="text-xl font-bold text-foreground hidden sm:block">
+              Celestial<span className="text-primary">Scrolls</span>
+            </span>)}
         </NavLink>
       </SidebarHeader>
       <SidebarContent>

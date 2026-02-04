@@ -85,8 +85,12 @@ export default function Login() {
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
             <Link to="/" className="flex items-center gap-2">
-              <BookOpen className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold text-foreground">NovelVerse</span>
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
+                <img src="/favicon.ico" alt="Logo" className="w-full h-full object-cover" />
+              </div>
+              <span className="text-xl font-bold text-foreground hidden sm:block">
+                Celestial<span className="text-primary">Scrolls</span>
+              </span>
             </Link>
           </div>
           <CardTitle className="text-2xl">Masuk ke Akun</CardTitle>
