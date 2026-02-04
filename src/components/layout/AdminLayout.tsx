@@ -66,7 +66,7 @@ export default function AdminLayout() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/admin/profile">
+                    <Link to="/settings">
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </Link>
