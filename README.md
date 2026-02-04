@@ -1,59 +1,185 @@
-# Calestial Scrolls - Immortal Library
 
-**Calestial Scrolls** is a modern web platform designed for reading Calestial, Xianxia, and Fantasy novels. Built with a focus on immersion, aesthetics, and user experience.
+---
 
-## 📸 Preview
-![CelestialScrolls Preview](./public/readme/preview.jpeg)
+# 📚 Celestial Scrolls – Immortal Library
 
+**Celestial Scrolls** is a modern web platform dedicated to delivering an immersive reading experience for Celestial, Xianxia, and Fantasy novels. Built with the latest web technologies, the platform offers an elegant, fast, and fully responsive interface.
 
-## 🌟 Features
+---
 
-- **Immersive Reading Experience**: Distraction-free reader capability with customizable font size, font family (Serif/Sans), and themes (Light/Sepia/Dark).
-- **Novel Catalog**: Browse a wide collection of novels with filtering by Genre and Sorting options.
-- **Detailed Info**: Rich novel details pages including synopsis, ratings, and chapter lists.
-- **Modern UI/UX**: Built with a sleek, responsive design supporting full Dark Mode integration.
-- **Responsive**: Optimized for both Desktop and Mobile devices.
+## 🌟 Key Features
+
+### 📖 For Readers
+
+* **Immersive Reading Experience** – A distraction-free reading mode with full customization:
+
+  * **Font Type**: Choose between Serif and Sans-serif
+  * **Text Size**: Adjustable for eye comfort
+  * **Theme**: Light, Sepia, and Dark modes available
+
+* **Complete Novel Catalog**
+
+  * Advanced search
+  * Genre filtering
+  * Sorting options (Most Popular, Latest)
+
+* **Comprehensive Novel Details**
+
+  * Synopsis
+  * Rating
+  * Bookmark status
+  * Chapter list
+
+* **User Interaction**
+
+  * **Comment System** – Discuss each chapter or novel page
+  * **Bookmarks / Library** – Save favorite novels for quick access
+  * **Reading History** – Continue from your last read chapter
+  * **Ratings & Views** – Track popularity based on readers and scores
+
+* **Responsive Design**
+
+  * Optimized for Desktop, Tablet, and Mobile devices
+
+---
+
+### 🛡️ Admin Dashboard
+
+* **Real-time Statistics**
+
+  * Total Novels, Chapters, Users, and Views
+
+* **Visual Analytics**
+
+  * Interactive bar charts for weekly views (last 7 days)
+
+* **Content Management**
+
+  * Most Popular Novels list
+  * Additional novel/chapter management features
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Components**: [shadcn/ui](https://ui.shadcn.com/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **State Management**: React Query (TanStack Query)
-- **Routing**: React Router DOM
+This project is built using modern technologies for performance and scalability:
 
-## 🚀 Getting Started
+### Frontend
+
+* **React** + **Vite** – Lightning-fast UI performance
+* **TypeScript** – Type safety and robust development
+
+### Styling & UI
+
+* **Tailwind CSS** – Utility-first styling
+* **shadcn/ui** – Accessible and beautiful UI components
+* **Lucide** – Lightweight vector icons
+
+### Backend & Infrastructure
+
+* **Supabase** – PostgreSQL database, authentication, and realtime subscriptions
+
+### Other Tools
+
+* **TanStack Query** – Efficient server state management
+* **React Router** – SPA navigation
+* **Recharts** – Dashboard data visualization
+
+---
+
+## 🚀 Installation & Setup Guide
 
 Follow these steps to run the project locally:
 
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/adityaimamz/Calestial-scrolls.git
-    cd Calestial-scrolls
-    ```
+### Prerequisites
 
-2.  **Install dependencies**
-    ```bash
-    npm install
-    ```
+Make sure you have installed:
 
-3.  **Start the development server**
-    ```bash
-    npm run dev
-    ```
+* **Node.js** (v18+ recommended)
+* A package manager such as `npm`, `yarn`, or `bun`
 
-4.  **Build for production**
-    ```bash
-    npm run build
-    ```
+---
+
+### Steps
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/adityaimamz/Calestial-scrolls.git
+cd Calestial-scrolls
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+# or
+bun install
+```
+
+### 3. Configure Environment Variables
+
+Duplicate `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Fill in your Supabase credentials:
+
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+> **Note:** Create a project in the Supabase dashboard to obtain your URL and API key.
+
+---
+
+### 4. Start Development Server
+
+```bash
+npm run dev
+```
+
+Open:
+
+```
+http://localhost:5173
+```
+
+---
+
+### 5. Build for Production
+
+```bash
+npm run build
+```
+
+The production build will be generated inside the `dist` folder.
+
+---
+
+## 📂 Main Folder Structure
+
+```
+src/
+├── components/     # Reusable UI components (Button, Card, Navbar, etc.)
+├── hooks/          # Custom React Hooks
+├── integrations/   # Third-party service configuration (Supabase)
+├── lib/            # Utilities and helper functions
+├── pages/          # Application pages (Home, Catalog, Reader, Admin)
+└── index.css       # Global styles
+```
+
+---
 
 ## 👨‍💻 Credits
 
-Created and maintained by **Aditya Imam Zuhdi**.
+Created and developed by **Aditya Imam Zuhdi**
 
-- **Instagram**: [@adityaimamz](https://www.instagram.com/adityaimamz/)
-- **LinkedIn**: [Aditya Imam Zuhdi](https://www.linkedin.com/in/izaditya/)
+* Instagram: @adityaimamz
+* LinkedIn: Aditya Imam Zuhdi
 
 ---
+
