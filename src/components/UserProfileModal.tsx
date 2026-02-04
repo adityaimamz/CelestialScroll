@@ -75,13 +75,36 @@ const UserProfileModal = ({ userId, isOpen, onOpenChange }: UserProfileModalProp
     };
 
     const getRoleBadge = (role: string) => {
-        const variants: Record<string, "default" | "secondary" | "outline"> = {
-            admin: "default",
-            moderator: "secondary",
-            user: "outline",
+        const config: Record<
+            string,
+            {
+                label: string;
+                variant: "default" | "secondary" | "outline";
+            }
+        > = {
+            admin: {
+                label: "Immortal King",
+                variant: "default", // paling mencolok
+            },
+            moderator: {
+                label: "Immortal",
+                variant: "secondary",
+            },
+            user: {
+                label: "Mortal",
+                variant: "outline",
+            },
         };
-        return <Badge variant={variants[role] || "outline"} className="capitalize">{role}</Badge>;
+
+        const current = config[role] || config.user;
+
+        return (
+            <Badge variant={current.variant}>
+                {current.label}
+            </Badge>
+        );
     };
+
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
