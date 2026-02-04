@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { AdminRoute } from "@/components/auth/AdminRoute";
 import { AuthListener } from "@/components/auth/AuthListener";
+import CommentReports from "./pages/admin/CommentReports";
 
 // Public pages
 import Index from "./pages/Index";
@@ -81,6 +82,7 @@ const App = () => (
                   <Route path="/admin/users" element={<UserList />} />
                   <Route path="/admin/genres" element={<GenresList />} />
                   <Route path="/admin/announcements" element={<AnnouncementsList />} />
+                  <Route path="/admin/reports" element={<CommentReports />} />
                 </Route>
               </Route>
             </Routes>
