@@ -7,6 +7,14 @@
 
 ---
 
+## 📸 Preview
+![CelestialScrolls Preview](./public/readme/preview.jpeg)
+
+## 🚀 Live Demo
+
+👉 **Try it here:** [https://calestial-scroll.vercel.app/](https://calestial-scroll.vercel.app/)
+Deployed on **Vercel**
+
 ## 🌟 Key Features
 
 ### 📖 For Readers
