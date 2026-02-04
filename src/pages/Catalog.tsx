@@ -25,7 +25,7 @@ const sortOptions = ["Popular", "Newest", "Rating", "Alphabetical"];
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const genreParam = searchParams.get("genre");
-  
+
   const [novels, setNovels] = useState<Novel[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState("All");
@@ -36,11 +36,13 @@ const Catalog = () => {
   useEffect(() => {
     if (genreParam) {
       // Find matching genre case-insensitive or just use capitalize
-      const matchedGenre = genres.find(g => g.toLowerCase() === genreParam.toLowerCase()) || 
-                           genreParam.charAt(0).toUpperCase() + genreParam.slice(1);
+      // Handle slugs with hyphens (e.g., martial-arts -> martial arts)
+      const normalizedGenre = genreParam.replace(/-/g, " ");
+      const matchedGenre = genres.find(g => g.toLowerCase() === normalizedGenre.toLowerCase()) ||
+        normalizedGenre.charAt(0).toUpperCase() + normalizedGenre.slice(1);
       setSelectedGenre(matchedGenre);
     } else {
-        setSelectedGenre("All");
+      setSelectedGenre("All");
     }
   }, [genreParam]);
 
@@ -114,9 +116,9 @@ const Catalog = () => {
   const handleGenreSelect = (genre: string) => {
     setSelectedGenre(genre);
     if (genre === "All") {
-        setSearchParams({});
+      setSearchParams({});
     } else {
-        setSearchParams({ genre: genre.toLowerCase() });
+      setSearchParams({ genre: genre.toLowerCase() });
     }
   };
 
@@ -126,19 +128,19 @@ const Catalog = () => {
       <div className="bg-surface border-b border-border py-8">
         <div className="section-container">
           <h1 className="text-3xl font-bold mb-4">
-             {selectedGenre !== "All" ? `Archive for ${selectedGenre}` : "Browse Series"}
+            {selectedGenre !== "All" ? `Archive for ${selectedGenre}` : "Browse Series"}
           </h1>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search series..." 
+              <Input
+                placeholder="Search series..."
                 className="pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
+
             <div className="flex gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -179,11 +181,11 @@ const Catalog = () => {
       {/* Grid */}
       <div className="section-container py-8">
         <SectionHeader title={`All Series (${novels.length})`} />
-        
+
         {loading ? (
-             <div className="flex justify-center py-20">
-             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-           </div>
+          <div className="flex justify-center py-20">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          </div>
         ) : novels.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-6 mt-6">
             {novels.map((novel) => (
@@ -204,8 +206,8 @@ const Catalog = () => {
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <p>No novels found matching your criteria.</p>
-            <Button 
-              variant="link" 
+            <Button
+              variant="link"
               onClick={() => {
                 setSelectedGenre("All");
                 setSearchQuery("");
