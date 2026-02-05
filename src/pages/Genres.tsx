@@ -8,7 +8,11 @@ interface Genre {
   name: string;
   slug: string;
   description: string | null;
-  novel_genres: { count: number }[];
+  novel_genres: {
+    novels: {
+      is_published: boolean;
+    } | null;
+  }[];
 }
 
 const Genres = () => {
@@ -20,12 +24,11 @@ const Genres = () => {
       try {
         const { data, error } = await supabase
           .from("genres")
-          .select("*, novel_genres(count, novels!inner(is_published))")
-          .eq("novel_genres.novels.is_published", true)
+          .select("*, novel_genres(novels(is_published))")
           .order("name");
 
         if (error) throw error;
-        setGenres(data || []);
+        setGenres((data as any) || []);
       } catch (error) {
         console.error("Error fetching genres:", error);
       } finally {
@@ -45,12 +48,19 @@ const Genres = () => {
   }
 
   // Transform genres to the format expected by HoverEffect
-  const items = genres.map((genre) => ({
-    title: genre.name,
-    description: `${genre.description || "No description available."}`,
-    novels: `${genre.novel_genres?.[0]?.count || 0} Novels`,
-    link: `/series?genre=${genre.slug}`,
-  }));
+  const items = genres.map((genre) => {
+    // Filter and count only published novels manually
+    const publishedCount = genre.novel_genres?.filter(
+      (ng) => ng.novels?.is_published === true
+    ).length || 0;
+
+    return {
+      title: genre.name,
+      description: `${genre.description || "No description available."}`,
+      novels: `${publishedCount} Novels`,
+      link: `/series?genre=${genre.slug}`,
+    };
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-8 py-10">
