@@ -36,12 +36,13 @@ const NovelDetail = () => {
   const [chapterSearchQuery, setChapterSearchQuery] = useState("");
   const [chapterSortOrder, setChapterSortOrder] = useState<"asc" | "desc">("desc");
   const [bookmarkCount, setBookmarkCount] = useState(0);
+  const [lastReadChapterNumber, setLastReadChapterNumber] = useState<number | null>(null);
 
   useEffect(() => {
     if (id && loading !== undefined) {
       fetchNovelAndChapters(id);
     }
-  }, [id, isAdmin]); 
+  }, [id, isAdmin]);
 
 
   useEffect(() => {
@@ -209,13 +210,26 @@ const NovelDetail = () => {
     if (!user) return;
     const { data } = await supabase
       .from("reading_history")
-      .select("chapter_id")
+      .select(`
+        chapter_id,
+        read_at,
+        chapters (
+          chapter_number
+        )
+      `)
       .eq("user_id", user.id)
-      .eq("novel_id", novelId);
+      .eq("novel_id", novelId)
+      .order("read_at", { ascending: false });
 
-    if (data) {
+    if (data && data.length > 0) {
       const ids = new Set(data.map(item => item.chapter_id));
       setReadChapterIds(ids);
+
+      // Get the latest read chapter number
+      const latest = data[0];
+      if (latest.chapters) {
+        setLastReadChapterNumber(latest.chapters.chapter_number);
+      }
     }
   };
 
@@ -250,6 +264,11 @@ const NovelDetail = () => {
   const processedChapters = getProcessedChapters();
 
   const handleReadNow = () => {
+    if (user && lastReadChapterNumber !== null) {
+      navigate(`/series/${id}/chapter/${lastReadChapterNumber}`);
+      return;
+    }
+
     if (chapters.length > 0) {
       // Find the first chapter (lowest chapter number)
       const firstChapter = [...chapters].sort((a, b) => a.chapter_number - b.chapter_number)[0];
@@ -373,9 +392,9 @@ const NovelDetail = () => {
           </div>
 
           <div className="flex justify-center md:justify-start gap-3">
-            <Button size="lg" className="w-40 gap-2 btn-glow" onClick={handleReadNow}>
+            <Button size="lg" className="w-auto px-8 gap-2 btn-glow" onClick={handleReadNow}>
               <PlayCircle className="w-5 h-5" />
-              Read Now
+              {lastReadChapterNumber ? `Continue Chapter ${lastReadChapterNumber}` : "Read Now"}
             </Button>
             <Button
               size="lg"
