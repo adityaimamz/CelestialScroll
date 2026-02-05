@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'logo.png', 'robots.txt'],
       manifest: {
-        name: 'Calestial Scrolls - Immortal Library',
-        short_name: 'CalestialScrolls',
+        name: 'Celestial Scrolls - Immortal Library',
+        short_name: 'CelestialScrolls',
         description: 'Tempat baca novel bahasa indonesia.',
         theme_color: '#ffffff',
         icons: [
