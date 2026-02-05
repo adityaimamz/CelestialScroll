@@ -114,7 +114,7 @@ const NovelCard = ({
       <div className="p-2 space-y-1">
         {chapters ? (
           <h3 className="font-bold text-sm text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-            Chapter {chapters}
+            {title}
           </h3>
         ) : (
           <h3 className="font-bold text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">
@@ -126,7 +126,7 @@ const NovelCard = ({
           {chapters && (
             <div className="flex items-center gap-1.5">
               <BookOpen className="w-3 h-3 flex-shrink-0" />
-              <span className="line-clamp-1">{title}</span>
+              <span className="line-clamp-1 font-bold">Chapter {chapters}</span>
             </div>
           )}
 
