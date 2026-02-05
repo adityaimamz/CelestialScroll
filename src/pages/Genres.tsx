@@ -20,7 +20,8 @@ const Genres = () => {
       try {
         const { data, error } = await supabase
           .from("genres")
-          .select("*, novel_genres(count)")
+          .select("*, novel_genres(count, novels!inner(is_published))")
+          .eq("novel_genres.novels.is_published", true)
           .order("name");
 
         if (error) throw error;
@@ -60,9 +61,9 @@ const Genres = () => {
           mystical cultivation journeys, find your next favorite story.
         </p>
       </div>
-      
+
       <HoverEffect items={items} />
-      
+
       {genres.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           No genres found.
