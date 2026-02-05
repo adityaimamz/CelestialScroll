@@ -40,6 +40,8 @@ import UserList from "./pages/admin/UserList";
 import GenresList from "./pages/admin/GenresList";
 import AnnouncementsList from "./pages/admin/AnnouncementsList";
 
+import { Analytics } from "@vercel/analytics/next"
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -69,6 +71,8 @@ const App = () => (
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
+
+              <Analytics />
 
               {/* Reader Route (No MainLayout/Navbar/Footer) */}
               <Route path="/series/:id/chapter/:chapterId" element={<ChapterReader />} />
