@@ -52,7 +52,7 @@ const ScrollButtons = () => {
 
     return (
         <div className={cn(
-            "fixed bottom-6 right-6 flex flex-col gap-2 z-50 transition-transform duration-300",
+            "fixed bottom-20 right-6 flex flex-col gap-2 z-50 transition-transform duration-300",
             isVisible ? "translate-y-0" : "translate-y-[200%]"
         )}>
             <Button

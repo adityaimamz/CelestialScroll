@@ -191,7 +191,10 @@ const ChapterReader = () => {
       >
         <div className="section-container h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/series/${novelSlug}`)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} title="Home">
+              <Home className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/series/${novelSlug}`)} title="Back to Series">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex flex-col">

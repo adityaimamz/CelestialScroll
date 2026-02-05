@@ -8,6 +8,7 @@ import NewReleasesSection from "@/components/NewReleasesSection";
 import GenresSection from "@/components/GenresSection";
 import SneakPeeksSection from "@/components/SneakPeeksSection";
 import RecentUpdatesSection from "@/components/RecentUpdatesSection";
+import RecentlyReadSection from "@/components/RecentlyReadSection";
 
 const Index = () => {
   const location = useLocation();
@@ -43,6 +44,7 @@ const Index = () => {
     <main>
       <HeroSection />
       <AnnouncementsSection />
+      <RecentlyReadSection />
       <TopSeriesSection />
 
       <div className="section-container grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
