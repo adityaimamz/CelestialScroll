@@ -10,7 +10,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, CheckCircle, ExternalLink } from "lucide-react";
+import { Loader2, Trash2, CheckCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
     Dialog,
@@ -113,7 +113,7 @@ const CommentReports = () => {
             });
 
             setReports(fullReports);
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error fetching reports:", error);
             toast({
                 title: "Error",
@@ -146,7 +146,7 @@ const CommentReports = () => {
             fetchReports();
             setIsDeleteDialogOpen(false);
             setSelectedReport(null);
-        } catch (error: any) {
+        } catch (error) {
             toast({ title: "Error", description: "Failed to delete comment.", variant: "destructive" });
         }
     };
@@ -162,7 +162,7 @@ const CommentReports = () => {
 
             toast({ title: "Report Dismissed", description: "The report has been removed." });
             setReports(prev => prev.filter(r => r.id !== reportId));
-        } catch (error: any) {
+        } catch (error) {
             toast({ title: "Error", description: "Failed to dismiss report.", variant: "destructive" });
         }
     };
@@ -195,13 +195,17 @@ const CommentReports = () => {
                                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                                 </TableCell>
                             </TableRow>
-                        ) : reports.length === 0 ? (
+                        ) : null}
+
+                        {!loading && reports.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                                     No reports found. Good job!
                                 </TableCell>
                             </TableRow>
-                        ) : (
+                        )}
+
+                        {!loading && reports.length > 0 && (
                             reports.map((report) => (
                                 <TableRow key={report.id}>
                                     <TableCell className="font-medium">

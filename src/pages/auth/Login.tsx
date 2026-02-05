@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, BookOpen } from "lucide-react";
+import { Loader2, Mail, Lock } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -49,10 +49,10 @@ export default function Login() {
         title: "Login berhasil!",
         description: "Selamat datang kembali.",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Login gagal",
-        description: error.message || "Terjadi kesalahan saat login.",
+        description: (error as Error).message || "Terjadi kesalahan saat login.",
         variant: "destructive",
       });
     } finally {
@@ -70,10 +70,10 @@ export default function Login() {
       });
 
       if (error) throw error;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Login gagal",
-        description: error.message || "Terjadi kesalahan saat login dengan Google.",
+        description: (error as Error).message || "Terjadi kesalahan saat login with Google.",
         variant: "destructive",
       });
     }

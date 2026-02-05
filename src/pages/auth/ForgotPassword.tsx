@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, ArrowLeft, BookOpen } from "lucide-react";
+import { Loader2, Mail, ArrowLeft } from "lucide-react";
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
     const { toast } = useToast();
 
     const handleResetPassword = async (e: React.FormEvent) => {
@@ -31,10 +30,10 @@ export default function ForgotPassword() {
             });
 
             // Optional: Navigate back to login after some time or let them stay
-        } catch (error: any) {
+        } catch (error) {
             toast({
                 title: "Gagal mengirim email",
-                description: error.message || "Terjadi kesalahan.",
+                description: (error as Error).message || "Terjadi kesalahan.",
                 variant: "destructive",
             });
         } finally {

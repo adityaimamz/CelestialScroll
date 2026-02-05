@@ -215,7 +215,9 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-              ) : popularNovels.length > 0 ? (
+              ) : null}
+
+              {!loading && popularNovels.length > 0 && (
                 <div className="flex flex-col gap-4">
                   {popularNovels.map((novel, index) => (
                     <Link
@@ -249,7 +251,9 @@ export default function Dashboard() {
                     </Link>
                   ))}
                 </div>
-              ) : (
+              )}
+
+              {!loading && popularNovels.length === 0 && (
                 <p className="text-muted-foreground text-sm">
                   Belum ada novel yang tersedia.
                 </p>

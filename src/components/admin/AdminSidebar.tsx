@@ -1,4 +1,4 @@
-import { BookOpen, LayoutDashboard, BookText, Users, FileText, Settings, Megaphone, Tags, Flag } from "lucide-react";
+import { LayoutDashboard, BookText, Users, Megaphone, Tags, Flag } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Trophy, Medal, BookOpen, Star, Eye } from 'lucide-react'
+import { Trophy, BookOpen, Star, Eye } from 'lucide-react'
 
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -60,7 +60,7 @@ const Rankings = () => {
             </div>
 
             <main className='container mx-auto px-4 pb-12 flex-1'>
-                
+
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>

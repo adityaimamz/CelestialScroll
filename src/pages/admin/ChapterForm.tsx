@@ -143,11 +143,11 @@ export default function ChapterForm() {
       }
 
       navigate(`/admin/novels/${novelId}/chapters`);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving chapter:", error);
       toast({
         title: "Error",
-        description: error.message || "Gagal menyimpan chapter",
+        description: (error as Error).message || "Gagal menyimpan chapter",
         variant: "destructive",
       });
     } finally {

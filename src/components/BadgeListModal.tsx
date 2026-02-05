@@ -5,9 +5,8 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
-import { BADGE_TIERS, BadgeTier } from "@/lib/badgeSystem";
+import { BADGE_TIERS } from "@/lib/badgeSystem";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
 import { Lock, Check } from "lucide-react";
 
 interface BadgeListModalProps {
@@ -46,15 +45,17 @@ const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalPr
                             const isUnlocked = currentCount >= tier.minChapters;
                             const isCurrent = index === currentTierIndex;
 
+                            let tierClass = "bg-muted/20 border-border/30 opacity-40 grayscale";
+                            if (isCurrent) {
+                                tierClass = "bg-accent/20 border-primary shadow-[0_0_10px_rgba(var(--primary),0.3)]";
+                            } else if (isUnlocked) {
+                                tierClass = "bg-card/50 border-border/50 opacity-70";
+                            }
+
                             return (
                                 <div
                                     key={tier.name}
-                                    className={`relative p-3 rounded-lg border flex items-center gap-4 transition-all ${isCurrent
-                                        ? "bg-accent/20 border-primary shadow-[0_0_10px_rgba(var(--primary),0.3)]"
-                                        : isUnlocked
-                                            ? "bg-card/50 border-border/50 opacity-70"
-                                            : "bg-muted/20 border-border/30 opacity-40 grayscale"
-                                        }`}
+                                    className={`relative p-3 rounded-lg border flex items-center gap-4 transition-all ${tierClass}`}
                                 >
                                     {/* Status Icon */}
                                     <div className="shrink-0">

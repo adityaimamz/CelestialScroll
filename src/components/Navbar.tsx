@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, Menu, X, BookOpen, Bookmark, Home, Layers, User, LogOut, Settings, Shield, Loader2 } from "lucide-react";
+import { Search, Menu, X, BookOpen, Bookmark, Home, Layers, LogOut, Settings, Shield, Loader2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";

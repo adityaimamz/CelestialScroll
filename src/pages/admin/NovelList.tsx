@@ -228,72 +228,75 @@ export default function NovelList() {
                   <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                 </TableCell>
               </TableRow>
-            ) : filteredNovels.length === 0 ? (
+            ) : null}
+
+            {!loading && filteredNovels.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? "Tidak ada novel yang cocok" : "Belum ada novel"}
                 </TableCell>
               </TableRow>
-            ) : (
-              filteredNovels.map((novel) => (
-                <TableRow key={novel.id}>
-                  <TableCell className="font-medium">{novel.title}</TableCell>
-                  <TableCell>{novel.author || "-"}</TableCell>
-                  <TableCell>{getStatusBadge(novel.status)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1 flex-wrap">
-                      {novel.genres.slice(0, 2).map((genre) => (
-                        <Badge key={genre} variant="outline" className="text-xs">
-                          {genre}
-                        </Badge>
-                      ))}
-                      {novel.genres.length > 2 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{novel.genres.length - 2}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{novel.views.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link to={`/series/${novel.slug}`}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            Lihat
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to={`/admin/novels/${novel.id}/edit`}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to={`/admin/novels/${novel.id}/chapters`}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Chapters
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => setDeleteId(novel.id)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Hapus
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
             )}
+
+            {!loading && filteredNovels.length > 0 && filteredNovels.map((novel) => (
+              <TableRow key={novel.id}>
+                <TableCell className="font-medium">{novel.title}</TableCell>
+                <TableCell>{novel.author || "-"}</TableCell>
+                <TableCell>{getStatusBadge(novel.status)}</TableCell>
+                <TableCell>
+                  <div className="flex gap-1 flex-wrap">
+                    {novel.genres.slice(0, 2).map((genre) => (
+                      <Badge key={genre} variant="outline" className="text-xs">
+                        {genre}
+                      </Badge>
+                    ))}
+                    {novel.genres.length > 2 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{novel.genres.length - 2}
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>{novel.views.toLocaleString()}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link to={`/series/${novel.slug}`}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Lihat
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={`/admin/novels/${novel.id}/edit`}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={`/admin/novels/${novel.id}/chapters`}>
+                          <FileText className="mr-2 h-4 w-4" />
+                          Chapters
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={() => setDeleteId(novel.id)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Hapus
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+            }
           </TableBody>
         </Table>
       </div>

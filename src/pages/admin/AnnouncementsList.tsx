@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Megaphone, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,13 +52,13 @@ const AnnouncementsList = () => {
         .from("announcements")
         .select("*")
         .order("created_at", { ascending: false });
-      
+
       if (error) throw error;
       setAnnouncements(data || []);
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error fetching announcements",
-        description: error.message,
+        description: (error as Error).message,
         variant: "destructive",
       });
     } finally {
@@ -101,10 +100,10 @@ const AnnouncementsList = () => {
       }
       setIsDialogOpen(false);
       fetchAnnouncements();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error saving announcement",
-        description: error.message,
+        description: (error as Error).message,
         variant: "destructive",
       });
     }
@@ -117,10 +116,10 @@ const AnnouncementsList = () => {
       if (error) throw error;
       toast({ title: "Announcement deleted successfully" });
       fetchAnnouncements();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error deleting announcement",
-        description: error.message,
+        description: (error as Error).message,
         variant: "destructive",
       });
     }
@@ -128,25 +127,25 @@ const AnnouncementsList = () => {
 
   const toggleActive = async (announcement: Announcement) => {
     try {
-        const { error } = await supabase
-          .from("announcements")
-          .update({ is_active: !announcement.is_active })
-          .eq("id", announcement.id);
-        
-        if (error) throw error;
-        
-        // Optimistic update
-        setAnnouncements(announcements.map(a => 
-            a.id === announcement.id ? { ...a, is_active: !a.is_active } : a
-        ));
-        
-        toast({ title: `Announcement ${!announcement.is_active ? 'activated' : 'deactivated'}` });
+      const { error } = await supabase
+        .from("announcements")
+        .update({ is_active: !announcement.is_active })
+        .eq("id", announcement.id);
+
+      if (error) throw error;
+
+      // Optimistic update
+      setAnnouncements(announcements.map(a =>
+        a.id === announcement.id ? { ...a, is_active: !a.is_active } : a
+      ));
+
+      toast({ title: `Announcement ${!announcement.is_active ? 'activated' : 'deactivated'}` });
     } catch (error: any) {
-        toast({
-            title: "Error updating status",
-            description: error.message,
-            variant: "destructive",
-        });
+      toast({
+        title: "Error updating status",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -183,13 +182,13 @@ const AnnouncementsList = () => {
                 required
               />
             </div>
-           <div className="flex items-center space-x-2">
-                <Switch
-                    id="is_active"
-                    checked={isActive}
-                    onCheckedChange={setIsActive}
-                />
-                <Label htmlFor="is_active">Active Status</Label>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is_active"
+                checked={isActive}
+                onCheckedChange={setIsActive}
+              />
+              <Label htmlFor="is_active">Active Status</Label>
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -218,51 +217,53 @@ const AnnouncementsList = () => {
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : announcements.length === 0 ? (
+            ) : null}
+
+            {!loading && announcements.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8">
                   No announcements found
                 </TableCell>
               </TableRow>
-            ) : (
-              announcements.map((announcement) => (
-                <TableRow key={announcement.id}>
-                  <TableCell>
-                    <button 
-                        onClick={() => toggleActive(announcement)}
-                        className="focus:outline-none"
-                    >
-                        {announcement.is_active ? (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                        ) : (
-                            <XCircle className="h-5 w-5 text-muted-foreground" />
-                        )}
-                    </button>
-                  </TableCell>
-                  <TableCell className="font-medium">{announcement.title}</TableCell>
-                  <TableCell className="max-w-md truncate">{announcement.content}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleOpenDialog(announcement)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(announcement.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
             )}
+
+            {!loading && announcements.length > 0 && announcements.map((announcement) => (
+              <TableRow key={announcement.id}>
+                <TableCell>
+                  <button
+                    onClick={() => toggleActive(announcement)}
+                    className="focus:outline-none"
+                  >
+                    {announcement.is_active ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </button>
+                </TableCell>
+                <TableCell className="font-medium">{announcement.title}</TableCell>
+                <TableCell className="max-w-md truncate">{announcement.content}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleOpenDialog(announcement)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(announcement.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>

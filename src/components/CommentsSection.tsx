@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Send, User as UserIcon, Loader2, Trash2, MessageCircle, ThumbsUp, ThumbsDown, Flag, X, MoreHorizontal } from "lucide-react";
+import { Send, User as UserIcon, Loader2, Trash2, MessageCircle, ThumbsUp, ThumbsDown, Flag, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";

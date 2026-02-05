@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Menu, Home, BookOpen, ArrowLeft, List, Loader2 } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Home, ArrowLeft, List, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import ReaderSettings from "@/components/ReaderSettings";

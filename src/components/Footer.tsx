@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { BookOpen, Github, Twitter, MessageCircle } from "lucide-react";
+import { Github, Twitter, MessageCircle } from "lucide-react";
 
 const Footer = () => {
   const location = useLocation();

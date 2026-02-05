@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { BookOpen, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Tables } from "@/integrations/supabase/types";
 
 // Define the type for the joined data
 type ReadingHistoryEntry = {

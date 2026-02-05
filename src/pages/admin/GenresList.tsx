@@ -16,7 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,10 +55,10 @@ const GenresList = () => {
 
       if (error) throw error;
       setGenres(data || []);
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error fetching genres",
-        description: error.message,
+        description: (error as Error).message,
         variant: "destructive",
       });
     } finally {
@@ -116,10 +115,10 @@ const GenresList = () => {
       }
       setIsDialogOpen(false);
       fetchGenres();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error saving genre",
-        description: error.message,
+        description: (error as Error).message,
         variant: "destructive",
       });
     }
@@ -132,10 +131,10 @@ const GenresList = () => {
       if (error) throw error;
       toast({ title: "Genre deleted successfully" });
       fetchGenres();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error deleting genre",
-        description: error.message,
+        description: (error as Error).message,
         variant: "destructive",
       });
     }
@@ -224,40 +223,43 @@ const GenresList = () => {
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : filteredGenres.length === 0 ? (
+            ) : null}
+
+            {!loading && filteredGenres.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8">
                   {searchQuery ? "No genres found matching your search" : "No genres found"}
                 </TableCell>
               </TableRow>
-            ) : (
-              filteredGenres.map((genre) => (
-                <TableRow key={genre.id}>
-                  <TableCell className="font-medium">{genre.name}</TableCell>
-                  <TableCell>{genre.slug}</TableCell>
-                  <TableCell className="max-w-xs truncate">{genre.description || "-"}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleOpenDialog(genre)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(genre.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
             )}
+
+            {!loading && filteredGenres.length > 0 && filteredGenres.map((genre) => (
+              <TableRow key={genre.id}>
+                <TableCell className="font-medium">{genre.name}</TableCell>
+                <TableCell>{genre.slug}</TableCell>
+                <TableCell className="max-w-xs truncate">{genre.description || "-"}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleOpenDialog(genre)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(genre.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+            }
           </TableBody>
         </Table>
       </div>

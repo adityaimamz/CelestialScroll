@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock, BookOpen } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 
 export default function UpdatePassword() {
     const [password, setPassword] = useState("");
@@ -65,10 +65,10 @@ export default function UpdatePassword() {
             });
 
             navigate("/login");
-        } catch (error: any) {
+        } catch (error) {
             toast({
                 title: "Gagal mengubah password",
-                description: error.message || "Terjadi kesalahan.",
+                description: (error as Error).message || "Terjadi kesalahan.",
                 variant: "destructive",
             });
         } finally {

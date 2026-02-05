@@ -122,7 +122,9 @@ const UserProfileModal = ({ userId, isOpen, onOpenChange }: UserProfileModalProp
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         <p className="mt-2 text-sm text-muted-foreground">Loading profile...</p>
                     </div>
-                ) : profile ? (
+                ) : null}
+
+                {!loading && profile && (
                     <div className="flex flex-col items-center gap-6 py-4">
                         <Avatar className="h-24 w-24 border-2 border-border">
                             <AvatarImage src={profile.avatar_url || ""} />
@@ -152,7 +154,9 @@ const UserProfileModal = ({ userId, isOpen, onOpenChange }: UserProfileModalProp
                             <span>Joined {format(new Date(profile.created_at), "MMMM d, yyyy")}</span>
                         </div>
                     </div>
-                ) : (
+                )}
+
+                {!loading && !profile && (
                     <div className="py-8 text-center text-muted-foreground">
                         User not found.
                     </div>

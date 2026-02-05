@@ -1,4 +1,4 @@
-import { Type, Minus, Plus, Settings } from "lucide-react";
+import { Minus, Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -6,7 +6,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 
 interface ReaderSettingsProps {
   fontSize: number;
@@ -40,13 +39,13 @@ const ReaderSettings = ({
               Customize your reading experience
             </p>
           </div>
-          
+
           <div className="grid gap-2">
             <Label>Font Size</Label>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="icon" 
+              <Button
+                variant="outline"
+                size="icon"
                 className="h-8 w-8"
                 onClick={() => setFontSize(Math.max(12, fontSize - 1))}
               >
@@ -55,9 +54,9 @@ const ReaderSettings = ({
               <div className="flex-1 text-center text-sm font-medium">
                 {fontSize}px
               </div>
-              <Button 
-                variant="outline" 
-                size="icon" 
+              <Button
+                variant="outline"
+                size="icon"
                 className="h-8 w-8"
                 onClick={() => setFontSize(Math.min(32, fontSize + 1))}
               >
@@ -69,17 +68,17 @@ const ReaderSettings = ({
           <div className="grid gap-2">
             <Label>Font Family</Label>
             <div className="flex gap-2">
-              <Button 
-                variant={fontFamily === 'sans' ? "default" : "outline"} 
+              <Button
+                variant={fontFamily === 'sans' ? "default" : "outline"}
                 size="sm"
                 className="flex-1 font-sans"
                 onClick={() => setFontFamily('sans')}
               >
                 Sans
               </Button>
-              <Button 
+              <Button
                 variant={fontFamily === 'serif' ? "default" : "outline"}
-                size="sm" 
+                size="sm"
                 className="flex-1 font-serif"
                 onClick={() => setFontFamily('serif')}
               >
@@ -91,25 +90,25 @@ const ReaderSettings = ({
           <div className="grid gap-2">
             <Label>Theme</Label>
             <div className="flex gap-2">
-              <Button 
-                variant={theme === 'light' ? "default" : "outline"} 
+              <Button
+                variant={theme === 'light' ? "default" : "outline"}
                 size="sm"
                 className="flex-1 bg-white text-black border-slate-200 hover:bg-slate-50 hover:text-black"
                 onClick={() => setTheme('light')}
               >
                 Light
               </Button>
-              <Button 
+              <Button
                 variant={theme === 'sepia' ? "default" : "outline"}
-                size="sm" 
+                size="sm"
                 className="flex-1 bg-[#f4ecd8] text-[#5b4636] border-[#e3d7bf] hover:bg-[#e9dfc6] hover:text-[#5b4636]"
                 onClick={() => setTheme('sepia')}
               >
                 Sepia
               </Button>
-              <Button 
+              <Button
                 variant={theme === 'dark' ? "default" : "outline"}
-                size="sm" 
+                size="sm"
                 className="flex-1 bg-slate-900 text-white border-slate-800 hover:bg-slate-800 hover:text-white"
                 onClick={() => setTheme('dark')}
               >
