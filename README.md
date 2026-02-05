@@ -24,47 +24,44 @@ Deployed on **Vercel**
   * **Font Type**: Choose between Serif and Sans-serif
   * **Text Size**: Adjustable for eye comfort
   * **Theme**: Light, Sepia, and Dark modes available
+  * **Visual Progress**: Indicators for read chapters to track your journey
 
 * **Complete Novel Catalog**
 
-  * Advanced search
-  * Genre filtering
-  * Sorting options (Most Popular, Latest)
+  * Advanced search and filtering capabilities
+  * Interactive Genre cards with 3D hover effects
+  * Sorting options (Most Popular, Latest, Top Rated)
 
-* **Comprehensive Novel Details**
+* **Smart Library & Tracking**
 
-  * Synopsis
-  * Rating
-  * Bookmark status
-  * Chapter list
+  * **Recently Read**: Quick access to your last read book on the homepage
+  * **Bookmarks**: Save your favorite series
+  * **History**: Comprehensive reading history
+  * **Engagement**: Novel rating system and real-time view counters
 
 * **User Interaction**
 
-  * **Comment System** – Discuss each chapter or novel page
-  * **Bookmarks / Library** – Save favorite novels for quick access
-  * **Reading History** – Continue from your last read chapter
-  * **Ratings & Views** – Track popularity based on readers and scores
+  * **Authentication**: Seamless login via **Google** or Email
+  * **Community**: Comment system on novels and chapters for discussions
 
-* **Responsive Design**
+* **Progressive Web App (PWA)**
 
-  * Optimized for Desktop, Tablet, and Mobile devices
+  * **Installable**: Functions as a native app on Mobile and Desktop
+  * **Offline Capable**: Improved performance and caching
 
 ---
 
 ### 🛡️ Admin Dashboard
 
-* **Real-time Statistics**
+* **Advanced Analytics**
 
-  * Total Novels, Chapters, Users, and Views
+  * Real-time stats for Novels, Chapters, Users, and Views
+  * **Weekly Trends**: Interactive charts visualizing viewership data
 
-* **Visual Analytics**
+* **Moderation & Management**
 
-  * Interactive bar charts for weekly views (last 7 days)
-
-* **Content Management**
-
-  * Most Popular Novels list
-  * Additional novel/chapter management features
+  * **Comment Safety**: Review user reports and delete inappropriate comments
+  * **Content Control**: Manage rankings and popular series list
 
 ---
 
