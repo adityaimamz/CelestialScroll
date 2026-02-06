@@ -51,6 +51,7 @@ const RecentlyReadSection = () => {
             )
           `)
                     .eq("novels.is_published", true)
+                    .neq("novel_id", "00000000-0000-0000-0000-000000000000")
                     .eq("user_id", user.id)
                     .order("read_at", { ascending: false })
                     .limit(1)

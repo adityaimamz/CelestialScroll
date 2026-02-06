@@ -31,7 +31,8 @@ const HeroSection = () => {
       const { data, error } = await supabase
         .from("novels")
         .select("*, chapters(count)")
-        .limit(10); // Fetch top 10 then we can shuffle or just display them
+        .limit(10) // Fetch top 10 then we can shuffle or just display them
+        .neq("id", "00000000-0000-0000-0000-000000000000");
 
       if (error) throw error;
 

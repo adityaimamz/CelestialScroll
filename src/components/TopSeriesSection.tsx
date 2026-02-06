@@ -38,6 +38,7 @@ const TopSeriesSection = () => {
         .select("*")
         .order("rating", { ascending: false })
         .eq("is_published", true)
+        .neq("id", "00000000-0000-0000-0000-000000000000")
         .limit(6); // Increased limit slightly since it's scrollable
 
       if (error) throw error;
@@ -52,7 +53,7 @@ const TopSeriesSection = () => {
   if (loading) {
     return (
       <section className="section-spacing section-container flex justify-center py-10">
-        <BarLoader/>
+        <BarLoader />
       </section>
     );
   }

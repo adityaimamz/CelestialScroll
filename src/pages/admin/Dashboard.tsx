@@ -57,11 +57,17 @@ export default function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      const { count: novelCount } = await supabase.from("novels").select("*", { count: "exact", head: true });
+      const { count: novelCount } = await supabase
+        .from("novels")
+        .select("*", { count: "exact", head: true })
+        .neq("id", "00000000-0000-0000-0000-000000000000");
       const { count: chapterCount } = await supabase.from("chapters").select("*", { count: "exact", head: true });
       const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
 
-      const { data: novels } = await supabase.from("novels").select("views");
+      const { data: novels } = await supabase
+        .from("novels")
+        .select("views")
+        .neq("id", "00000000-0000-0000-0000-000000000000");
       const totalViews = novels?.reduce((acc, curr) => acc + (curr.views || 0), 0) || 0;
 
       setStats({
@@ -122,6 +128,7 @@ export default function Dashboard() {
         .from("novels")
         .select("id, title, cover_url, views, rating, slug")
         .order("views", { ascending: false })
+        .neq("id", "00000000-0000-0000-0000-000000000000")
         .limit(5);
 
       if (data) {

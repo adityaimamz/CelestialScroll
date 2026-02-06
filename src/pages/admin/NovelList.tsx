@@ -67,7 +67,8 @@ export default function NovelList() {
       const { data, error } = await supabase
         .from("novels")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .neq("id", "00000000-0000-0000-0000-000000000000");
 
       if (error) throw error;
       setNovels(data || []);

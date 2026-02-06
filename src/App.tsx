@@ -23,6 +23,7 @@ import Bookmark from "./pages/Bookmark";
 import Rankings from "./pages/Rankings";
 import Genres from "./pages/Genres";
 import NotFound from "./pages/NotFound";
+import RequestNovel from "./pages/RequestNovel";
 
 // Auth pages
 import Login from "./pages/auth/Login";
@@ -73,6 +74,7 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/update-password" element={<UpdatePassword />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/request" element={<RequestNovel />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
 

@@ -27,6 +27,7 @@ const PopularSection = () => {
         .select("*, chapters(count)")
         .order("views", { ascending: false })
         .eq("is_published", true)
+        .neq("id", "00000000-0000-0000-0000-000000000000")
         .limit(6);
 
       if (error) throw error;

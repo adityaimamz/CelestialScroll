@@ -62,7 +62,8 @@ const Catalog = () => {
       let query = supabase
         .from("novels")
         .select("*, chapters(count)")
-        .eq("is_published", true);
+        .eq("is_published", true)
+        .neq("id", "00000000-0000-0000-0000-000000000000");
 
       // Search
       if (searchQuery) {

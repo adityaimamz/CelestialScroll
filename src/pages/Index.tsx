@@ -7,6 +7,7 @@ import PopularSection from "@/components/PopularSection";
 import NewReleasesSection from "@/components/NewReleasesSection";
 import GenresSection from "@/components/GenresSection";
 import RecentUpdatesSection from "@/components/RecentUpdatesSection";
+import RequestSection from "@/components/RequestSection";
 import RecentlyReadSection from "@/components/RecentlyReadSection";
 
 const Index = () => {
@@ -58,6 +59,8 @@ const Index = () => {
       </div>
 
       <RecentUpdatesSection />
+
+      <RequestSection />
 
       {/* <SneakPeeksSection /> */}
     </main>

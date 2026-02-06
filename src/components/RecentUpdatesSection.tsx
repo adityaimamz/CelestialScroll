@@ -45,6 +45,7 @@ const RecentUpdatesSection = () => {
           )
         `)
         .eq("novels.is_published", true)
+        .neq("novel_id", "00000000-0000-0000-0000-000000000000")
         .not("published_at", "is", null)
         .order("published_at", { ascending: false })
         .limit(8);
