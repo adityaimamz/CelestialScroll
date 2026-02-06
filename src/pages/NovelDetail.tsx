@@ -392,21 +392,21 @@ const NovelDetail = () => {
             ))}
           </div>
 
-          <div className="flex justify-center md:justify-start gap-3">
-            <Button size="lg" className="w-auto px-8 gap-2 btn-glow" onClick={handleReadNow}>
-              <PlayCircle className="w-5 h-5" />
+          <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-3 w-full sm:w-auto">
+            <Button size="lg" className="w-full sm:w-auto px-6 md:px-8 gap-2 btn-glow text-sm md:text-base h-10 md:h-11" onClick={handleReadNow}>
+              <PlayCircle className="w-4 h-4 md:w-5 md:h-5" />
               {lastReadChapterNumber ? `Continue Chapter ${lastReadChapterNumber}` : "Read Now"}
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className={`gap-2 border-0 shadow-sm ${isFavorite
+              className={`w-full sm:w-auto gap-2 border-0 shadow-sm text-sm md:text-base h-10 md:h-11 ${isFavorite
                 ? "bg-white text-destructive border border-destructive hover:bg-destructive/10"
                 : "bg-white text-primary hover:bg-white/90"
                 }`}
               onClick={toggleBookmark}
             >
-              <Tag className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`} />
+              <Tag className={`w-4 h-4 md:w-5 md:h-5 ${isFavorite ? "fill-current" : ""}`} />
               {isFavorite ? "Saved" : "Add to Library"}
             </Button>
           </div>
