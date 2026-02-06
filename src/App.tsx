@@ -12,6 +12,7 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { AdminRoute } from "@/components/auth/AdminRoute";
 import { AuthListener } from "@/components/auth/AuthListener";
 import CommentReports from "./pages/admin/CommentReports";
+import FollowCursor from "@/components/ui/FollowCursor";
 
 // Public pages
 import Index from "./pages/Index";
@@ -55,6 +56,9 @@ const App = () => (
             <AuthListener />
             <ScrollToTop />
             <ScrollButtons />
+            <div className="hidden md:block">
+              <FollowCursor color="#19202f" zIndex={50} />
+            </div>
             <Routes>
               {/* Public Routes with MainLayout */}
               <Route element={<MainLayout />}>
