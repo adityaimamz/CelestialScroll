@@ -31,6 +31,7 @@ export default function Navbar() {
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null); // 1. TAMBAHKAN INI
 
   useEffect(() => {
     const delaySearch = setTimeout(async () => {
@@ -70,14 +71,17 @@ export default function Navbar() {
   // Close search on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      const clickedInsideDesktop = searchRef.current && searchRef.current.contains(event.target as Node);
+      const clickedInsideMobile = mobileSearchRef.current && mobileSearchRef.current.contains(event.target as Node);
+
+      if (!clickedInsideDesktop && !clickedInsideMobile) {
         setShowResults(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -275,41 +279,49 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Search Results */}
-            {showResults && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto">
-                {isSearching ? (
-                  <div className="p-4 flex justify-center">
-                    <BarLoader />
+            {isSearchOpen && (
+              <div
+                className="md:hidden py-3 border-t border-border animate-fade-in relative"
+                ref={mobileSearchRef}  
+              >
+                <div className="relative">
+                </div>
+
+                {/* Mobile Search Results */}
+                {showResults && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto">
+                    {isSearching ? (
+                      <div className="p-4 flex justify-center"><BarLoader /></div>
+                    ) : searchResults.length > 0 ? (
+                      <div className="py-2">
+                        {searchResults.map((novel) => (
+                          <Link
+                            key={novel.id}
+                            to={`/series/${novel.slug}`}
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault(); 
+                              navigate(`/series/${novel.slug}`);
+
+                              setShowResults(false);
+                              setSearchQuery("");
+                              setIsSearchOpen(false);
+                            }}
+                          >
+                            <div className="w-10 h-14 flex-shrink-0 rounded overflow-hidden">
+                              <img src={novel.cover_url || "/placeholder.jpg"} alt={novel.title} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium leading-tight line-clamp-2 mb-1">{novel.title}</h4>
+                              <p className="text-xs text-muted-foreground">{novel.chapters_count} chapters</p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      !isSearching && <div className="p-4 text-center text-sm text-muted-foreground">No results found.</div>
+                    )}
                   </div>
-                ) : searchResults.length > 0 ? (
-                  <div className="py-2">
-                    {searchResults.map((novel) => (
-                      <Link
-                        key={novel.id}
-                        to={`/series/${novel.slug}`}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
-                        onClick={() => {
-                          setShowResults(false);
-                          setSearchQuery("");
-                          setIsSearchOpen(false);
-                        }}
-                      >
-                        <div className="w-10 h-14 flex-shrink-0 rounded overflow-hidden">
-                          <img src={novel.cover_url || "/placeholder.jpg"} alt={novel.title} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium leading-tight line-clamp-2 mb-1">{novel.title}</h4>
-                          <p className="text-xs text-muted-foreground">{novel.chapters_count} chapters</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  !isSearching && (
-                    <div className="p-4 text-center text-sm text-muted-foreground">
-                      No results found.
-                    </div>
-                  )
                 )}
               </div>
             )}
