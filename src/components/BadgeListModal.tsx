@@ -32,7 +32,7 @@ const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalPr
 
                 <div className="py-4 space-y-2 shrink-0">
                     <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
-                        <span className="text-muted-foreground text-sm">Your Achievement</span>
+                        <span className="text-muted-foreground text-sm">User Achievement</span>
                         <span className="font-bold font-mono text-lg text-primary">{currentCount} Chapters</span>
                     </div>
                 </div>

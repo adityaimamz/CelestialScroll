@@ -100,7 +100,7 @@ const FollowCursor: React.FC<FollowCursorProps> = ({
             canvas.style.pointerEvents = 'none';
             canvas.width = width;
             canvas.height = height;
-            canvas.style.zIndex = zIndex ? zIndex.toString() : '9999'; // Default z-index if not provided
+            canvas.style.zIndex = zIndex ? zIndex.toString() : '99999'; 
             document.body.appendChild(canvas);
 
             window.addEventListener('mousemove', onMouseMove);
