@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import SectionHeader from "@/components/SectionHeader";
+import { BarLoader } from "./ui/BarLoader";
 
 type Novel = Tables<"novels">;
 
@@ -52,7 +52,7 @@ const TopSeriesSection = () => {
   if (loading) {
     return (
       <section className="section-spacing section-container flex justify-center py-10">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <BarLoader/>
       </section>
     );
   }
