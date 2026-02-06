@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { format } from "date-fns";
 import UserBadge from "./UserBadge";
+import { BarLoader } from "./ui/BarLoader";
 
 interface UserProfileModalProps {
     userId: string | null;
@@ -119,8 +120,7 @@ const UserProfileModal = ({ userId, isOpen, onOpenChange }: UserProfileModalProp
 
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="mt-2 text-sm text-muted-foreground">Loading profile...</p>
+                        <BarLoader />                        <p className="mt-2 text-sm text-muted-foreground">Loading profile...</p>
                     </div>
                 ) : null}
 

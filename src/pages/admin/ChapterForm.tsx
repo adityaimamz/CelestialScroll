@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { BarLoader } from "@/components/ui/BarLoader";
 
 interface ChapterFormData {
   chapter_number: number;
@@ -158,8 +159,7 @@ export default function ChapterForm() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+        <BarLoader />      </div>
     );
   }
 
@@ -285,7 +285,7 @@ export default function ChapterForm() {
                 Batal
               </Button>
               <Button type="submit" className="flex-1" disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {saving && <BarLoader />}
                 {isEditing ? "Update" : "Simpan"}
               </Button>
             </div>

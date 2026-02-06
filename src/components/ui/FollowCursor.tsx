@@ -84,6 +84,14 @@ const FollowCursor: React.FC<FollowCursorProps> = ({
                 return;
             }
 
+
+            const isDesktop = window.matchMedia("(min-width: 768px)").matches &&
+                window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+            if (!isDesktop) {
+                return;
+            }
+
             canvas = document.createElement('canvas');
             context = canvas.getContext('2d');
             canvas.style.position = 'fixed';
@@ -115,11 +123,29 @@ const FollowCursor: React.FC<FollowCursorProps> = ({
             }
         };
 
+        // Re-init on resize to handle orientation changes or desktop window resizing
+        const handleResizeCheck = () => {
+            const isDesktop = window.matchMedia("(min-width: 768px)").matches &&
+                window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+            if (isDesktop && !canvas) {
+                init();
+            } else if (!isDesktop && canvas) {
+                destroy();
+            } else if (canvas) {
+                onWindowResize(); // Standard resize if canvas exists
+            }
+        };
+
         init();
+        window.addEventListener('resize', handleResizeCheck);
 
         return () => {
             destroy();
+            window.removeEventListener('resize', handleResizeCheck);
         };
+
+
     }, [color, zIndex]);
 
     return null; // This component doesn't render any visible JSX

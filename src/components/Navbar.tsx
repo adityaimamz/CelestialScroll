@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, Menu, X, BookOpen, Bookmark, Home, Layers, LogOut, Settings, Shield, Loader2 } from "lucide-react";
+import { Search, Menu, X, BookOpen, Bookmark, Home, Layers, LogOut, Settings, Shield } from "lucide-react";
+import { BarLoader } from "@/components/ui/BarLoader";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -129,15 +130,17 @@ export default function Navbar() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => { if (searchQuery) setShowResults(true); }}
                 />
-                {isSearching && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
-                )}
+                {/* Loader removed from here */}
               </div>
 
               {/* Search Results Dropdown */}
               {showResults && (
                 <div className="absolute top-full left-7 right-0 mt-2 w-80 bg-popover border border-border rounded-lg shadow-xl overflow-hidden z-50 -translate-x-8">
-                  {searchResults.length > 0 ? (
+                  {isSearching ? (
+                    <div className="p-4 flex justify-center">
+                      <BarLoader />
+                    </div>
+                  ) : searchResults.length > 0 ? (
                     <div className="py-2">
                       {searchResults.map((novel) => (
                         <Link
@@ -268,36 +271,46 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              {isSearching && (
-                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
-              )}
+              {/* Loader removed from here */}
             </div>
 
             {/* Mobile Search Results */}
-            {showResults && searchResults.length > 0 && (
+            {showResults && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-lg shadow-xl overflow-hidden z-50 max-h-80 overflow-y-auto">
-                <div className="py-2">
-                  {searchResults.map((novel) => (
-                    <Link
-                      key={novel.id}
-                      to={`/series/${novel.slug}`}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
-                      onClick={() => {
-                        setShowResults(false);
-                        setSearchQuery("");
-                        setIsSearchOpen(false);
-                      }}
-                    >
-                      <div className="w-10 h-14 flex-shrink-0 rounded overflow-hidden">
-                        <img src={novel.cover_url || "/placeholder.jpg"} alt={novel.title} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium leading-tight line-clamp-2 mb-1">{novel.title}</h4>
-                        <p className="text-xs text-muted-foreground">{novel.chapters_count} chapters</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                {isSearching ? (
+                  <div className="p-4 flex justify-center">
+                    <BarLoader />
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div className="py-2">
+                    {searchResults.map((novel) => (
+                      <Link
+                        key={novel.id}
+                        to={`/series/${novel.slug}`}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                        onClick={() => {
+                          setShowResults(false);
+                          setSearchQuery("");
+                          setIsSearchOpen(false);
+                        }}
+                      >
+                        <div className="w-10 h-14 flex-shrink-0 rounded overflow-hidden">
+                          <img src={novel.cover_url || "/placeholder.jpg"} alt={novel.title} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium leading-tight line-clamp-2 mb-1">{novel.title}</h4>
+                          <p className="text-xs text-muted-foreground">{novel.chapters_count} chapters</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  !isSearching && (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      No results found.
+                    </div>
+                  )
+                )}
               </div>
             )}
           </div>

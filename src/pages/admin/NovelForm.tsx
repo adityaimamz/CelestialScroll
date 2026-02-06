@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, X, Plus, Pencil, Trash2, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowLeft, X, Plus, Pencil, Trash2, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -37,6 +37,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
+import { BarLoader } from "@/components/ui/BarLoader";
 
 
 interface Genre {
@@ -365,8 +366,7 @@ export default function NovelForm() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+        <BarLoader />      </div>
     );
   }
 
@@ -552,7 +552,7 @@ export default function NovelForm() {
                     Batal
                   </Button>
                   <Button type="submit" className="flex-1" disabled={saving}>
-                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {saving && <BarLoader />}
                     {isEditing ? "Update" : "Simpan"}
                   </Button>
                 </div>
@@ -610,7 +610,7 @@ export default function NovelForm() {
                   {loadingChapters ? (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                        <BarLoader />
                       </TableCell>
                     </TableRow>
                   ) : chapters.length === 0 ? (
