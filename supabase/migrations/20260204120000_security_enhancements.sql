@@ -24,16 +24,13 @@ CREATE TRIGGER check_comment_rate_limit_trigger
 
 
 -- 2. Data Constraints for Novels
--- Ensure titles have reasonable length
+-- Ensure titles have reasonable length 
 ALTER TABLE public.novels
 DROP CONSTRAINT IF EXISTS title_length_check;
 
 ALTER TABLE public.novels
 ADD CONSTRAINT title_length_check CHECK (char_length(trim(title)) >= 3);
 
--- Ensure slugs are URL-friendly (lowercase, numbers, hyphens only)
--- Note: existing data must comply or this will fail. 
--- We assume the app has been generating slugs correctly so far.
 ALTER TABLE public.novels
 DROP CONSTRAINT IF EXISTS slug_format_check;
 

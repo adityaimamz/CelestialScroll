@@ -1,9 +1,6 @@
--- PERHATIAN: Jalankan script ini di SQL Editor dashboard Supabase Anda.
 
--- 1. Drop trigger lama untuk memastikan bersih
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
--- 2. Buat ulang function handle_new_user dengan penanganan error yang lebih baik
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -11,9 +8,6 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- Insert ke public.profiles
-  -- Saya menambahkan kolom 'email' disini sesuai info Anda bahwa kolom tersebut sudah dibuat manual.
-  -- Pastikan nama kolomnya benar-benar 'email' (lowercase) di tabel profiles.
   INSERT INTO public.profiles (id, username, avatar_url, email)
   VALUES (
     NEW.id,
@@ -26,7 +20,6 @@ BEGIN
       email = EXCLUDED.email,
       updated_at = now();
   
-  -- Insert ke public.user_roles (default role: user)
   INSERT INTO public.user_roles (user_id, role)
   VALUES (NEW.id, 'user')
   ON CONFLICT (user_id, role) DO NOTHING;
@@ -40,7 +33,6 @@ EXCEPTION
 END;
 $$;
 
--- 3. Pasang kembali trigger
 CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
