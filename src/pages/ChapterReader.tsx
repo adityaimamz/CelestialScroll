@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Home, ArrowLeft, List } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
@@ -143,6 +143,19 @@ const ChapterReader = () => {
   };
 
   const [showControls, setShowControls] = useState(true);
+  const [isTocOpen, setIsTocOpen] = useState(false);
+
+  useEffect(() => {
+    if (isTocOpen) {
+      const timer = setTimeout(() => {
+        const activeElement = document.getElementById("active-chapter-toc");
+        if (activeElement) {
+          activeElement.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isTocOpen]);
 
   const handleToggleControls = () => {
     if (!window.getSelection()?.toString()) {
@@ -236,7 +249,7 @@ const ChapterReader = () => {
               setTheme={toggleTheme}
             />
 
-            <Sheet>
+            <Sheet open={isTocOpen} onOpenChange={setIsTocOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <List className="h-5 w-5" />
@@ -247,17 +260,21 @@ const ChapterReader = () => {
                   <SheetTitle>Table of Contents</SheetTitle>
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100vh-80px)] mt-4">
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 pr-4">
                     {chaptersList.map((ch) => (
                       <Button
                         key={ch.id}
+                        id={ch.chapter_number === currentChapterNum ? "active-chapter-toc" : undefined}
                         variant={ch.chapter_number === currentChapterNum ? "secondary" : "ghost"}
-                        className="justify-start"
+                        className="justify-start w-full text-left font-normal"
                         onClick={() => {
                           navigate(`/series/${novelSlug}/chapter/${ch.chapter_number}`);
+                          setIsTocOpen(false);
                         }}
                       >
-                        Chapter {ch.chapter_number}: {ch.title}
+                        <span className="truncate">
+                          Chapter {ch.chapter_number}: {ch.title}
+                        </span>
                       </Button>
                     ))}
                   </div>
