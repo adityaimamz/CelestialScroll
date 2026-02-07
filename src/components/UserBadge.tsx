@@ -24,10 +24,10 @@ const UserBadge = ({ chapterCount, size = "sm", className = "" }: UserBadgeProps
         borderWidth: "1px",
         borderStyle: "solid",
         // Logic Glow:
-        boxShadow: isGodTier 
-            ? "0 0 15px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(255,255,255,0.8)" 
-            : style.glow 
-                ? `0 0 8px ${style.glow}80, inset 0 0 4px rgba(255,255,255,0.2)` 
+        boxShadow: isGodTier
+            ? "0 0 15px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(255,255,255,0.8)"
+            : style.glow
+                ? `0 0 8px ${style.glow}80, inset 0 0 4px rgba(255,255,255,0.2)`
                 : "none",
         textShadow: style.textShadow || "none",
         cursor: "pointer",
@@ -36,8 +36,8 @@ const UserBadge = ({ chapterCount, size = "sm", className = "" }: UserBadgeProps
     };
 
     // Class tambahan untuk teks gradient pada tier God
-    const godTierTextClass = isGodTier 
-        ? "bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 via-red-500 to-purple-600 font-extrabold animate-pulse" 
+    const godTierTextClass = isGodTier
+        ? "bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 via-red-500 to-purple-600 font-extrabold animate-pulse"
         : "";
 
     // Class tambahan untuk border pelangi pada tier God
@@ -52,7 +52,10 @@ const UserBadge = ({ chapterCount, size = "sm", className = "" }: UserBadgeProps
                 className={`
                     hover:scale-105 transition-all active:scale-95 select-none 
                     ${className} 
-                    ${size === "sm" ? "text-[10px] px-3 h-5 rounded-md" : "text-xs px-3 py-1 rounded-md"}
+                    ${size === "sm"
+                        ? "text-[8px] px-1.5 h-4 rounded-sm md:text-[10px] md:px-3 md:h-5 md:rounded-md"
+                        : "text-[9px] px-2 py-0.5 rounded-sm md:text-xs md:px-3 md:py-1 md:rounded-md"
+                    }
                     ${godTierContainerClass}
                 `}
                 style={badgeStyle}
