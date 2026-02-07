@@ -225,7 +225,36 @@ export default function ChapterForm() {
                       <Textarea
                         id="content"
                         value={formData.content}
-                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFormData((prev) => ({ ...prev, content: value }));
+
+                          if (value) {
+                            const firstLine = value.split('\n')[0].trim();
+                            const cleanLine = firstLine.replace(/^[\*\#\s]+|[\*\#\s]+$/g, '');
+
+                            const match = cleanLine.match(/^(?:chapter|bab)\s+(\d+)\s*[:\-\.]\s*(.+)$/i);
+
+                            if (match) {
+                              const chapterNum = parseInt(match[1]);
+                              const realTitle = match[2];
+
+                              // Avoid infinite loop / unnecessary updates
+                              if (realTitle !== formData.title) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  chapter_number: isNaN(chapterNum) ? prev.chapter_number : chapterNum,
+                                  title: realTitle,
+                                }));
+
+                                toast({
+                                  title: "Format Terdeteksi",
+                                  description: `Judul otomatis diisi: ${realTitle}`,
+                                });
+                              }
+                            }
+                          }
+                        }}
                         placeholder="Tulis isi chapter di sini (Mendukung Markdown)..."
                         rows={20}
                         className="font-mono"
