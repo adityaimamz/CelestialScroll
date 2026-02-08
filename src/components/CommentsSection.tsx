@@ -514,14 +514,14 @@ const CommentItem = ({
         <div className="flex-1 space-y-2">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span
                 className="font-semibold text-sm text-foreground cursor-pointer hover:underline"
                 onClick={() => onUserClick(comment.user_id)}
               >
                 {comment.profile?.username || "Anonymous User"}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
                 • {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
               </span>
               <UserBadge chapterCount={comment.profile?.read_count || 0} />
@@ -725,7 +725,7 @@ const DeleteConfirmModal = ({
             Are you sure you want to delete this comment? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isDeleting}>
             Cancel
           </Button>

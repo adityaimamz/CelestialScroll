@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { BADGE_TIERS } from "@/lib/badgeSystem";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Lock, Check, Crown } from "lucide-react"; 
+import { Lock, Check, Crown } from "lucide-react";
 
 interface BadgeListModalProps {
     isOpen: boolean;
@@ -20,12 +20,12 @@ const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalPr
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-900">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <Crown className="w-5 h-5 text-yellow-500" /> 
+                <DialogHeader className="mb-4">
+                    <DialogTitle className="flex items-center justify-center sm:justify-start gap-2 text-xl">
+                        <Crown className="w-5 h-5 text-yellow-500" />
                         Cultivation Realm
                     </DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription >
                         Read chapters to ascend the heavens!
                     </DialogDescription>
                 </DialogHeader>
@@ -51,15 +51,15 @@ const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalPr
                             if (isUnlocked) {
                                 containerClass += "opacity-100 ";
                                 containerStyle = {
-                                    background: isCurrent 
-                                        ? "linear-gradient(to right, rgba(255,255,255,0.05), rgba(0,0,0,0.02))" 
+                                    background: isCurrent
+                                        ? "linear-gradient(to right, rgba(255,255,255,0.05), rgba(0,0,0,0.02))"
                                         : "transparent",
                                     borderColor: isCurrent ? tier.style.border : "transparent",
-                                    boxShadow: isCurrent && tier.style.glow 
-                                        ? `inset 0 0 20px ${typeof tier.style.glow === 'string' && tier.style.glow !== 'rainbow' ? tier.style.glow + '20' : '#FFD70020'}` 
+                                    boxShadow: isCurrent && tier.style.glow
+                                        ? `inset 0 0 20px ${typeof tier.style.glow === 'string' && tier.style.glow !== 'rainbow' ? tier.style.glow + '20' : '#FFD70020'}`
                                         : "none"
                                 };
-                                if(isCurrent) containerClass += "bg-accent/10 border-l-4";
+                                if (isCurrent) containerClass += "bg-accent/10 border-l-4";
                             } else {
                                 containerClass += "opacity-50 grayscale bg-muted/30 border-transparent";
                             }
@@ -92,8 +92,8 @@ const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalPr
                                                         background: tier.style.background,
                                                         color: tier.style.color,
                                                         borderColor: isGod ? 'transparent' : tier.style.border,
-                                                        boxShadow: tier.style.glow && tier.style.glow !== 'rainbow' 
-                                                            ? `0 0 5px ${tier.style.glow}60` 
+                                                        boxShadow: tier.style.glow && tier.style.glow !== 'rainbow'
+                                                            ? `0 0 5px ${tier.style.glow}60`
                                                             : 'none',
                                                         textShadow: tier.style.textShadow || 'none'
                                                     }}
@@ -106,7 +106,7 @@ const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalPr
                                                 {tier.minChapters}+
                                             </span>
                                         </div>
-                                        
+
                                         {/* Progress Bar Visual (Optional) */}
                                         {isCurrent && (
                                             <p className="text-[10px] text-muted-foreground mt-1">
