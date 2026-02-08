@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Send, User as UserIcon, Trash2, MessageCircle, ThumbsUp, ThumbsDown, Flag, MoreHorizontal } from "lucide-react";
+import { Send, User as UserIcon, Trash2, MessageCircle, ThumbsUp, ThumbsDown, Flag, MoreHorizontal, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -222,6 +222,32 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
     }
   };
 
+  const editComment = async (commentId: string, newContent: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from("comments" as any)
+        .update({ content: newContent.trim() })
+        .eq("id", commentId)
+        .eq("user_id", user.id); // Ensure ownership
+
+      if (error) throw error;
+
+      toast({ title: "Updated", description: "Comment updated successfully." });
+      fetchComments();
+      return true;
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update comment.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   // Delete Modal State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
@@ -380,6 +406,7 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
               currentUserId={user?.id}
               isAdmin={isAdmin}
               onReply={postComment}
+              onEdit={editComment}
               onVote={handleVote}
               onDelete={handleDelete}
               onReport={handleReport}
@@ -448,6 +475,7 @@ const CommentItem = ({
   currentUserId,
   isAdmin,
   onReply,
+  onEdit,
   onVote,
   onDelete,
   onReport,
@@ -457,13 +485,16 @@ const CommentItem = ({
   currentUserId?: string;
   isAdmin?: boolean;
   onReply: (content: string, parentId: string) => Promise<boolean>;
+  onEdit: (commentId: string, content: string) => Promise<boolean>;
   onVote: (commentId: string, type: 1 | -1) => Promise<void>;
   onDelete: (commentId: string) => void;
   onReport: (commentId: string) => Promise<void>;
   onUserClick: (userId: string) => void;
 }) => {
   const [isReplying, setIsReplying] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
 
 
@@ -507,6 +538,11 @@ const CommentItem = ({
                 <DropdownMenuItem onClick={() => onReport(comment.id)}>
                   <Flag className="w-4 h-4 mr-2" /> Report
                 </DropdownMenuItem>
+                {(currentUserId === comment.user_id) && (
+                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                    <Edit2 className="w-4 h-4 mr-2" /> Edit
+                  </DropdownMenuItem>
+                )}
                 {(currentUserId === comment.user_id || isAdmin) && (
                   <DropdownMenuItem onClick={() => onDelete(comment.id)} className="text-destructive">
                     <Trash2 className="w-4 h-4 mr-2" /> Delete
@@ -517,9 +553,27 @@ const CommentItem = ({
           </div>
 
           {/* Content */}
-          <p className="text-foreground/90 whitespace-pre-wrap text-sm leading-relaxed">
-            {comment.content}
-          </p>
+          {/* Content */}
+          {isEditing ? (
+            <div className="mt-2">
+              <CommentInput
+                initialValue={comment.content}
+                isSubmitting={isSubmittingEdit}
+                onCancel={() => setIsEditing(false)}
+                onSubmit={async (content) => {
+                  setIsSubmittingEdit(true);
+                  const success = await onEdit(comment.id, content);
+                  setIsSubmittingEdit(false);
+                  if (success) setIsEditing(false);
+                  return success;
+                }}
+              />
+            </div>
+          ) : (
+            <p className="text-foreground/90 whitespace-pre-wrap text-sm leading-relaxed">
+              {comment.content}
+            </p>
+          )}
 
           {/* Footer Actions */}
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -579,6 +633,7 @@ const CommentItem = ({
                   currentUserId={currentUserId}
                   isAdmin={isAdmin}
                   onReply={onReply}
+                  onEdit={onEdit}
                   onVote={onVote}
                   onDelete={onDelete}
                   onReport={onReport}
