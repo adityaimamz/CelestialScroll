@@ -59,7 +59,9 @@ const ScrollButtons = ({ customVisibility }: ScrollButtonsProps) => {
         });
     };
 
-    if (isReaderPage && customVisibility === undefined) {
+    const isAdminPage = location.pathname.startsWith("/admin");
+
+    if ((isReaderPage && customVisibility === undefined) || isAdminPage) {
         return null;
     }
 
