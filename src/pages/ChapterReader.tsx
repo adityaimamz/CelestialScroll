@@ -14,6 +14,18 @@ import remarkGfm from "remark-gfm";
 import { useAuth } from "@/components/auth/AuthProvider";
 import CommentsSection from "@/components/CommentsSection";
 import ScrollButtons from "@/components/ScrollButtons";
+import { Flag } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 
 type Chapter = Tables<"chapters">;
@@ -209,6 +221,58 @@ const ChapterReader = () => {
     }
   };
 
+  // Report Logic
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+  const handleReportSubmit = async () => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to report issues.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!reportReason.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a reason for the report.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmittingReport(true);
+    try {
+      const { error } = await supabase.from("chapter_reports" as any).insert({
+        chapter_id: chapter.id,
+        user_id: user.id,
+        report_text: reportReason.trim(),
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Report Submitted",
+        description: "Thank you for detecting the error. We will fix it soon.",
+      });
+      setIsReportOpen(false);
+      setReportReason("");
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit report.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${getThemeColors()}`}>
@@ -309,10 +373,53 @@ const ChapterReader = () => {
           </ReactMarkdown>
         </article>
 
+              {/* Report Button Area */}
+      <div className="max-w-3xl mx-auto px-6 mt-16 flex justify-center">
+        <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
+          <DialogTrigger asChild>
+            <Button variant="ghost" className="text-muted-foreground hover:text-destructive gap-2 text-sm">
+              <Flag className="h-4 w-4" />
+              Ada terjemahan yang salah? Laporkan
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Lapor Kesalahan Terjemahan</DialogTitle>
+              <DialogDescription>
+                Bantu kami memperbaiki kualitas terjemahan dengan melaporkan kesalahan yang Anda temukan.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="reason">Detail Kesalahan</Label>
+                <Textarea
+                  id="reason"
+                  placeholder="Contoh: Pada paragraf ke-3, kata 'Apple' seharusnya diterjemahkan menjadi 'Apel', bukan 'Jeruk'."
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  rows={4}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsReportOpen(false)}>
+                Batal
+              </Button>
+              <Button onClick={handleReportSubmit} disabled={isSubmittingReport}>
+                {isSubmittingReport && <BarLoader className="mr-2" />}
+                Kirim Laporan
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
         <div className="mt-16 pt-8 border-t border-border">
           {novel && <CommentsSection novelId={novel.id} chapterId={chapter.id} />}
         </div>
       </main>
+
+
 
       {/* Bottom Navigation */}
       <div
