@@ -1,4 +1,4 @@
-import { LayoutDashboard, BookText, Users, Megaphone, Tags, Flag, MessageSquareWarning, Settings, ChevronRight } from "lucide-react";
+import { LayoutDashboard, BookText, Users, Megaphone, Tags, Flag, MessageSquareWarning, Settings, ChevronRight, Activity } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -39,6 +39,7 @@ const menuItems = [
       },
     ]
   },
+  { title: "Activity", url: "/admin/activity", icon: Activity },
   { title: "Users", url: "/admin/users", icon: Users },
   {
     title: "Settings",

@@ -13,6 +13,7 @@ import { AdminRoute } from "@/components/auth/AdminRoute";
 import { AuthListener } from "@/components/auth/AuthListener";
 import CommentReports from "./pages/admin/CommentReports";
 import ChapterReports from "./pages/admin/ChapterReports";
+import Activity from "./pages/admin/Activity";
 import FollowCursor from "@/components/ui/FollowCursor";
 
 // Public pages
@@ -99,6 +100,7 @@ const App = () => (
                   <Route path="/admin/announcements" element={<AnnouncementsList />} />
                   <Route path="/admin/reports/comments" element={<CommentReports />} />
                   <Route path="/admin/reports/chapters" element={<ChapterReports />} />
+                  <Route path="/admin/activity" element={<Activity />} />
                 </Route>
               </Route>
             </Routes>
