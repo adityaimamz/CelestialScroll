@@ -58,31 +58,17 @@ export default function NovelList() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const ITEMS_PER_PAGE = 10;
+
   useEffect(() => {
-    fetchNovels();
-  }, []);
-
-  const fetchNovels = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("novels")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .neq("id", "00000000-0000-0000-0000-000000000000");
-
-      if (error) throw error;
-      setNovels(data || []);
-    } catch (error) {
-      console.error("Error fetching novels:", error);
-      toast({
-        title: "Error",
-        description: "Gagal memuat daftar novel",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Debounce search
+    const timer = setTimeout(() => {
+      fetchNovels();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [page, searchQuery, sortConfig]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -140,31 +126,63 @@ export default function NovelList() {
     }
   };
 
+  const fetchNovels = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("novels")
+        .select("*", { count: "exact" })
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+
+      // Search
+      if (searchQuery) {
+        // Simple search on title for now. can extend to author if needed.
+        query = query.ilike("title", `%${searchQuery}%`);
+      }
+
+      // Sort
+      if (sortConfig.key) {
+        query = query.order(sortConfig.key, { ascending: sortConfig.direction === "asc" });
+      }
+
+      // Pagination
+      const from = (page - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      query = query.range(from, to);
+
+      const { data, count, error } = await query;
+
+      if (error) throw error;
+
+      setNovels(data || []);
+      if (count !== null) {
+        setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
+      }
+    } catch (error) {
+      console.error("Error fetching novels:", error);
+      toast({
+        title: "Error",
+        description: "Gagal memuat daftar novel",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
+
   const handleSort = (key: keyof Novel) => {
     setSortConfig((current) => ({
       key,
       direction: current.key === key && current.direction === "asc" ? "desc" : "asc",
     }));
+    setPage(1); // Reset to first page on sort change
   };
-
-  const sortedNovels = [...novels].sort((a, b) => {
-    const aValue = a[sortConfig.key];
-    const bValue = b[sortConfig.key];
-
-    if (aValue === bValue) return 0;
-
-    // Handle null values
-    if (aValue === null) return 1;
-    if (bValue === null) return -1;
-
-    const compareResult = aValue < bValue ? -1 : 1;
-    return sortConfig.direction === "asc" ? compareResult : -compareResult;
-  });
-
-  const filteredNovels = sortedNovels.filter((novel) =>
-    novel.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    novel.author?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "outline"> = {
@@ -184,7 +202,7 @@ export default function NovelList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-foreground">Kelola Novel</h2>
           <p className="text-muted-foreground">Daftar semua novel di website</p>
@@ -209,7 +227,7 @@ export default function NovelList() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border border-border">
+      <div className="rounded-md border border-border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -263,7 +281,7 @@ export default function NovelList() {
               </TableRow>
             ) : null}
 
-            {!loading && filteredNovels.length === 0 && (
+            {!loading && novels.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? "Tidak ada novel yang cocok" : "Belum ada novel"}
@@ -271,7 +289,7 @@ export default function NovelList() {
               </TableRow>
             )}
 
-            {!loading && filteredNovels.length > 0 && filteredNovels.map((novel) => (
+            {!loading && novels.length > 0 && novels.map((novel) => (
               <TableRow
                 key={novel.id}
                 className="cursor-pointer hover:bg-muted/50"
@@ -354,10 +372,32 @@ export default function NovelList() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))
-            }
+            ))}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handlePageChange(page - 1)}
+          disabled={page <= 1 || loading}
+        >
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          Page {page} of {totalPages || 1}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handlePageChange(page + 1)}
+          disabled={page >= totalPages || loading}
+        >
+          Next
+        </Button>
       </div>
 
       {/* Delete Dialog */}

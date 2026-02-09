@@ -462,7 +462,7 @@ const NovelDetail = () => {
                   </Button>
                 </div>
               </div>
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border max-h-[600px] overflow-y-auto">
                 {processedChapters.length === 0 ? (
                   <div className="p-8 text-center text-muted-foreground">
                     {chapters.length === 0 ? "No chapters uploaded yet." : "No chapters found matching your search."}

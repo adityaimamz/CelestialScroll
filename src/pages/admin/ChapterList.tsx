@@ -195,7 +195,7 @@ export default function ChapterList() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border border-border">
+      <div className="rounded-md border border-border max-h-[600px] overflow-y-auto">
         <Table>
           <TableHeader>
             <TableRow>

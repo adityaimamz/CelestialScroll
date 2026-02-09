@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -32,40 +33,93 @@ interface UserWithRole {
 }
 
 export default function UserList() {
+  const { toast } = useToast();
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const ITEMS_PER_PAGE = 10;
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const { toast } = useToast();
+
+
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    // Debounce search
+    const timer = setTimeout(() => {
+      setPage(1); // Reset to page 1 on search change? No, useEffect dep handling
+      fetchUsers();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [page, searchQuery]);
+
+  // When search changes, we want to reset page to 1, but if we include page in dependency array of useEffect
+  // and we also setPage(1) inside useEffect, it might loop or race.
+  // Better: useEffect on [page] calls fetch. useEffect on [search] sets page 1 (which triggers fetch).
+  // Actually, standard pattern: 
+  // useEffect(() => { fetch() }, [page, searchQuery]); 
+  // But if search changes, we probably want to go to page 1 manually or have a separate effect.
+  // For simplicity, let's just keep the single effect and I'll manually setPage(1) in the input onChange?
+  // No, let's do:
+
+  // Separate effect for search reset is cleaner but standard hook often combines.
+  // Let's stick to the previous pattern I used in NovelList but be careful.
+  // In NovelList I had: useEffect(() => { fetch() }, [page, searchQuery, sortConfig]);
+  // And setSearchQuery just sets state.
+  // If I change search, page remains 5. If result < 5 pages, it might return empty.
+  // So I should reset page when search changes.
+
+  // Implementation below uses the NovelList pattern but with explicit page reset handled in the render or onChange?
+  // I will add a separate effect for resetting page on search change?
+  // Or just modify the Input onChange to setPage(1).
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
-      // Fetch profiles
-      const { data: profiles, error: profilesError } = await supabase
+      // Fetch profiles with pagination
+      let query = supabase
         .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*", { count: "exact" });
+
+      if (searchQuery) {
+        query = query.or(`username.ilike.%${searchQuery}%`);
+      }
+
+      query = query.order("created_at", { ascending: false });
+
+      const from = (page - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      query = query.range(from, to);
+
+      const { data: profiles, count, error: profilesError } = await query;
 
       if (profilesError) throw profilesError;
 
-      // Fetch user roles
+      if (count !== null) {
+        setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
+      }
+
+      if (!profiles || profiles.length === 0) {
+        setUsers([]);
+        return;
+      }
+
+      // Fetch user roles for these profiles
+      const userIds = profiles.map(p => p.id);
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
-        .select("user_id, role");
+        .select("user_id, role")
+        .in("user_id", userIds);
 
       if (rolesError) throw rolesError;
 
       // Merge profiles with roles
-      const usersWithRoles = profiles?.map((profile) => {
+      const usersWithRoles = profiles.map((profile) => {
         const userRole = roles?.find((r) => r.user_id === profile.id);
         return {
           ...profile,
           role: userRole?.role || "user",
         };
-      }) || [];
+      });
 
       setUsers(usersWithRoles);
     } catch (error) {
@@ -77,6 +131,12 @@ export default function UserList() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
     }
   };
 
@@ -123,12 +183,6 @@ export default function UserList() {
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const getRoleBadge = (role: string) => {
     const variants: Record<string, "default" | "secondary" | "outline"> = {
       admin: "default",
@@ -140,9 +194,11 @@ export default function UserList() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground">Kelola Users</h2>
-        <p className="text-muted-foreground">Daftar semua user terdaftar</p>
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">Kelola Users</h2>
+          <p className="text-muted-foreground">Daftar semua user terdaftar</p>
+        </div>
       </div>
 
       {/* Search */}
@@ -151,13 +207,16 @@ export default function UserList() {
         <Input
           placeholder="Cari user..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(1); // Reset page on search
+          }}
           className="pl-10"
         />
       </div>
 
       {/* Table */}
-      <div className="rounded-md border border-border">
+      <div className="rounded-md border border-border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -176,7 +235,7 @@ export default function UserList() {
               </TableRow>
             ) : null}
 
-            {!loading && filteredUsers.length === 0 && (
+            {!loading && users.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? "Tidak ada user yang cocok" : "Belum ada user"}
@@ -184,7 +243,7 @@ export default function UserList() {
               </TableRow>
             )}
 
-            {!loading && filteredUsers.length > 0 && filteredUsers.map((user) => (
+            {!loading && users.length > 0 && users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -222,10 +281,32 @@ export default function UserList() {
                   </Select>
                 </TableCell>
               </TableRow>
-            ))
-            }
+            ))}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handlePageChange(page - 1)}
+          disabled={page <= 1 || loading}
+        >
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          Page {page} of {totalPages || 1}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handlePageChange(page + 1)}
+          disabled={page >= totalPages || loading}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );

@@ -47,17 +47,26 @@ const Catalog = () => {
     }
   }, [genreParam]);
 
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const NOVELS_PER_PAGE = 12;
+
   useEffect(() => {
     // Debounce search to avoid too many requests
     const timer = setTimeout(() => {
-      fetchNovels();
+      // Reset pagination when filters change
+      setPage(0);
+      setNovels([]);
+      setHasMore(true);
+      fetchNovels(0);
     }, 500);
 
     return () => clearTimeout(timer);
   }, [selectedGenre, sortBy, searchQuery]);
 
-  const fetchNovels = async () => {
-    setLoading(true);
+  const fetchNovels = async (pageNum: number) => {
+    if (pageNum === 0) setLoading(true);
+
     try {
       let query = supabase
         .from("novels")
@@ -93,16 +102,27 @@ const Catalog = () => {
           query = query.order("views", { ascending: false });
       }
 
+      // Pagination
+      query = query.range(pageNum * NOVELS_PER_PAGE, (pageNum + 1) * NOVELS_PER_PAGE - 1);
+
       const { data, error } = await query;
 
       if (error) throw error;
 
       if (data) {
+        if (data.length < NOVELS_PER_PAGE) {
+          setHasMore(false);
+        }
+
         const novelsWithChapterCount = data.map(novel => ({
           ...novel,
           chapters_count: novel.chapters?.[0]?.count || 0,
         }));
-        setNovels(novelsWithChapterCount);
+
+        setNovels(prev => pageNum === 0 ? novelsWithChapterCount : [...prev, ...novelsWithChapterCount]);
+      } else {
+        if (pageNum === 0) setNovels([]);
+        setHasMore(false);
       }
     } catch (error) {
       console.error("Error fetching novels:", error);
@@ -185,27 +205,46 @@ const Catalog = () => {
       <div className="section-container py-8">
         <SectionHeader title={`All Series (${novels.length})`} />
 
-        {loading ? (
+        {loading && page === 0 ? (
           <div className="flex justify-center py-20">
             <BarLoader />
           </div>
         ) : novels.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-6 mt-6">
-            {novels.map((novel) => (
-              <NovelCard
-                key={novel.id}
-                title={novel.title}
-                cover={novel.cover_url || ""}
-                rating={novel.rating || 0}
-                status={novel.status as any}
-                chapters={novel.chapters_count || 0}
-                genre={novel.genres?.[0] || "Unknown"}
-                size="medium"
-                id={novel.id}
-                slug={novel.slug}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-6 mt-6">
+              {novels.map((novel) => (
+                <NovelCard
+                  key={novel.id}
+                  title={novel.title}
+                  cover={novel.cover_url || ""}
+                  rating={novel.rating || 0}
+                  status={novel.status as any}
+                  chapters={novel.chapters_count || 0}
+                  genre={novel.genres?.[0] || "Unknown"}
+                  size="medium"
+                  id={novel.id}
+                  slug={novel.slug}
+                />
+              ))}
+            </div>
+
+            {hasMore && (
+              <div className="flex justify-center mt-12">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => {
+                    const nextPage = page + 1;
+                    setPage(nextPage);
+                    fetchNovels(nextPage);
+                  }}
+                  disabled={loading}
+                >
+                  {loading ? <BarLoader /> : "Load More Series"}
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <p>No novels found matching your criteria.</p>

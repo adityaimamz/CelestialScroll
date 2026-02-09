@@ -73,19 +73,39 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
 
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'popular'>('popular');
 
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const COMMENTS_PER_PAGE = 20;
+
   useEffect(() => {
-    fetchComments();
+    // Reset scenarios: novel/chapter change, user change, sort change
+    setPage(0);
+    setComments([]);
+    setHasMore(true);
+    fetchComments(0);
   }, [novelId, chapterId, user?.id, sortBy]);
 
-  const fetchComments = async () => {
-    setIsLoading(true);
+  const fetchComments = async (pageNum: number) => {
+    if (pageNum === 0) setIsLoading(true);
+
     try {
-      // 1. Fetch Comments
+      // 1. Fetch Root Comments (Paginated)
       let query = supabase
         .from("comments" as any)
         .select("*")
         .eq("novel_id", novelId)
-        .order("created_at", { ascending: true }); // Ascending for easier chronological tree building
+        .is("parent_id", null) // Only fetch root comments
+        .range(pageNum * COMMENTS_PER_PAGE, (pageNum + 1) * COMMENTS_PER_PAGE - 1);
+
+      // Sorting
+      if (sortBy === 'newest') {
+        query = query.order("created_at", { ascending: false });
+      } else if (sortBy === 'oldest') {
+        query = query.order("created_at", { ascending: true });
+      } else if (sortBy === 'popular') {
+        // Fallback for popular: sort by created_at for now as DB doesn't support computed sort easily without function
+        query = query.order("created_at", { ascending: false });
+      }
 
       if (chapterId) {
         query = query.eq("chapter_id", chapterId);
@@ -93,111 +113,69 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
         query = query.is("chapter_id", null);
       }
 
-      const { data: commentsData, error: commentsError } = await query;
-      if (commentsError) throw commentsError;
+      const { data: rootCommentsData, error: rootCommentsError } = await query;
+      if (rootCommentsError) throw rootCommentsError;
 
-      const rawComments = commentsData as any[];
-      if (rawComments.length === 0) {
-        setComments([]);
+      const rawRootComments = rootCommentsData as any[];
+
+      if (rawRootComments.length < COMMENTS_PER_PAGE) {
+        setHasMore(false);
+      }
+
+      if (rawRootComments.length === 0) {
+        if (pageNum === 0) setComments([]);
         return;
       }
 
-      // 2. Fetch Profiles
-      const userIds = [...new Set(rawComments.map((c) => c.user_id))];
-      let profilesMap: Record<string, UserProfile> = {};
-      if (userIds.length > 0) {
-        const { data: profilesData } = await supabase
-          .from("profiles" as any)
-          .select("id, username, avatar_url")
-          .in("id", userIds);
+      // 1b. Fetch ALL replies for these root comments
+      // This is a simplification. Ideally we'd fetch replies recursively or on demand.
+      // For now, we fetch all comments that are children of these roots.
+      const rootIds = rawRootComments.map(c => c.id);
+      let allRelatedComments = [...rawRootComments];
 
-        // 2b. Fetch Reading Counts (Badges)
-        const { data: readingCounts } = await supabase.rpc("get_users_reading_counts" as any, {
-          user_ids: userIds,
-        });
-
-        const countsMap: Record<string, number> = {};
-        if (readingCounts && Array.isArray(readingCounts)) {
-          readingCounts.forEach((r: any) => {
-            countsMap[r.user_id] = r.count;
-          });
-        }
-
-        profilesData?.forEach((p: any) => {
-          profilesMap[p.id] = {
-            ...p,
-            read_count: countsMap[p.id] || 0,
-          };
-        });
-      }
-
-      // 3. Fetch Votes
-      const commentIds = rawComments.map(c => c.id);
-      let votesMap: Record<string, CommentVote[]> = {};
-      if (commentIds.length > 0) {
-        const { data: votesData } = await supabase
-          .from("comment_votes" as any)
+      if (rootIds.length > 0) {
+        // Recursive fetch isn't easy in one query.
+        // Let's just fetch direct children for now, or fetch all comments for this novel/chapter 
+        // and filter locally is what we did before, but that defeats pagination purpose.
+        // BETTER APPROACH: Fetch replies only for the loaded root IDs.
+        const { data: repliesData } = await supabase
+          .from("comments" as any)
           .select("*")
-          .in("comment_id", commentIds);
+          .in("parent_id", rootIds)
+          .order("created_at", { ascending: true }); // Replies generally old to new
 
-        votesData?.forEach((v: any) => {
-          if (!votesMap[v.comment_id]) votesMap[v.comment_id] = [];
-          votesMap[v.comment_id].push(v);
-        });
+        if (repliesData) {
+          allRelatedComments = [...allRelatedComments, ...repliesData];
+        }
       }
 
-      // 4. Process Comments (Structure & Stats)
-      const processedComments: Record<string, Comment> = {};
+      // 2. Fetch Profiles & Votes and Process
+      const processedComments = await processCommentsData(allRelatedComments);
 
-      rawComments.forEach(c => {
-        const votes = votesMap[c.id] || [];
-        const upvotes = votes.filter(v => v.vote_type === 1).length;
-        const downvotes = votes.filter(v => v.vote_type === -1).length;
-        const userVote = user ? (votes.find(v => v.user_id === user.id)?.vote_type || 0) : 0;
+      // 3. Build Tree (Only from the fetched batch)
+      const commentsMap: Record<string, Comment> = {};
+      processedComments.forEach(c => commentsMap[c.id] = c);
 
-        processedComments[c.id] = {
-          ...c,
-          profile: profilesMap[c.user_id],
-          replies: [],
-          upvotes,
-          downvotes,
-          user_vote: userVote,
-        };
-      });
-
-      // 5. Build Tree
       const rootComments: Comment[] = [];
-      rawComments.forEach(c => {
-        const comment = processedComments[c.id];
-        if (comment.parent_id && processedComments[comment.parent_id]) {
-          processedComments[comment.parent_id].replies?.push(comment);
-        } else {
-          rootComments.push(comment);
+      processedComments.forEach(c => {
+        if (c.parent_id && commentsMap[c.parent_id]) {
+          commentsMap[c.parent_id].replies = commentsMap[c.parent_id].replies || [];
+          commentsMap[c.parent_id].replies?.push(c);
+        } else if (!c.parent_id) {
+          rootComments.push(c);
         }
       });
 
-      // Sort root comments based on selected option
-      switch (sortBy) {
-        case 'newest':
-          rootComments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-          break;
-        case 'oldest':
-          rootComments.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-          break;
-        case 'popular':
-          rootComments.sort((a, b) => {
-            const scoreA = a.upvotes - a.downvotes;
-            const scoreB = b.upvotes - b.downvotes;
-            if (scoreA === scoreB) {
-              // Create secondary sort by newest if scores are equal
-              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            }
-            return scoreB - scoreA;
-          });
-          break;
+      // Sort client side again just in case (especially for Popular if we implement it later)
+      if (sortBy === 'newest') {
+        rootComments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      } else if (sortBy === 'oldest') {
+        rootComments.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      } else if (sortBy === 'popular') {
+        rootComments.sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
       }
 
-      setComments(rootComments);
+      setComments(prev => pageNum === 0 ? rootComments : [...prev, ...rootComments]);
 
     } catch (error) {
       console.error("Error fetching comments:", error);
@@ -210,6 +188,79 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
       setIsLoading(false);
     }
   };
+
+  // Helper to process raw comments (fetch profiles, votes, etc)
+  const processCommentsData = async (rawComments: any[]) => {
+    // 2. Fetch Profiles
+    const userIds = [...new Set(rawComments.map((c) => c.user_id))];
+    let profilesMap: Record<string, UserProfile> = {};
+
+    if (userIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from("profiles" as any)
+        .select("id, username, avatar_url")
+        .in("id", userIds);
+
+      // 2b. Fetch Reading Counts (Badges)
+      const { data: readingCounts } = await supabase.rpc("get_users_reading_counts" as any, {
+        user_ids: userIds,
+      });
+
+      const countsMap: Record<string, number> = {};
+      if (readingCounts && Array.isArray(readingCounts)) {
+        readingCounts.forEach((r: any) => {
+          countsMap[r.user_id] = r.count;
+        });
+      }
+
+      profilesData?.forEach((p: any) => {
+        profilesMap[p.id] = {
+          ...p,
+          read_count: countsMap[p.id] || 0,
+        };
+      });
+    }
+
+    // 3. Fetch Votes
+    const commentIds = rawComments.map(c => c.id);
+    let votesMap: Record<string, CommentVote[]> = {};
+    if (commentIds.length > 0) {
+      const { data: votesData } = await supabase
+        .from("comment_votes" as any)
+        .select("*")
+        .in("comment_id", commentIds);
+
+      votesData?.forEach((v: any) => {
+        if (!votesMap[v.comment_id]) votesMap[v.comment_id] = [];
+        votesMap[v.comment_id].push(v);
+      });
+    }
+
+    // 4. Process
+    const processed: Comment[] = rawComments.map(c => {
+      const votes = votesMap[c.id] || [];
+      const upvotes = votes.filter(v => v.vote_type === 1).length;
+      const downvotes = votes.filter(v => v.vote_type === -1).length;
+      const userVote = user ? (votes.find(v => v.user_id === user.id)?.vote_type || 0) : 0;
+
+      return {
+        ...c,
+        profile: profilesMap[c.user_id],
+        replies: [], // Pagination replies? For now, flat list or replies fetched separately? 
+        // Original code built a tree. Pagination breaks tree building if parents/children are split across pages.
+        // CRITICAL: Comment pagination usually only paginates ROOT comments. Replies are fetched with parent or loaded on demand.
+        // Current DB structure: 'parent_id'.
+        // To paginate properly: Query only where parent_id IS NULL.
+        upvotes,
+        downvotes,
+        user_vote: userVote,
+      };
+    });
+
+    return processed;
+  };
+
+  // ... (rest of methods)
 
   const postComment = async (content: string, parentId?: string) => {
     if (!user) {
@@ -229,7 +280,7 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
       if (error) throw error;
 
       toast({ title: "Success", description: "Comment posted!" });
-      fetchComments(); // Refresh to show new comment
+      fetchComments(0); // Refresh to show new comment
       return true;
     } catch (error: any) {
       console.error("Error posting comment:", error);
@@ -255,7 +306,7 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
       if (error) throw error;
 
       toast({ title: "Updated", description: "Comment updated successfully." });
-      fetchComments();
+      fetchComments(0);
       return true;
     } catch (error) {
       console.error("Error updating comment:", error);
@@ -284,7 +335,7 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
       const { error } = await supabase.from("comments" as any).delete().eq("id", commentToDelete);
       if (error) throw error;
       toast({ title: "Deleted", description: "Comment deleted." });
-      fetchComments();
+      fetchComments(0);
     } catch (error) {
       toast({ title: "Error", description: "Failed to delete comment.", variant: "destructive" });
     } finally {
@@ -332,7 +383,7 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
         if (error) throw error; // Could trigger unique constraint race condition
       }
 
-      fetchComments(); // Refresh votes
+      fetchComments(0); // Refresh votes
     } catch (error: any) {
       console.error("Error voting:", error);
       toast({ title: "Error", description: "Failed to update vote.", variant: "destructive" });
@@ -438,7 +489,7 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
 
       {/* List Section */}
       <div className="space-y-6 mt-4">
-        {isLoading ? (
+        {isLoading && page === 0 ? (
           <div className="flex justify-center py-8">
             <BarLoader />
           </div>
@@ -447,23 +498,41 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
             No comments yet. Be the first to share your thoughts!
           </div>
         ) : (
-          comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              currentUserId={user?.id}
-              isAdmin={isAdmin}
-              onReply={postComment}
-              onEdit={editComment}
-              onVote={handleVote}
-              onDelete={handleDelete}
-              onReport={handleReport}
-              onUserClick={(userId) => {
-                setSelectedUserId(userId);
-                setIsProfileOpen(true);
-              }}
-            />
-          ))
+          <>
+            {comments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                currentUserId={user?.id}
+                isAdmin={isAdmin}
+                onReply={postComment}
+                onEdit={editComment}
+                onVote={handleVote}
+                onDelete={handleDelete}
+                onReport={handleReport}
+                onUserClick={(userId) => {
+                  setSelectedUserId(userId);
+                  setIsProfileOpen(true);
+                }}
+              />
+            ))}
+
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const nextPage = page + 1;
+                    setPage(nextPage);
+                    fetchComments(nextPage);
+                  }}
+                  disabled={isLoading}
+                >
+                  {isLoading ? <BarLoader /> : "Load More Comments"}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

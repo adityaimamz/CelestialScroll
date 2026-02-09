@@ -151,7 +151,8 @@ const AnnouncementsList = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <h2 className="text-3xl font-bold tracking-tight">Announcements</h2>
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" /> Add Announcement
@@ -200,7 +201,7 @@ const AnnouncementsList = () => {
         </DialogContent>
       </Dialog>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

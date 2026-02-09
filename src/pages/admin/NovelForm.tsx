@@ -573,83 +573,85 @@ export default function NovelForm() {
               </Button>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead
-                      className="w-20 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => handleSort("chapter_number")}
-                    >
-                      <div className="flex items-center">
-                        No.
-                        <SortIcon columnKey="chapter_number" />
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => handleSort("title")}
-                    >
-                      <div className="flex items-center">
-                        Judul
-                        <SortIcon columnKey="title" />
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => handleSort("published_at")}
-                    >
-                      <div className="flex items-center">
-                        Tanggal Publish
-                        <SortIcon columnKey="published_at" />
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loadingChapters ? (
+              <div className="rounded-md border max-h-[500px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8">
-                        <BarLoader />
-                      </TableCell>
+                      <TableHead
+                        className="w-20 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleSort("chapter_number")}
+                      >
+                        <div className="flex items-center">
+                          No.
+                          <SortIcon columnKey="chapter_number" />
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleSort("title")}
+                      >
+                        <div className="flex items-center">
+                          Judul
+                          <SortIcon columnKey="title" />
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleSort("published_at")}
+                      >
+                        <div className="flex items-center">
+                          Tanggal Publish
+                          <SortIcon columnKey="published_at" />
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-right">Aksi</TableHead>
                     </TableRow>
-                  ) : chapters.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                        Belum ada chapter. Silakan tambah chapter baru.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    sortedChapters.map((chapter) => (
-                      <TableRow key={chapter.id}>
-                        <TableCell className="font-medium">{chapter.chapter_number}</TableCell>
-                        <TableCell>{chapter.title}</TableCell>
-                        <TableCell>
-                          {chapter.published_at
-                            ? format(new Date(chapter.published_at), "dd MMM yyyy")
-                            : <Badge variant="secondary">Draft</Badge>}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" asChild>
-                              <Link to={`/admin/novels/${id}/chapters/${chapter.id}/edit`}>
-                                <Pencil className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeleteChapterId(chapter.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingChapters ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-8">
+                          <BarLoader />
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : chapters.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                          Belum ada chapter. Silakan tambah chapter baru.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      sortedChapters.map((chapter) => (
+                        <TableRow key={chapter.id}>
+                          <TableCell className="font-medium">{chapter.chapter_number}</TableCell>
+                          <TableCell>{chapter.title}</TableCell>
+                          <TableCell>
+                            {chapter.published_at
+                              ? format(new Date(chapter.published_at), "dd MMM yyyy")
+                              : <Badge variant="secondary">Draft</Badge>}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" asChild>
+                                <Link to={`/admin/novels/${id}/chapters/${chapter.id}/edit`}>
+                                  <Pencil className="h-4 w-4" />
+                                </Link>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setDeleteChapterId(chapter.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
