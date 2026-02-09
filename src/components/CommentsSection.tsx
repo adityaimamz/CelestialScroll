@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Send, User as UserIcon, Trash2, MessageCircle, ThumbsUp, ThumbsDown, Flag, MoreHorizontal, Edit2 } from "lucide-react";
+import { Send, User as UserIcon, Trash2, MessageCircle, ThumbsUp, ThumbsDown, Flag, MoreHorizontal, Edit2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,9 +71,11 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
 
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'popular'>('popular');
+
   useEffect(() => {
     fetchComments();
-  }, [novelId, chapterId, user?.id]);
+  }, [novelId, chapterId, user?.id, sortBy]);
 
   const fetchComments = async () => {
     setIsLoading(true);
@@ -174,8 +176,26 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
         }
       });
 
-      // Sort root comments (Newest first)
-      rootComments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Sort root comments based on selected option
+      switch (sortBy) {
+        case 'newest':
+          rootComments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          break;
+        case 'oldest':
+          rootComments.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          break;
+        case 'popular':
+          rootComments.sort((a, b) => {
+            const scoreA = a.upvotes - a.downvotes;
+            const scoreB = b.upvotes - b.downvotes;
+            if (scoreA === scoreB) {
+              // Create secondary sort by newest if scores are equal
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            }
+            return scoreB - scoreA;
+          });
+          break;
+      }
 
       setComments(rootComments);
 
@@ -388,8 +408,36 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
         </div>
       )}
 
+      {/* Sort Options */}
+      <div className="flex gap-2 border-b border-border pb-2 justify-end">
+        <Button
+          variant={sortBy === 'newest' ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => setSortBy('newest')}
+          className="text-xs h-8"
+        >
+          Newest
+        </Button>
+        <Button
+          variant={sortBy === 'oldest' ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => setSortBy('oldest')}
+          className="text-xs h-8"
+        >
+          Oldest
+        </Button>
+        <Button
+          variant={sortBy === 'popular' ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => setSortBy('popular')}
+          className="text-xs h-8"
+        >
+          Popular
+        </Button>
+      </div>
+
       {/* List Section */}
-      <div className="space-y-6 mt-6">
+      <div className="space-y-6 mt-4">
         {isLoading ? (
           <div className="flex justify-center py-8">
             <BarLoader />
@@ -495,8 +543,7 @@ const CommentItem = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
-
-
+  const [areRepliesVisible, setAreRepliesVisible] = useState(true);
 
   return (
     <div className="group animate-fade-in">
@@ -521,10 +568,10 @@ const CommentItem = ({
               >
                 {comment.profile?.username || "Anonymous User"}
               </span>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                • {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-              </span>
               <UserBadge chapterCount={comment.profile?.read_count || 0} />
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+              </span>
             </div>
 
             {/* Actions Menu */}
@@ -625,21 +672,33 @@ const CommentItem = ({
 
           {/* Nested Replies */}
           {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-4 space-y-6 pl-4 border-l-2 border-border/50">
-              {comment.replies.map(reply => (
-                <CommentItem
-                  key={reply.id}
-                  comment={reply}
-                  currentUserId={currentUserId}
-                  isAdmin={isAdmin}
-                  onReply={onReply}
-                  onEdit={onEdit}
-                  onVote={onVote}
-                  onDelete={onDelete}
-                  onReport={onReport}
-                  onUserClick={onUserClick}
-                />
-              ))}
+            <div className="mt-2 text-sm">
+              <button
+                onClick={() => setAreRepliesVisible(!areRepliesVisible)}
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors mb-2"
+              >
+                {areRepliesVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {areRepliesVisible ? "Hide Replies" : `View ${comment.replies.length} Replies`}
+              </button>
+
+              {areRepliesVisible && (
+                <div className="space-y-6 pl-4 border-l-2 border-border/50">
+                  {comment.replies.map(reply => (
+                    <CommentItem
+                      key={reply.id}
+                      comment={reply}
+                      currentUserId={currentUserId}
+                      isAdmin={isAdmin}
+                      onReply={onReply}
+                      onEdit={onEdit}
+                      onVote={onVote}
+                      onDelete={onDelete}
+                      onReport={onReport}
+                      onUserClick={onUserClick}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

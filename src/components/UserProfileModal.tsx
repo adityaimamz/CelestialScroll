@@ -120,7 +120,8 @@ const UserProfileModal = ({ userId, isOpen, onOpenChange }: UserProfileModalProp
 
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-8">
-                        <BarLoader />                        <p className="mt-2 text-sm text-muted-foreground">Loading profile...</p>
+                        <BarLoader />
+                        <p className="mt-2 text-sm text-muted-foreground">Loading profile...</p>
                     </div>
                 ) : null}
 

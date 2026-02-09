@@ -16,22 +16,24 @@ interface BadgeListModalProps {
 }
 
 const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalProps) => {
+    // Logic untuk menentukan tier user saat ini
     const currentTierIndex = BADGE_TIERS.filter(tier => currentCount >= tier.minChapters).length - 1;
+
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-900">
-                <DialogHeader className="mb-4">
+            <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                <DialogHeader className="mb-2">
                     <DialogTitle className="flex items-center justify-center sm:justify-start gap-2 text-xl">
-                        <Crown className="w-5 h-5 text-yellow-500" />
+                        <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                         Cultivation Realm
                     </DialogTitle>
-                    <DialogDescription >
+                    <DialogDescription>
                         Read chapters to ascend the heavens!
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="py-4 space-y-2 shrink-0">
-                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
+                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border">
                         <span className="text-muted-foreground text-sm">User Achievement</span>
                         <span className="font-bold font-mono text-lg text-primary">{currentCount} Chapters</span>
                     </div>
@@ -44,24 +46,32 @@ const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalPr
                             const isCurrent = index === currentTierIndex;
                             const isGod = tier.style.glow === "rainbow";
 
-                            // Logic styling container list
+                            // Base styles
+                            let containerClass = "relative p-3 rounded-lg border flex items-center gap-4 transition-all duration-300 ";
                             let containerStyle: React.CSSProperties = {};
-                            let containerClass = "relative p-3 rounded-lg border flex items-center gap-4 transition-all ";
 
                             if (isUnlocked) {
                                 containerClass += "opacity-100 ";
-                                containerStyle = {
-                                    background: isCurrent
-                                        ? "linear-gradient(to right, rgba(255,255,255,0.05), rgba(0,0,0,0.02))"
-                                        : "transparent",
-                                    borderColor: isCurrent ? tier.style.border : "transparent",
-                                    boxShadow: isCurrent && tier.style.glow
-                                        ? `inset 0 0 20px ${typeof tier.style.glow === 'string' && tier.style.glow !== 'rainbow' ? tier.style.glow + '20' : '#FFD70020'}`
-                                        : "none"
-                                };
-                                if (isCurrent) containerClass += "bg-accent/10 border-l-4";
+
+                                // Handling Style Container
+                                if (isCurrent) {
+                                    containerClass += "bg-accent/10 ";
+                                    // Efek Glow Khusus Container jika Current Rank
+                                    if (isGod) {
+                                        containerStyle.boxShadow = "inset 0 0 20px rgba(255, 215, 0, 0.15)";
+                                        containerStyle.border = "1px solid rgba(255, 215, 0, 0.5)";
+                                    } else {
+                                        containerStyle.borderColor = tier.style.border;
+                                        containerStyle.borderLeftWidth = "4px"; // Penanda visual rank aktif
+                                    }
+                                } else {
+                                    // Rank yang sudah lewat
+                                    containerStyle.borderColor = "transparent";
+                                    containerStyle.background = "transparent";
+                                }
                             } else {
-                                containerClass += "opacity-50 grayscale bg-muted/30 border-transparent";
+                                // Rank Terkunci
+                                containerClass += "opacity-40 grayscale bg-muted/20 border-transparent";
                             }
 
                             return (
@@ -73,7 +83,7 @@ const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalPr
                                     {/* Icon Status */}
                                     <div className="shrink-0">
                                         {isUnlocked ? (
-                                            <div className={`rounded-full p-1 ${isCurrent ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                            <div className={`rounded-full p-1 shadow-sm ${isCurrent ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                                                 <Check className="w-3 h-3" />
                                             </div>
                                         ) : (
@@ -85,17 +95,18 @@ const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalPr
                                     <div className="flex-1">
                                         <div className="flex justify-between items-center mb-1">
                                             <div className="flex flex-col items-start gap-2">
-                                                {/* BADGE PREVIEW MINIATUR */}
+                                                {/* BADGE PREVIEW (Render Visual Badge) */}
                                                 <div
-                                                    className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold border shadow-sm"
+                                                    className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold border select-none"
                                                     style={{
                                                         background: tier.style.background,
                                                         color: tier.style.color,
-                                                        borderColor: isGod ? 'transparent' : tier.style.border,
-                                                        boxShadow: tier.style.glow && tier.style.glow !== 'rainbow'
-                                                            ? `0 0 5px ${tier.style.glow}60`
-                                                            : 'none',
-                                                        textShadow: tier.style.textShadow || 'none'
+                                                        borderColor: tier.style.border,
+                                                        boxShadow: isGod
+                                                            ? "0 0 10px rgba(255,255,255,0.5), 0 0 5px rgba(255,0,255,0.3)"
+                                                            : (tier.style.glow ? `0 0 5px ${tier.style.glow}60` : 'none'),
+                                                        textShadow: tier.style.textShadow || 'none',
+                                                        backgroundClip: isGod ? "padding-box" : "border-box"
                                                     }}
                                                 >
                                                     {tier.name}
@@ -107,10 +118,9 @@ const BadgeListModal = ({ isOpen, onOpenChange, currentCount }: BadgeListModalPr
                                             </span>
                                         </div>
 
-                                        {/* Progress Bar Visual (Optional) */}
                                         {isCurrent && (
-                                            <p className="text-[10px] text-muted-foreground mt-1">
-                                                Current Rank
+                                            <p className="text-[10px] text-primary/80 font-medium mt-1 animate-pulse">
+                                                Current Realm
                                             </p>
                                         )}
                                     </div>
