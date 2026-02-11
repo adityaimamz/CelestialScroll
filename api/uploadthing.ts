@@ -1,6 +1,5 @@
-
-
 import { createUploadthing, type FileRouter } from "uploadthing/server";
+import { createRouteHandler } from "uploadthing/next-legacy";
 
 const f = createUploadthing();
 
@@ -37,4 +36,7 @@ export const ourFileRouter = {
 
 export type OurFileRouter = typeof ourFileRouter;
 
-
+export default createRouteHandler({
+    router: ourFileRouter,
+    config: { token: process.env.UPLOADTHING_TOKEN },
+});
