@@ -506,7 +506,6 @@ export default function NovelForm() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="cover_url" className="ml-5">Cover Image</Label>
                       <ImageUpload
                         value={formData.cover_url}
                         onChange={(url) => setFormData({ ...formData, cover_url: url || "" })}

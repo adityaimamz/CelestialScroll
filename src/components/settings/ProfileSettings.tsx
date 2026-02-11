@@ -98,7 +98,6 @@ export function ProfileSettings() {
                     </div>
 
                     <div className="flex-1 space-y-1">
-                        <Label className="text-sm font-medium ml-5">Avatar Image</Label>
                         <div className="flex items-center gap-4">
                             <ImageUpload
                                 value={avatarUrl}
