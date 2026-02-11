@@ -23,6 +23,18 @@ import { Search } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface UserWithRole {
   id: string;
@@ -183,6 +195,28 @@ export default function UserList() {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase.rpc('delete_user_account', { target_user_id: userId });
+
+      if (error) throw error;
+
+      setUsers(users.filter((user) => user.id !== userId));
+
+      toast({
+        title: "Berhasil",
+        description: "User berhasil dihapus",
+      });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menghapus user. Pastikan Anda memiliki izin admin.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getRoleBadge = (role: string) => {
     const variants: Record<string, "default" | "secondary" | "outline"> = {
       admin: "default",
@@ -223,7 +257,7 @@ export default function UserList() {
               <TableHead>User</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Bergabung</TableHead>
-              <TableHead>Ubah Role</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -265,20 +299,44 @@ export default function UserList() {
                 <TableCell>
                   {format(new Date(user.created_at), "dd MMM yyyy")}
                 </TableCell>
-                <TableCell>
-                  <Select
-                    value={user.role}
-                    onValueChange={(value: "admin" | "moderator" | "user") => handleRoleChange(user.id, value)}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="moderator">Moderator</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Select
+                      value={user.role}
+                      onValueChange={(value: "admin" | "moderator" | "user") => handleRoleChange(user.id, value)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="moderator">Moderator</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon" className="h-8 w-8">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tindakan ini tidak dapat dibatalkan. User akan dihapus secara permanen dari sistem.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Batal</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteUser(user.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Hapus
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
