@@ -145,8 +145,10 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
             break;
           }
 
-          allRelatedComments = [...allRelatedComments, ...repliesData];
-          parentIdsToFetch = repliesData.map(r => r.id);
+          const typedReplies = repliesData as any[];
+
+          allRelatedComments = [...allRelatedComments, ...typedReplies];
+          parentIdsToFetch = typedReplies.map((r) => r.id);
         }
       }
 

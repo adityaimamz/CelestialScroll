@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { BarLoader } from "@/components/ui/BarLoader";
+import { ImageUpload } from "@/components/ImageUpload";
 
 
 interface Genre {
@@ -505,25 +506,15 @@ export default function NovelForm() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="cover_url">Cover URL</Label>
-                      <Input
-                        id="cover_url"
+                      <Label htmlFor="cover_url" className="ml-5">Cover Image</Label>
+                      <ImageUpload
                         value={formData.cover_url}
-                        onChange={(e) => setFormData({ ...formData, cover_url: e.target.value })}
-                        placeholder="https://..."
+                        onChange={(url) => setFormData({ ...formData, cover_url: url || "" })}
+                        endpoint="imageUploader"
                       />
-                      {formData.cover_url && (
-                        <div className="mt-2 aspect-[3/4] rounded-lg overflow-hidden bg-muted">
-                          <img
-                            src={formData.cover_url}
-                            alt="Cover preview"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/placeholder.svg";
-                            }}
-                          />
-                        </div>
-                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Upload cover novel. Max 4MB.
+                      </p>
                     </div>
 
                     <div className="flex items-center justify-between space-x-2 border rounded-lg p-4 bg-muted/20">

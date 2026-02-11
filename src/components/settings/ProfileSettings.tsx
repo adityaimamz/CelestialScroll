@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Loader2, Upload } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export function ProfileSettings() {
     const { user } = useAuth();
@@ -97,15 +98,18 @@ export function ProfileSettings() {
                     </div>
 
                     <div className="flex-1 space-y-1">
-                        <Label htmlFor="avatar_url">Avatar URL</Label>
-                        <Input
-                            id="avatar_url"
-                            placeholder="https://example.com/avatar.jpg"
-                            value={avatarUrl}
-                            onChange={(e) => setAvatarUrl(e.target.value)}
-                            className="max-w-md font-mono text-xs"
-                        />
-                        <p className="text-xs text-muted-foreground">Enter a direct link to an image to use as your avatar.</p>
+                        <Label className="text-sm font-medium ml-5">Avatar Image</Label>
+                        <div className="flex items-center gap-4">
+                            <ImageUpload
+                                value={avatarUrl}
+                                onChange={(url) => setAvatarUrl(url || "")}
+                                endpoint="imageUploader"
+                            />
+                            <div className="text-xs text-muted-foreground">
+                                <p>Upload a new avatar image.</p>
+                                <p>Max size 4MB.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

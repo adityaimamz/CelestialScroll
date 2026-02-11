@@ -11,8 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
+import { ImageUpload } from "@/components/ImageUpload";
+import { UploadButton } from "@/utils/uploadthing";
 
 interface ChapterFormData {
   chapter_number: number;
@@ -325,9 +327,48 @@ export default function ChapterForm() {
                         rows={20}
                         className="font-mono"
                       />
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Mendukung format Markdown: **bold**, *italic*, # Heading, dll.
-                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <p className="text-xs text-muted-foreground flex-1">
+                          Mendukung format Markdown: **bold**, *italic*, # Heading, dll.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Insert Image:</span>
+                          <UploadButton
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res) => {
+                              if (res && res[0]) {
+                                const imageUrl = res[0].url;
+                                const imageMarkdown = `\n![Image](${imageUrl})\n`;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  content: prev.content + imageMarkdown
+                                }));
+                                toast({
+                                  title: "Image Uploaded",
+                                  description: "Image code appended to content",
+                                });
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast({
+                                title: "Upload Failed",
+                                description: error.message,
+                                variant: "destructive",
+                              });
+                            }}
+                            appearance={{
+                              button: "bg-secondary text-secondary-foreground hover:bg-secondary/80 h-8 text-xs px-2",
+                              allowedContent: "hidden"
+                            }}
+                            content={{
+                              button({ ready }) {
+                                if (ready) return <div className="flex items-center gap-1"><ImageIcon className="w-3 h-3" /> Upload</div>;
+                                return "Loading...";
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
                     </TabsContent>
 
                     <TabsContent value="preview">
