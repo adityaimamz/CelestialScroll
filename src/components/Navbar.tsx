@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationDropdown } from "@/components/NotificationDropdown";
 
 
 export default function Navbar() {
@@ -191,6 +192,9 @@ export default function Navbar() {
             {/* Theme Toggle */}
             <ThemeToggle />
 
+            {/* Notification Dropdown */}
+            {user && <NotificationDropdown />}
+
             {/* Auth Buttons */}
             <div className="hidden sm:flex items-center gap-2">
               {user ? (
@@ -283,7 +287,7 @@ export default function Navbar() {
             {isSearchOpen && (
               <div
                 className="md:hidden py-3 border-t border-border animate-fade-in relative"
-                ref={mobileSearchRef}  
+                ref={mobileSearchRef}
               >
                 <div className="relative">
                 </div>
@@ -301,7 +305,7 @@ export default function Navbar() {
                             to={`/series/${novel.slug}`}
                             className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
                             onClick={(e) => {
-                              e.preventDefault(); 
+                              e.preventDefault();
                               navigate(`/series/${novel.slug}`);
 
                               setShowResults(false);

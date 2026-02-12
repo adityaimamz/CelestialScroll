@@ -103,6 +103,51 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          actor_id: string | null
+          type: "reply" | "like" | "system"
+          entity_id: string | null
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          actor_id?: string | null
+          type: "reply" | "like" | "system"
+          entity_id?: string | null
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          actor_id?: string | null
+          type?: "reply" | "like" | "system"
+          entity_id?: string | null
+          is_read?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users" // referencing auth.users technically but usually mapped to profiles in App
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -178,6 +223,65 @@ export type Database = {
             referencedRelation: "novels"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      comments: {
+        Row: {
+          id: string
+          user_id: string
+          novel_id: string
+          chapter_id: string | null
+          parent_id: string | null
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          novel_id: string
+          chapter_id?: string | null
+          parent_id?: string | null
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          novel_id?: string
+          chapter_id?: string | null
+          parent_id?: string | null
+          content?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_novel_id_fkey"
+            columns: ["novel_id"]
+            isOneToOne: false
+            referencedRelation: "novels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          }
         ]
       }
       novel_ratings: {
