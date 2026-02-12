@@ -19,9 +19,9 @@ const Footer = () => {
       { label: "Genres", href: "/genres" },
     ],
     legal: [
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "DMCA", href: "/dmca" },
+      { label: "Terms of Service", href: "/" },
+      { label: "Privacy Policy", href: "/" },
+      { label: "DMCA", href: "/" },
     ],
   };
 

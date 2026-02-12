@@ -198,7 +198,7 @@ const Bookmark = () => {
                   rating={novel.rating || 0}
                   status={novel.status as any}
                   chapters={novel.chapters_count}
-                  genre={novel.genres?.[0] || "Unknown"}
+                  // genre={novel.genres?.[0] || "Unknown"}
                   size="medium"
                   id={novel.id}
                   slug={novel.slug}

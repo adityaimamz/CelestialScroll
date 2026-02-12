@@ -92,6 +92,7 @@ export default function Navbar() {
     { label: "Series", href: "/series", icon: BookOpen },
     { label: "Bookmarks", href: "/bookmarks", icon: Bookmark },
     { label: "Genres", href: "/genres", icon: Layers },
+    { label: "Request", href: "/request", icon: Layers },
   ];
 
   return (

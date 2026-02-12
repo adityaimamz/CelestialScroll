@@ -220,7 +220,7 @@ const Catalog = () => {
                   rating={novel.rating || 0}
                   status={novel.status as any}
                   chapters={novel.chapters_count || 0}
-                  genre={novel.genres?.[0] || "Unknown"}
+                  // genre={novel.genres?.[0] || "Unknown"}
                   size="medium"
                   id={novel.id}
                   slug={novel.slug}

@@ -74,7 +74,7 @@ const RecentUpdatesSection = () => {
       <SectionHeader
         title="Most Recently Updated"
         subtitle="Fresh chapters hot off the press"
-        viewAllLink="/updates"
+        viewAllLink="/series"
       />
 
       <div className="bg-surface rounded-xl border border-border overflow-hidden">
