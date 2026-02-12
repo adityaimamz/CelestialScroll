@@ -28,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, Eye, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, Eye, FileText, ArrowUpDown, ArrowUp, ArrowDown, Pin, PinOff } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,6 +42,7 @@ interface Novel {
   views: number;
   created_at: string;
   is_published: boolean;
+  pinned: boolean; 
 }
 
 type SortConfig = {
@@ -126,6 +127,36 @@ export default function NovelList() {
     }
   };
 
+  const handlePinToggle = async (id: string, currentStatus: boolean, e: MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const { error } = await supabase
+        .from("novels")
+        .update({ pinned: !currentStatus })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setNovels(novels.map(n =>
+        n.id === id ? { ...n, pinned: !currentStatus } : n
+      ));
+
+      toast({
+        title: !currentStatus ? "Novel Dipin" : "Pin Dilepas",
+        description: `Novel berhasil ${!currentStatus ? "dipin ke atas" : "dilepas pin-nya"}.`,
+      });
+      // Refresh to update order
+      fetchNovels();
+    } catch (error) {
+      console.error("Error updating pin status:", error);
+      toast({
+        title: "Error",
+        description: "Gagal mengubah status pin",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchNovels = async () => {
     setLoading(true);
     try {
@@ -139,6 +170,9 @@ export default function NovelList() {
         // Simple search on title for now. can extend to author if needed.
         query = query.ilike("title", `%${searchQuery}%`);
       }
+
+      // Always put pinned items first
+      query = query.order("pinned", { ascending: false });
 
       // Sort
       if (sortConfig.key) {
@@ -331,6 +365,21 @@ export default function NovelList() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => handlePinToggle(novel.id, !!novel.pinned, e)}
+                      >
+                        {novel.pinned ? (
+                          <>
+                            <PinOff className="mr-2 h-4 w-4" />
+                            Unpin
+                          </>
+                        ) : (
+                          <>
+                            <Pin className="mr-2 h-4 w-4" />
+                            Pin
+                          </>
+                        )}
+                      </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link
                           to={`/series/${novel.slug}`}
