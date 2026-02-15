@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, Eye } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
+import UserProfileModal from "@/components/UserProfileModal";
 
 export function ProfileSettings() {
     const { user } = useAuth();
@@ -17,6 +18,7 @@ export function ProfileSettings() {
     const [username, setUsername] = useState("");
     const [bio, setBio] = useState("");
     const [avatarUrl, setAvatarUrl] = useState("");
+    const [showProfileModal, setShowProfileModal] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -77,11 +79,22 @@ export function ProfileSettings() {
 
     return (
         <div className="space-y-8 animate-fade-in">
-            <div>
-                <h3 className="text-lg font-medium">Profile</h3>
-                <p className="text-sm text-muted-foreground">
-                    This is how others will see you on the site.
-                </p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="text-lg font-medium">Profile</h3>
+                    <p className="text-sm text-muted-foreground">
+                        This is how others will see you on the site.
+                    </p>
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowProfileModal(true)}
+                    className="gap-2"
+                >
+                    <Eye className="w-4 h-4" />
+                    View Public Profile
+                </Button>
             </div>
 
             <div className="flex flex-col gap-6">
@@ -151,6 +164,12 @@ export function ProfileSettings() {
                     Update profile
                 </Button>
             </div>
+
+            <UserProfileModal
+                userId={user?.id || null}
+                isOpen={showProfileModal}
+                onOpenChange={setShowProfileModal}
+            />
         </div>
     );
 }
