@@ -17,24 +17,26 @@ const UserBadge = ({ chapterCount, size = "sm", className = "" }: UserBadgeProps
 
     // Style khusus untuk Tier Tertinggi (Rainbow/God)
     const isGodTier = style.glow === "rainbow";
+    const godEffect = badgeInfo.godStageEffect as any; // Cast to access new props
 
     const badgeStyle: React.CSSProperties = {
         background: style.background,
         color: style.color,
-        borderColor: isGodTier ? "#FFFFFF" : style.border,
+        borderColor: isGodTier && godEffect?.borderColor ? godEffect.borderColor : (isGodTier ? "#FFFFFF" : style.border),
         borderWidth: "1px",
         borderStyle: "solid",
-        boxShadow: isGodTier && badgeInfo.godStageEffect
-            ? badgeInfo.godStageEffect.boxShadow
+        boxShadow: isGodTier && godEffect
+            ? godEffect.boxShadow
             : (style.glow ? `0 0 5px ${style.glow}60` : 'none'),
         textShadow: style.textShadow || "none",
         backgroundClip: isGodTier ? "padding-box" : "border-box",
         cursor: "pointer",
         position: "relative",
         zIndex: 1,
-        // CSS variable untuk mengatur kecepatan animasi glow per God stage
-        ...(isGodTier && badgeInfo.godStageEffect ? {
-            ['--god-glow-speed' as string]: badgeInfo.godStageEffect.animationSpeed
+        // CSS variable untuk mengatur kecepatan & warna animasi glow per God stage
+        ...(isGodTier && godEffect ? {
+            ['--god-glow-speed' as string]: godEffect.animationSpeed,
+            ['--god-glow-color' as string]: godEffect.glowColor,
         } : {}),
     };
 

@@ -171,7 +171,10 @@ export const GOD_STAGES = [
     effect: {
       glowIntensity: 1,
       animationSpeed: "6s",
-      boxShadow: "0 0 10px rgba(255,215,0,0.4), 0 0 5px rgba(255,0,255,0.2)",
+      // White/Gold Theme (Purity) - Gold Glow, White Border
+      glowColor: "rgba(255, 215, 0, 0.5)",
+      borderColor: "#FFFFFF",
+      boxShadow: "0 0 10px rgba(255,215,0,0.3), 0 0 20px rgba(255,255,255,0.2)",
     }
   },
   {
@@ -182,7 +185,10 @@ export const GOD_STAGES = [
     effect: {
       glowIntensity: 2,
       animationSpeed: "4s",
-      boxShadow: "0 0 15px rgba(255,215,0,0.5), 0 0 10px rgba(255,0,255,0.3), 0 0 5px rgba(0,230,118,0.3)",
+      // Cyan/Sky Blue Theme (Heaven) - Blue Glow, White Border
+      glowColor: "rgba(0, 229, 255, 0.6)",
+      borderColor: "#FFFFFF",
+      boxShadow: "0 0 15px rgba(0,229,255,0.4), 0 0 25px rgba(0,100,255,0.3)",
     }
   },
   {
@@ -193,7 +199,10 @@ export const GOD_STAGES = [
     effect: {
       glowIntensity: 3,
       animationSpeed: "3s",
-      boxShadow: "0 0 20px rgba(255,215,0,0.6), 0 0 15px rgba(255,0,255,0.4), 0 0 10px rgba(41,121,255,0.4)",
+      // Purple/Void Theme (Mystery) - Purple Glow, White Border
+      glowColor: "rgba(213, 0, 249, 0.6)",
+      borderColor: "#FFFFFF",
+      boxShadow: "0 0 15px rgba(213,0,249,0.5), 0 0 30px rgba(100,0,255,0.4)",
     }
   },
   {
@@ -204,7 +213,10 @@ export const GOD_STAGES = [
     effect: {
       glowIntensity: 4,
       animationSpeed: "2s",
-      boxShadow: "0 0 25px rgba(255,215,0,0.8), 0 0 20px rgba(255,0,255,0.5), 0 0 15px rgba(0,230,118,0.5), 0 0 10px rgba(41,121,255,0.5)",
+      // Full Rainbow/Divine Theme - Rainbow Glow, White Border
+      glowColor: "rgba(255, 61, 0, 0.7)",
+      borderColor: "#FFFFFF",
+      boxShadow: "0 0 20px rgba(255,0,0,0.5), 0 0 40px rgba(0,255,0,0.3), 0 0 60px rgba(0,0,255,0.3)",
     }
   }
 ];
