@@ -1,16 +1,18 @@
 
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useScrollHideNav } from "@/hooks/useScrollHideNav";
 
 interface ScrollButtonsProps {
     customVisibility?: boolean;
+    isAutoScrolling?: boolean;
+    onToggleAutoScroll?: () => void;
 }
 
-const ScrollButtons = ({ customVisibility }: ScrollButtonsProps) => {
+const ScrollButtons = ({ customVisibility, isAutoScrolling, onToggleAutoScroll }: ScrollButtonsProps) => {
     const location = useLocation();
     const [showTopBtn, setShowTopBtn] = useState(false);
     const [showBottomBtn, setShowBottomBtn] = useState(true);
@@ -82,6 +84,24 @@ const ScrollButtons = ({ customVisibility }: ScrollButtonsProps) => {
             >
                 <ArrowUp className="h-5 w-5" />
             </Button>
+
+            {/* Autoscroll Toggle - only on reader page */}
+            {isReaderPage && onToggleAutoScroll && (
+                <Button
+                    variant="secondary"
+                    size="icon"
+                    className={cn(
+                        "rounded-full shadow-md transition-all duration-300 opacity-100 translate-y-0 pointer-events-auto",
+                        isAutoScrolling
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                            : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    )}
+                    onClick={onToggleAutoScroll}
+                    aria-label={isAutoScrolling ? "Pause autoscroll" : "Start autoscroll"}
+                >
+                    {isAutoScrolling ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                </Button>
+            )}
 
             <Button
                 variant="secondary"

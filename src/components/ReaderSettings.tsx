@@ -1,4 +1,4 @@
-import { Minus, Plus, Settings } from "lucide-react";
+import { Minus, Plus, Settings, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -6,6 +6,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 
 interface ReaderSettingsProps {
   fontSize: number;
@@ -14,6 +15,10 @@ interface ReaderSettingsProps {
   setFontFamily: (font: string) => void;
   theme: 'light' | 'sepia' | 'dark';
   setTheme: (theme: 'light' | 'sepia' | 'dark') => void;
+  isAutoScrolling: boolean;
+  setIsAutoScrolling: (v: boolean) => void;
+  autoScrollSpeed: number;
+  setAutoScrollSpeed: (speed: number) => void;
 }
 
 const ReaderSettings = ({
@@ -23,6 +28,10 @@ const ReaderSettings = ({
   setFontFamily,
   theme,
   setTheme,
+  isAutoScrolling,
+  setIsAutoScrolling,
+  autoScrollSpeed,
+  setAutoScrollSpeed,
 }: ReaderSettingsProps) => {
   return (
     <Popover>
@@ -114,6 +123,60 @@ const ReaderSettings = ({
               >
                 Dark
               </Button>
+            </div>
+          </div>
+
+          {/* Autoscroll Section */}
+          <div className="border-t border-border pt-4">
+            <div className="space-y-2 mb-3">
+              <h4 className="font-medium leading-none">Autoscroll</h4>
+              <p className="text-sm text-muted-foreground">
+                Scroll page automatically
+              </p>
+            </div>
+
+            <div className="grid gap-3">
+              <div className="flex items-center justify-between">
+                <Label>Status</Label>
+                <Button
+                  variant={isAutoScrolling ? "default" : "outline"}
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setIsAutoScrolling(!isAutoScrolling)}
+                >
+                  {isAutoScrolling ? (
+                    <>
+                      <Pause className="h-3 w-3" /> Pause
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-3 w-3" /> Play
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label>Speed</Label>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {autoScrollSpeed.toFixed(1)}x
+                  </span>
+                </div>
+                <Slider
+                  value={[autoScrollSpeed]}
+                  onValueChange={(v) => setAutoScrollSpeed(v[0])}
+                  min={0.5}
+                  max={10.0}
+                  step={0.1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>0.5x</span>
+                  <span>5.0x</span>
+                  <span>10.0x</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

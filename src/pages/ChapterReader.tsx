@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Home, ArrowLeft, List, Loader2 } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
@@ -47,6 +47,16 @@ const ChapterReader = () => {
   const [fontSize, setFontSize] = useState(18);
   const [fontFamily, setFontFamily] = useState("sans");
   const [theme, setTheme] = useState<'light' | 'sepia' | 'dark'>("dark");
+
+  // Autoscroll state
+  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
+  const [autoScrollSpeed, setAutoScrollSpeed] = useState(() => {
+    const saved = localStorage.getItem('reader_autoscroll_speed');
+    return saved ? parseFloat(saved) : 1.0;
+  });
+  const autoScrollRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number>(0);
+  const scrollAccumulatorRef = useRef<number>(0);
 
 
   // Fetch data
@@ -125,7 +135,8 @@ const ChapterReader = () => {
         toast({ title: "Error", description: "Chapter not found", variant: "destructive" });
       } else {
         setChapter(data);
-        // Scroll to top on new chapter
+        // Stop autoscroll & scroll to top on new chapter
+        setIsAutoScrolling(false);
         window.scrollTo(0, 0);
 
         // Increment Chapter Views
@@ -157,6 +168,76 @@ const ChapterReader = () => {
       console.error("Error updating reading history:", error);
     }
   };
+
+  // Autoscroll logic using requestAnimationFrame with precise floating-point accumulation
+  useEffect(() => {
+    if (!isAutoScrolling) {
+      if (autoScrollRef.current) {
+        cancelAnimationFrame(autoScrollRef.current);
+        autoScrollRef.current = null;
+      }
+      return;
+    }
+
+    // Reset accumulator when starting/resuming
+    scrollAccumulatorRef.current = 0;
+
+    const scrollStep = (timestamp: number) => {
+      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
+      const delta = timestamp - lastTimeRef.current;
+      lastTimeRef.current = timestamp;
+
+      // Clamp delta to prevent huge jumps (e.g. tab switching)
+      const clampedDelta = Math.min(delta, 50);
+
+      const pixelsToScroll = (autoScrollSpeed * 40 * clampedDelta) / 1000;
+
+      const currentScrollY = window.scrollY;
+
+      scrollAccumulatorRef.current += pixelsToScroll;
+
+
+      if (scrollAccumulatorRef.current >= 0.5) {
+        const targetScrollY = currentScrollY + scrollAccumulatorRef.current;
+
+        window.scrollTo({
+          top: targetScrollY,
+          behavior: 'auto' 
+        });
+
+
+        scrollAccumulatorRef.current = 0;
+      }
+
+      // Auto-stop at bottom
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      if (atBottom) {
+        setIsAutoScrolling(false);
+        return;
+      }
+
+      autoScrollRef.current = requestAnimationFrame(scrollStep);
+    };
+
+    lastTimeRef.current = 0;
+    autoScrollRef.current = requestAnimationFrame(scrollStep);
+
+    return () => {
+      if (autoScrollRef.current) {
+        cancelAnimationFrame(autoScrollRef.current);
+      }
+    };
+  }, [isAutoScrolling, autoScrollSpeed]);
+
+  // Save autoscroll speed to localStorage
+  const handleSetAutoScrollSpeed = useCallback((speed: number) => {
+    setAutoScrollSpeed(speed);
+    localStorage.setItem('reader_autoscroll_speed', speed.toString());
+  }, []);
+
+  const toggleAutoScroll = useCallback(() => {
+    setIsAutoScrolling(prev => !prev);
+  }, []);
 
   const [showControls, setShowControls] = useState(true);
   const [isTocOpen, setIsTocOpen] = useState(false);
@@ -320,6 +401,10 @@ const ChapterReader = () => {
               setFontFamily={setFontFamily}
               theme={theme}
               setTheme={toggleTheme}
+              isAutoScrolling={isAutoScrolling}
+              setIsAutoScrolling={setIsAutoScrolling}
+              autoScrollSpeed={autoScrollSpeed}
+              setAutoScrollSpeed={handleSetAutoScrollSpeed}
             />
 
             <Sheet open={isTocOpen} onOpenChange={setIsTocOpen}>
@@ -458,7 +543,11 @@ const ChapterReader = () => {
           </Button>
         </div>
       </div>
-      <ScrollButtons customVisibility={showControls} />
+      <ScrollButtons
+        customVisibility={showControls}
+        isAutoScrolling={isAutoScrolling}
+        onToggleAutoScroll={toggleAutoScroll}
+      />
     </div>
   );
 };
