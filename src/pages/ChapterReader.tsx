@@ -33,6 +33,12 @@ type Novel = Tables<"novels">;
 
 type ChapterListItem = Pick<Chapter, "id" | "title" | "chapter_number">;
 
+const markdownComponents = {
+  p: ({ node, ...props }: any) => <p className="mb-8 leading-loose" {...props} />
+};
+
+const markdownPlugins = [remarkGfm];
+
 const ChapterReader = () => {
   const { id: novelSlug, chapterId } = useParams();
   const navigate = useNavigate();
@@ -192,21 +198,13 @@ const ChapterReader = () => {
 
       const pixelsToScroll = (autoScrollSpeed * 40 * clampedDelta) / 1000;
 
-      const currentScrollY = window.scrollY;
-
       scrollAccumulatorRef.current += pixelsToScroll;
 
+      const scrollAmount = Math.floor(scrollAccumulatorRef.current);
 
-      if (scrollAccumulatorRef.current >= 0.5) {
-        const targetScrollY = currentScrollY + scrollAccumulatorRef.current;
-
-        window.scrollTo({
-          top: targetScrollY,
-          behavior: 'auto' 
-        });
-
-
-        scrollAccumulatorRef.current = 0;
+      if (scrollAmount > 0) {
+        window.scrollBy(0, scrollAmount);
+        scrollAccumulatorRef.current -= scrollAmount;
       }
 
       // Auto-stop at bottom
@@ -453,10 +451,8 @@ const ChapterReader = () => {
           style={{ fontSize: `${fontSize}px`, overflowWrap: 'break-word', wordBreak: 'break-word' }}
         >
           <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              p: ({ node, ...props }) => <p className="mb-8 leading-loose" {...props} />
-            }}
+            remarkPlugins={markdownPlugins}
+            components={markdownComponents}
           >
             {chapter.content || "No content."}
           </ReactMarkdown>

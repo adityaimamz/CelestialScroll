@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Minus, Plus, Settings, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,12 @@ const ReaderSettings = ({
   autoScrollSpeed,
   setAutoScrollSpeed,
 }: ReaderSettingsProps) => {
+  const [localSpeed, setLocalSpeed] = useState(autoScrollSpeed);
+
+  useEffect(() => {
+    setLocalSpeed(autoScrollSpeed);
+  }, [autoScrollSpeed]);
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -160,21 +167,22 @@ const ReaderSettings = ({
                 <div className="flex items-center justify-between">
                   <Label>Speed</Label>
                   <span className="text-sm font-medium text-muted-foreground">
-                    {autoScrollSpeed.toFixed(1)}x
+                    {localSpeed.toFixed(1)}x
                   </span>
                 </div>
                 <Slider
-                  value={[autoScrollSpeed]}
-                  onValueChange={(v) => setAutoScrollSpeed(v[0])}
+                  value={[localSpeed]}
+                  onValueChange={(v) => setLocalSpeed(v[0])}
+                  onValueCommit={(v) => setAutoScrollSpeed(v[0])}
                   min={0.5}
-                  max={10.0}
+                  max={7.5}
                   step={0.1}
                   className="w-full"
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>0.5x</span>
                   <span>5.0x</span>
-                  <span>10.0x</span>
+                  <span>7.5x</span>
                 </div>
               </div>
             </div>
