@@ -44,6 +44,7 @@ export default function Navbar() {
             .from("novels")
             .select("*, chapters(count)")
             .ilike("title", `%${searchQuery}%`)
+            .neq("title", "Request Novel")
             .limit(5);
 
           if (error) throw error;
