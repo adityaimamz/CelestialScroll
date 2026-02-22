@@ -29,7 +29,7 @@ export const BADGE_TIERS: BadgeTier[] = [
   // TIER 2-3: LOW (Basic Elements)
   {
     name: "Martial Warrior",
-    minChapters: 10,
+    minChapters: 13,
     maxStages: 9,
     stageLabel: "Star",
     style: {
@@ -40,7 +40,7 @@ export const BADGE_TIERS: BadgeTier[] = [
   },
   {
     name: "Martial Master",
-    minChapters: 20,
+    minChapters: 25,
     maxStages: 9,
     stageLabel: "Star",
     style: {
@@ -53,7 +53,7 @@ export const BADGE_TIERS: BadgeTier[] = [
   // TIER 4-6: INTERMEDIATE (Precious Metals)
   {
     name: "Great Martial Master",
-    minChapters: 30,
+    minChapters: 37,
     maxStages: 9,
     stageLabel: "Star",
     style: {
@@ -65,7 +65,7 @@ export const BADGE_TIERS: BadgeTier[] = [
   },
   {
     name: "Martial Lord",
-    minChapters: 40,
+    minChapters: 49,
     maxStages: 9,
     stageLabel: "Star",
     style: {
@@ -77,7 +77,7 @@ export const BADGE_TIERS: BadgeTier[] = [
   },
   {
     name: "Martial King",
-    minChapters: 50,
+    minChapters: 61,
     maxStages: 9,
     stageLabel: "Star",
     style: {
@@ -92,7 +92,7 @@ export const BADGE_TIERS: BadgeTier[] = [
   // TIER 7-9: HIGH (Gemstones/Mystic)
   {
     name: "Martial Grandmaster",
-    minChapters: 60,
+    minChapters: 73,
     maxStages: 9,
     stageLabel: "Star",
     style: {
@@ -105,7 +105,7 @@ export const BADGE_TIERS: BadgeTier[] = [
   },
   {
     name: "Martial Emperor",
-    minChapters: 75, // Adjusted gap
+    minChapters: 91,
     maxStages: 9,
     stageLabel: "Star",
     style: {
@@ -118,7 +118,7 @@ export const BADGE_TIERS: BadgeTier[] = [
   },
   {
     name: "Martial Supreme",
-    minChapters: 90,
+    minChapters: 109,
     maxStages: 9,
     stageLabel: "Star",
     style: {
@@ -133,7 +133,7 @@ export const BADGE_TIERS: BadgeTier[] = [
   // TIER 10: LEGENDARY
   {
     name: "Martial Sovereign",
-    minChapters: 110,
+    minChapters: 133,
     maxStages: 9,
     stageLabel: "Star",
     style: {
@@ -148,7 +148,7 @@ export const BADGE_TIERS: BadgeTier[] = [
   // TIER 11: MARTIAL GOD - 4 Sub-Realms sebagai stages
   {
     name: "Martial God",
-    minChapters: 130,
+    minChapters: 156,
     maxStages: 4, // 4 sub-realms: Return to Truth, Heavenly Mastery, Void Extreme, Creation
     stageLabel: "Realm",
     style: {
@@ -167,7 +167,7 @@ export const GOD_STAGES = [
     stage: 1,
     name: "Return to Truth",
     chineseName: "归真境",
-    minChapters: 130,
+    minChapters: 156,
     effect: {
       glowIntensity: 1,
       animationSpeed: "6s",
@@ -181,7 +181,7 @@ export const GOD_STAGES = [
     stage: 2,
     name: "Heavenly Mastery",
     chineseName: "掌天境",
-    minChapters: 160,
+    minChapters: 192,
     effect: {
       glowIntensity: 2,
       animationSpeed: "4s",
@@ -195,7 +195,7 @@ export const GOD_STAGES = [
     stage: 3,
     name: "Void Extreme",
     chineseName: "虚极境",
-    minChapters: 200,
+    minChapters: 240,
     effect: {
       glowIntensity: 3,
       animationSpeed: "3s",
@@ -209,7 +209,7 @@ export const GOD_STAGES = [
     stage: 4,
     name: "Creation Realm Good Fortune",
     chineseName: "造化境",
-    minChapters: 250,
+    minChapters: 300,
     effect: {
       glowIntensity: 4,
       animationSpeed: "2s",
@@ -222,9 +222,10 @@ export const GOD_STAGES = [
 ];
 
 export const getBadgeInfo = (chapterCount: number): BadgeTier => {
+  const normalizedChapters = Math.max(1, chapterCount);
   let currentTier = BADGE_TIERS[0];
   for (const tier of BADGE_TIERS) {
-    if (chapterCount >= tier.minChapters) {
+    if (normalizedChapters >= tier.minChapters) {
       currentTier = tier;
     } else {
       break;
@@ -235,7 +236,8 @@ export const getBadgeInfo = (chapterCount: number): BadgeTier => {
 
 // Helper untuk menghitung stage detail (e.g., 5th Star)
 export const getBadgeStageInfo = (chapterCount: number) => {
-  const currentTier = getBadgeInfo(chapterCount);
+  const normalizedChapters = Math.max(1, chapterCount);
+  const currentTier = getBadgeInfo(normalizedChapters);
   const nextTierIndex = BADGE_TIERS.indexOf(currentTier) + 1;
   const nextTier = BADGE_TIERS[nextTierIndex];
   const isGodTier = currentTier.style.glow === "rainbow";
@@ -245,7 +247,7 @@ export const getBadgeStageInfo = (chapterCount: number) => {
     // Cari God stage saat ini berdasarkan chapter count
     let godStage = GOD_STAGES[0];
     for (const stage of GOD_STAGES) {
-      if (chapterCount >= stage.minChapters) {
+      if (normalizedChapters >= stage.minChapters) {
         godStage = stage;
       } else {
         break;
@@ -256,11 +258,11 @@ export const getBadgeStageInfo = (chapterCount: number) => {
     const nextGodStage = GOD_STAGES[nextGodStageIndex];
 
     const progressInCurrentStage = nextGodStage
-      ? (chapterCount - godStage.minChapters) / (nextGodStage.minChapters - godStage.minChapters)
+      ? (normalizedChapters - godStage.minChapters) / (nextGodStage.minChapters - godStage.minChapters)
       : 1;
 
     const chaptersToNextStage = nextGodStage
-      ? nextGodStage.minChapters - chapterCount
+      ? nextGodStage.minChapters - normalizedChapters
       : 0;
 
     return {
@@ -279,7 +281,7 @@ export const getBadgeStageInfo = (chapterCount: number) => {
   }
 
   // === TIER NORMAL ===
-  const chaptersInCurrentTier = chapterCount - currentTier.minChapters;
+  const chaptersInCurrentTier = normalizedChapters - currentTier.minChapters;
 
   const chaptersPerStage = nextTier
     ? (nextTier.minChapters - currentTier.minChapters) / currentTier.maxStages
@@ -298,7 +300,7 @@ export const getBadgeStageInfo = (chapterCount: number) => {
   const chaptersToNextStage = currentStage < currentTier.maxStages
     ? Math.ceil(chaptersPerStage - (chaptersInCurrentTier % chaptersPerStage))
     : nextTier
-      ? nextTier.minChapters - chapterCount
+      ? nextTier.minChapters - normalizedChapters
       : 0;
 
   return {
