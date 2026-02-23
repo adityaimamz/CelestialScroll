@@ -41,6 +41,7 @@ import { BarLoader } from "@/components/ui/BarLoader";
 import { ImageUpload } from "@/components/ImageUpload";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { logAdminAction } from "@/services/adminLogger";
+import { EpubImporter } from "@/components/EpubImporter";
 
 
 interface Genre {
@@ -65,6 +66,7 @@ interface Chapter {
   title: string;
   published_at: string | null;
   created_at: string;
+  language?: string;
 }
 
 type SortConfig = {
@@ -96,8 +98,9 @@ export default function NovelForm() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loadingChapters, setLoadingChapters] = useState(false);
   const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "chapter_number", direction: "asc" });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "chapter_number", direction: "desc" });
   const [chapterSearchQuery, setChapterSearchQuery] = useState("");
+  const [activeChapterTab, setActiveChapterTab] = useState<string>("id");
   const { userRole } = useAuth();
 
   useEffect(() => {
@@ -171,7 +174,7 @@ export default function NovelForm() {
         .from("chapters")
         .select("*")
         .eq("novel_id", id)
-        .order("chapter_number", { ascending: true });
+        .order("chapter_number", { ascending: false });
 
       if (error) throw error;
       setChapters(data || []);
@@ -377,10 +380,12 @@ export default function NovelForm() {
   });
 
   // Filter chapters based on search query
-  const filteredChapters = sortedChapters.filter((chapter) =>
-    chapter.title.toLowerCase().includes(chapterSearchQuery.toLowerCase()) ||
-    chapter.chapter_number.toString().includes(chapterSearchQuery)
-  );
+  const filteredChapters = sortedChapters.filter((chapter) => {
+    const matchesSearch = chapter.title.toLowerCase().includes(chapterSearchQuery.toLowerCase()) ||
+      chapter.chapter_number.toString().includes(chapterSearchQuery);
+    const matchesLanguage = (chapter.language || 'id') === activeChapterTab;
+    return matchesSearch && matchesLanguage;
+  });
 
   const SortIcon = ({ columnKey }: { columnKey: keyof Chapter }) => {
     if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground/30" />;
@@ -580,23 +585,34 @@ export default function NovelForm() {
           <Card className="bg-card/50 border-border/50">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Daftar Chapter</CardTitle>
-              <Button asChild>
-                <Link to={`/admin/novels/${id}/chapters/new`}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Tambah Chapter
-                </Link>
-              </Button>
+              <div className="flex items-center gap-2">
+                {id && <EpubImporter novelId={id} onImportSuccess={fetchChapters} />}
+                <Button asChild>
+                  <Link to={`/admin/novels/${id}/chapters/new`}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Tambah Chapter
+                  </Link>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              {/* Search Input */}
-              <div className="mb-4 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Cari chapter..."
-                  value={chapterSearchQuery}
-                  onChange={(e) => setChapterSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+              {/* Search Input & Tabs */}
+              <div className="mb-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <Tabs defaultValue="id" value={activeChapterTab} onValueChange={setActiveChapterTab} className="w-[400px]">
+                  <TabsList>
+                    <TabsTrigger value="id">Indonesia</TabsTrigger>
+                    <TabsTrigger value="en">Inggris</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <div className="relative max-w-sm w-full sm:w-auto">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Cari chapter..."
+                    value={chapterSearchQuery}
+                    onChange={(e) => setChapterSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
               <div className="rounded-md border max-h-[500px] overflow-y-auto">
                 <Table>
