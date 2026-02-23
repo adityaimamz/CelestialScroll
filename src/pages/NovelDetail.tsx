@@ -57,6 +57,7 @@ const NovelDetail = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [chaptersPerPage, setChaptersPerPage] = useState(20);
   const [totalChapterCount, setTotalChapterCount] = useState(0);
+  const [indonesianChapterCount, setIndonesianChapterCount] = useState(0);
   const [firstChapterNumber, setFirstChapterNumber] = useState<number | null>(null);
   const [bookmarkCount, setBookmarkCount] = useState(0);
   const [lastReadChapterNumber, setLastReadChapterNumber] = useState<number | null>(null);
@@ -97,8 +98,9 @@ const NovelDetail = () => {
       // 1. Fetch Novel by Slug
       const { data: novelData, error: novelError } = await supabase
         .from("novels")
-        .select("*")
+        .select("*, indocount:chapters(count)")
         .eq("slug", slug)
+        .eq("indocount.language", "id")
         .maybeSingle();
 
       if (novelError) throw novelError;
@@ -126,6 +128,7 @@ const NovelDetail = () => {
       }
 
       setNovel({ ...novelData, views: novelData.views + 1 });
+      setIndonesianChapterCount(novelData.indocount?.[0]?.count || 0);
 
       // Increment Views in DB
       const { error: viewError } = await supabase.rpc('increment_novel_views', { _novel_id: novelData.id });
@@ -442,7 +445,7 @@ const NovelDetail = () => {
             </div>
             <div className="flex items-center gap-1 text-muted-foreground">
               <BookOpen className="w-4 h-4" />
-              <span>{totalChapterCount} {t("novelDetail.chaptersCount")}</span>
+              <span>{indonesianChapterCount} {t("novelDetail.chaptersCount")}</span>
             </div>
             <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="w-4 h-4" />

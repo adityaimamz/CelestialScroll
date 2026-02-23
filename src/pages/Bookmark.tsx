@@ -76,7 +76,7 @@ const Bookmark = () => {
         `)
         .eq("user_id", user!.id)
         .eq("novels.is_published", true)
-        .eq("novels.chapters.language", languageFilter)
+        .eq("novels.chapters.language", "id")
         .neq("novel_id", "00000000-0000-0000-0000-000000000000");
 
       if (error) throw error;

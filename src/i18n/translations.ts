@@ -17,7 +17,7 @@ export const translations: Translations = {
     "nav.search": "Cari novel...",
     "nav.noResults": "Tidak ditemukan.",
     "nav.chapters": "bab",
-    "nav.signIn": "Masuk",
+    "nav.signIn": "Login",
     "nav.signUp": "Daftar",
     "nav.settings": "Pengaturan",
     "nav.admin": "Dashboard Admin",
@@ -256,11 +256,11 @@ export const translations: Translations = {
     "login.failed": "Login gagal",
     "login.errorDesc": "Terjadi kesalahan saat login.",
     "login.googleErrorDesc": "Gagal login dengan Google.",
-    "login.title": "Masuk",
+    "login.title": "Login",
     "login.subtitle": "Masukkan email dan password kamu",
     "login.forgotPassword": "Lupa password?",
-    "login.loginBtn": "Masuk",
-    "login.googleBtn": "Masuk dengan Google",
+    "login.loginBtn": "Login",
+    "login.googleBtn": "Login dengan Google",
     "login.noAccount": "Belum punya akun?",
     "login.registerLink": "Daftar sekarang",
 
@@ -280,7 +280,7 @@ export const translations: Translations = {
     "register.registerBtn": "Daftar",
     "register.googleBtn": "Daftar dengan Google",
     "register.hasAccount": "Sudah punya akun?",
-    "register.loginLink": "Masuk",
+    "register.loginLink": "Login",
 
     // Forgot Password
     "forgot.successTitle": "Email terkirim!",

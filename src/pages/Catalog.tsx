@@ -74,7 +74,7 @@ const Catalog = () => {
         .from("novels")
         .select("*, chapters(count)")
         .eq("is_published", true)
-        .eq("chapters.language", languageFilter)
+        .eq("chapters.language", "id")
         .neq("id", "00000000-0000-0000-0000-000000000000");
 
       // Search

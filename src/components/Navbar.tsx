@@ -45,6 +45,7 @@ export default function Navbar() {
           const { data, error } = await supabase
             .from("novels")
             .select("*, chapters(count)")
+            .eq("chapters.language", "id")
             .ilike("title", `%${searchQuery}%`)
             .neq("title", "Request Novel")
             .limit(5);

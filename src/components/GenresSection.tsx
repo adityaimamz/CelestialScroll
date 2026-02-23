@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 type Genre = Tables<"genres">;
 type Novel = Tables<"novels"> & {
-  chapters: { count: number }[];
+  chapters_count?: number;
   latest_chapter_date?: string | null;
 };
 
@@ -68,12 +68,10 @@ const GenresSection = () => {
           .select(`
             novel:novels!inner (
               *,
-              chapters (count),
-              latest_chapter:chapters (created_at)
+              chapters (created_at, language)
             )
           `)
           .eq("novel.is_published", true)
-          .eq("novel.chapters.language", languageFilter)
           .neq("novel_id", "00000000-0000-0000-0000-000000000000")
           .eq("genre_id", activeGenre)
           .limit(8);
@@ -81,20 +79,27 @@ const GenresSection = () => {
         if (error) throw error;
 
         // Extract the novel objects from the junction result
-        const formattedNovels = data.map((item: any) => {
-          // Find the most recent chapter created_at by sorting client-side
-          const chapters = item.novel?.latest_chapter || [];
-          const latestDate = chapters.length > 0
-            ? chapters
-              .map((ch: any) => ch.created_at)
-              .sort((a: string, b: string) => new Date(b).getTime() - new Date(a).getTime())[0]
+        let formattedNovels = data.map((item: any) => {
+          const allChapters = item.novel?.chapters || [];
+
+          const idChaptersCount = allChapters.filter((ch: any) => ch.language === 'id').length;
+
+          const latestChapters = allChapters.filter((ch: any) => ch.language === 'id');
+
+          const latestDate = latestChapters.length > 0
+            ? latestChapters.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
             : null;
 
           return {
             ...item.novel,
-            latest_chapter_date: latestDate,
+            chapters_count: idChaptersCount,
+            latest_chapter_date: latestDate
           };
         }).filter(Boolean);
+
+        // Hanya tampilkan yang mempunyai chapter indonesia
+        formattedNovels = formattedNovels.filter((n: any) => n.chapters_count > 0);
+
         setNovels(formattedNovels);
       } catch (error) {
         console.error("Error fetching novels for genre:", error);
@@ -148,7 +153,7 @@ const GenresSection = () => {
               cover={novel.cover_url || ""}
               rating={novel.rating || 0}
               status={novel.status as any}
-              chapters={novel.chapters?.[0]?.count || 0}
+              chapters={novel.chapters_count || 0}
               size="auto"
               slug={novel.slug}
               lastUpdate={novel.latest_chapter_date || novel.updated_at}

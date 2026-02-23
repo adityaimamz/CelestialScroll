@@ -31,9 +31,8 @@ const PopularSection = () => {
         .eq("is_published", true)
         .neq("id", "00000000-0000-0000-0000-000000000000");
 
-      if (languageFilter) {
-        query = query.eq("chapters.language", languageFilter);
-      }
+      // Always count Indonesian chapters for the total chapter display
+      query = query.eq("chapters.language", "id");
 
       const { data, error } = await query.limit(6);
 
