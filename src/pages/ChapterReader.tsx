@@ -44,7 +44,7 @@ const ChapterReader = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isAdmin } = useAuth();
-  const { t } = useLanguage();
+  const { t, languageFilter } = useLanguage();
 
   const [novel, setNovel] = useState<Novel | null>(null);
   const [chapter, setChapter] = useState<Chapter | null>(null);
@@ -113,6 +113,7 @@ const ChapterReader = () => {
         .from("chapters")
         .select("id, title, chapter_number")
         .eq("novel_id", novelData.id)
+        .eq("language", languageFilter)
         .order("chapter_number", { ascending: true });
 
       if (listError) throw listError;
@@ -133,6 +134,7 @@ const ChapterReader = () => {
         .select("*")
         .eq("novel_id", novelId)
         .eq("chapter_number", chapterNum)
+        .eq("language", languageFilter)
         .maybeSingle();
 
       if (error) throw error;

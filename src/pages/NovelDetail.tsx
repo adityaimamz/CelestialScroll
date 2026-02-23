@@ -32,7 +32,7 @@ const NovelDetail = () => {
   const { id } = useParams(); // 'id' acts as 'slug' here
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t,  } = useLanguage();
+  const { t, languageFilter, setLanguageFilter } = useLanguage();
 
   const { user, isAdmin } = useAuth();
 
@@ -45,8 +45,6 @@ const NovelDetail = () => {
   const [readChapterIds, setReadChapterIds] = useState<Set<string>>(new Set());
   const [isRatingLoading, setIsRatingLoading] = useState(false);
 
-  // Chapter List State
-  const [chapterLanguage, setChapterLanguage] = useState<"en" | "id">("id");
   const [chapterSearchQuery, setChapterSearchQuery] = useState("");
   const [chapterSortOrder, setChapterSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,8 +53,6 @@ const NovelDetail = () => {
   const [firstChapterNumber, setFirstChapterNumber] = useState<number | null>(null);
   const [bookmarkCount, setBookmarkCount] = useState(0);
   const [lastReadChapterNumber, setLastReadChapterNumber] = useState<number | null>(null);
-
-
   useEffect(() => {
     const fetchFirstChapter = async () => {
       if (!novel) return;
@@ -64,7 +60,7 @@ const NovelDetail = () => {
         .from("chapters")
         .select("chapter_number")
         .eq("novel_id", novel.id)
-        .eq("language", chapterLanguage)
+        .eq("language", languageFilter)
         .order("chapter_number", { ascending: true })
         .limit(1)
         .maybeSingle();
@@ -72,7 +68,7 @@ const NovelDetail = () => {
       setFirstChapterNumber(firstChapter?.chapter_number ?? null);
     };
     fetchFirstChapter();
-  }, [novel, chapterLanguage]);
+  }, [novel, languageFilter]);
 
   useEffect(() => {
     if (id && loading !== undefined) {
@@ -138,7 +134,7 @@ const NovelDetail = () => {
 
       // 2. We don't fetch total chapter count and first chapter here anymore
       // because they will be driven dynamically by `fetchChapters` and `fetchFirstChapter` 
-      // effect based on `chapterLanguage`.
+      // effect based on `languageFilter`.
 
     } catch (error) {
       console.error("Error fetching novel details:", error);
@@ -282,7 +278,7 @@ const NovelDetail = () => {
         .from("chapters")
         .select("*, views", { count: "exact" })
         .eq("novel_id", novel.id)
-        .eq("language", chapterLanguage);
+        .eq("language", languageFilter);
 
       // Server-side search (uses debounced value)
       if (debouncedSearch.trim()) {
@@ -310,17 +306,16 @@ const NovelDetail = () => {
     } finally {
       setChaptersLoading(false);
     }
-  }, [novel, currentPage, chapterSortOrder, debouncedSearch, chapterLanguage]);
+  }, [novel, currentPage, chapterSortOrder, debouncedSearch, languageFilter]);
 
   // Fetch chapters when dependencies change
   useEffect(() => {
     fetchChapters();
   }, [fetchChapters]);
 
-  // Reset page when search or sort or language changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, chapterSortOrder, chapterLanguage]);
+  }, [debouncedSearch, chapterSortOrder, languageFilter]);
 
   const totalPages = Math.ceil(totalChapterCount / CHAPTERS_PER_PAGE);
 
@@ -518,17 +513,17 @@ const NovelDetail = () => {
 
                   <div className="flex bg-background rounded-lg p-1 border border-border">
                     <Button
-                      variant={chapterLanguage === "id" ? "secondary" : "ghost"}
+                      variant={languageFilter === "id" ? "secondary" : "ghost"}
                       size="sm"
-                      onClick={() => setChapterLanguage("id")}
+                      onClick={() => setLanguageFilter("id")}
                       className="h-8 rounded-md px-4"
                     >
                       Indonesia
                     </Button>
                     <Button
-                      variant={chapterLanguage === "en" ? "secondary" : "ghost"}
+                      variant={languageFilter === "en" ? "secondary" : "ghost"}
                       size="sm"
-                      onClick={() => setChapterLanguage("en")}
+                      onClick={() => setLanguageFilter("en")}
                       className="h-8 rounded-md px-4"
                     >
                       English
