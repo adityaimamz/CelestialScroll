@@ -171,6 +171,8 @@ const ChapterReader = () => {
         novel_id: novelId,
         chapter_id: chapterId,
         read_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,chapter_id' // tambahkan ini
       });
     } catch (error) {
       console.error("Error updating reading history:", error);

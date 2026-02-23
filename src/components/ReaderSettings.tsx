@@ -133,8 +133,8 @@ const ReaderSettings = ({
             </div>
           </div>
 
-          {/* Autoscroll Section */}
-          <div className="border-t border-border pt-4">
+          {/* Autoscroll Section - Di-hide sementara sesuai permintaan */}
+          {/* <div className="border-t border-border pt-4">
             <div className="space-y-2 mb-3">
               <h4 className="font-medium leading-none">Autoscroll</h4>
               <p className="text-sm text-muted-foreground">
@@ -186,7 +186,7 @@ const ReaderSettings = ({
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </PopoverContent>
     </Popover>

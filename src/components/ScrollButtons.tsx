@@ -85,7 +85,7 @@ const ScrollButtons = ({ customVisibility, isAutoScrolling, onToggleAutoScroll }
                 <ArrowUp className="h-5 w-5" />
             </Button>
 
-            {/* Autoscroll Toggle - only on reader page */}
+            {/* Autoscroll Toggle - hidden temporarily 
             {isReaderPage && onToggleAutoScroll && (
                 <Button
                     variant="secondary"
@@ -101,7 +101,7 @@ const ScrollButtons = ({ customVisibility, isAutoScrolling, onToggleAutoScroll }
                 >
                     {isAutoScrolling ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                 </Button>
-            )}
+            )} */}
 
             <Button
                 variant="secondary"
