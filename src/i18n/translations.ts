@@ -162,6 +162,8 @@ export const translations: Translations = {
         'novelDetail.chapter': 'Bab',
         'novelDetail.page': 'Halaman',
         'novelDetail.of': 'dari',
+        'novelDetail.show': 'Tampilkan',
+        'novelDetail.goTo': 'Pergi ke',
 
         // Chapter Reader
         'reader.novelNotFound': 'Novel tidak ditemukan',
@@ -462,6 +464,9 @@ export const translations: Translations = {
         'novelDetail.chapter': 'Chapter',
         'novelDetail.page': 'Page',
         'novelDetail.of': 'of',
+        'novelDetail.goTo': 'Go to',
+        'novelDetail.show': 'Show',
+        
 
         // Chapter Reader
         'reader.novelNotFound': 'Novel not found',

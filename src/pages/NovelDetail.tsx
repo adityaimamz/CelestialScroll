@@ -10,6 +10,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +55,7 @@ const NovelDetail = () => {
   const [chapterSearchQuery, setChapterSearchQuery] = useState("");
   const [chapterSortOrder, setChapterSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const CHAPTERS_PER_PAGE = 20;
+  const [chaptersPerPage, setChaptersPerPage] = useState(20);
   const [totalChapterCount, setTotalChapterCount] = useState(0);
   const [firstChapterNumber, setFirstChapterNumber] = useState<number | null>(null);
   const [bookmarkCount, setBookmarkCount] = useState(0);
@@ -271,8 +278,8 @@ const NovelDetail = () => {
     if (!novel) return;
     setChaptersLoading(true);
     try {
-      const from = (currentPage - 1) * CHAPTERS_PER_PAGE;
-      const to = from + CHAPTERS_PER_PAGE - 1;
+      const from = (currentPage - 1) * chaptersPerPage;
+      const to = from + chaptersPerPage - 1;
 
       let query = supabase
         .from("chapters")
@@ -306,18 +313,19 @@ const NovelDetail = () => {
     } finally {
       setChaptersLoading(false);
     }
-  }, [novel, currentPage, chapterSortOrder, debouncedSearch, languageFilter]);
+  }, [novel, currentPage, chaptersPerPage, chapterSortOrder, debouncedSearch, languageFilter]);
 
   // Fetch chapters when dependencies change
   useEffect(() => {
     fetchChapters();
   }, [fetchChapters]);
 
+  // Reset page when search or sort or language or limit changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, chapterSortOrder, languageFilter]);
+  }, [debouncedSearch, chapterSortOrder, languageFilter, chaptersPerPage]);
 
-  const totalPages = Math.ceil(totalChapterCount / CHAPTERS_PER_PAGE);
+  const totalPages = Math.ceil(totalChapterCount / chaptersPerPage);
 
   const getPageNumbers = () => {
     const pages: (number | "ellipsis")[] = [];
@@ -593,11 +601,56 @@ const NovelDetail = () => {
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">
-                    {t("novelDetail.page")} {currentPage} {t("novelDetail.of")} {totalPages}
-                  </span>
+              {totalPages > 0 && (
+                <div className="p-4 border-t border-border flex flex-col items-center justify-between gap-4 w-full">
+                  {/* Top Bar Pagination Controls: Items per page & Jump to */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span>{t("novelDetail.show")}</span>
+                      <Select
+                        value={chaptersPerPage.toString()}
+                        onValueChange={(val) => setChaptersPerPage(Number(val))}
+                      >
+                        <SelectTrigger className="h-8 w-[70px]">
+                          <SelectValue placeholder="20" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                          <SelectItem value="100">100</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span>{t("novelDetail.chaptersCount").toLowerCase()}</span>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <span>
+                        {t("novelDetail.page")} <span className="font-medium text-foreground">{currentPage}</span> {t("novelDetail.of")} <span className="font-medium text-foreground">{totalPages}</span>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span>{t("novelDetail.goTo")}</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={totalPages || 1}
+                          className="h-8 w-[60px] text-center"
+                          placeholder={currentPage.toString()}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const val = parseInt(e.currentTarget.value);
+                              if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                                setCurrentPage(val);
+                                e.currentTarget.value = "";
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Standard Pagination Nav */}
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
