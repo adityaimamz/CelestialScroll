@@ -10,6 +10,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -204,12 +206,14 @@ export default function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setLanguageFilter('id')}>
-                  {t('index.language.id')} {languageFilter === 'id' && '✓'}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLanguageFilter('en')}>
-                  {t('index.language.en')} {languageFilter === 'en' && '✓'}
-                </DropdownMenuItem>
+                <DropdownMenuRadioGroup value={languageFilter} onValueChange={(val) => setLanguageFilter(val as 'id' | 'en')}>
+                  <DropdownMenuRadioItem value="id" className="gap-2">
+                    <span>🇮🇩</span> {t('index.language.id')}
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="en" className="gap-2">
+                    <span>🇺🇸</span> {t('index.language.en')}
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
 
