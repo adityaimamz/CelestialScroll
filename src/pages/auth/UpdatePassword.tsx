@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Lock } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function UpdatePassword() {
+    const { t } = useLanguage();
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -20,8 +22,8 @@ export default function UpdatePassword() {
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (!session) {
                 toast({
-                    title: "Akses Ditolak",
-                    description: "Link tidak valid atau kadaluarsa via session check.",
+                    title: t("updatePw.deniedTitle"),
+                    description: t("updatePw.deniedDesc"),
                     variant: "destructive",
                 });
                 navigate("/login");
@@ -34,8 +36,8 @@ export default function UpdatePassword() {
 
         if (password !== confirmPassword) {
             toast({
-                title: "Password tidak cocok",
-                description: "Pastikan kedua password sama.",
+                title: t("updatePw.mismatchTitle"),
+                description: t("updatePw.mismatchDesc"),
                 variant: "destructive",
             });
             return;
@@ -43,8 +45,8 @@ export default function UpdatePassword() {
 
         if (password.length < 6) {
             toast({
-                title: "Password terlalu pendek",
-                description: "Password minimal 6 karakter.",
+                title: t("updatePw.shortTitle"),
+                description: t("updatePw.shortDesc"),
                 variant: "destructive",
             });
             return;
@@ -60,15 +62,15 @@ export default function UpdatePassword() {
             if (error) throw error;
 
             toast({
-                title: "Password berhasil diubah!",
-                description: "Silakan login dengan password baru Anda.",
+                title: t("updatePw.successTitle"),
+                description: t("updatePw.successDesc"),
             });
 
             navigate("/login");
         } catch (error) {
             toast({
-                title: "Gagal mengubah password",
-                description: (error as Error).message || "Terjadi kesalahan.",
+                title: t("updatePw.failedTitle"),
+                description: (error as Error).message || t("updatePw.failedDesc"),
                 variant: "destructive",
             });
         } finally {
@@ -90,15 +92,15 @@ export default function UpdatePassword() {
                             </span>
                         </Link>
                     </div>
-                    <CardTitle className="text-2xl">Buat Password Baru</CardTitle>
+                    <CardTitle className="text-2xl">{t("updatePw.title")}</CardTitle>
                     <CardDescription>
-                        Masukkan password baru Anda di bawah ini.
+                        {t("updatePw.subtitle")}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleUpdatePassword} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password Baru</Label>
+                            <Label htmlFor="password">{t("updatePw.newPassword")}</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
@@ -113,7 +115,7 @@ export default function UpdatePassword() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+                            <Label htmlFor="confirmPassword">{t("updatePw.confirmPassword")}</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
@@ -129,7 +131,7 @@ export default function UpdatePassword() {
                         </div>
                         <Button type="submit" className="w-full" disabled={loading}>
                             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Ubah Password
+                            {t("updatePw.btn")}
                         </Button>
                     </form>
                 </CardContent>

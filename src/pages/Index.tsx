@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import HeroSection from "@/components/HeroSection";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const AnnouncementsSection = lazy(() => import("@/components/AnnouncementsSection"));
 const TopSeriesSection = lazy(() => import("@/components/TopSeriesSection"));
@@ -20,6 +21,7 @@ const SectionFallback = () => (
 const Index = () => {
   const location = useLocation();
   const [deferSections, setDeferSections] = useState(false);
+  const { languageFilter } = useLanguage();
 
   useEffect(() => {
     if (location.hash) {
@@ -54,13 +56,14 @@ const Index = () => {
       return () => window.cancelIdleCallback(idleId);
     }
 
-    const timeoutId = window.setTimeout(() => setDeferSections(true), 200);
-    return () => window.clearTimeout(timeoutId);
+    const timeoutId = setTimeout(() => setDeferSections(true), 200);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   return (
     <main>
       <HeroSection />
+
       {deferSections ? (
         <Suspense fallback={<SectionFallback />}>
           <AnnouncementsSection />
@@ -68,17 +71,17 @@ const Index = () => {
           <TopSeriesSection />
 
           <div className="section-container grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
-            <div className="lg:col-span-2 space-y-8">
-              <NewReleasesSection />
+            <div className="lg:col-span-2 space-y-8 min-w-0">
+              <NewReleasesSection languageFilter={languageFilter} />
               <GenresSection />
             </div>
 
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 min-w-0">
               <PopularSection />
             </div>
           </div>
 
-          <RecentUpdatesSection />
+          <RecentUpdatesSection languageFilter={languageFilter} />
 
           <RequestSection />
         </Suspense>

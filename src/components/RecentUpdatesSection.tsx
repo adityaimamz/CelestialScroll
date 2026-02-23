@@ -5,6 +5,7 @@ import { Clock } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { supabase } from "@/integrations/supabase/client";
 import SectionHeader from "@/components/SectionHeader";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChapterUpdate {
   id: string;
@@ -18,18 +19,22 @@ interface ChapterUpdate {
     slug: string;
   } | null;
 }
+interface RecentUpdatesSectionProps {
+  languageFilter?: string;
+}
 
-const RecentUpdatesSection = () => {
+const RecentUpdatesSection = ({ languageFilter = "all" }: RecentUpdatesSectionProps) => {
   const [updates, setUpdates] = useState<ChapterUpdate[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchRecentUpdates();
-  }, []);
+  }, [languageFilter]);
 
   const fetchRecentUpdates = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("chapters")
         .select(`
           id,
@@ -37,6 +42,7 @@ const RecentUpdatesSection = () => {
           chapter_number,
           published_at,
           novel_id,
+          language,
           novels!inner (
             title,
             author,
@@ -47,8 +53,13 @@ const RecentUpdatesSection = () => {
         .eq("novels.is_published", true)
         .neq("novel_id", "00000000-0000-0000-0000-000000000000")
         .not("published_at", "is", null)
-        .order("published_at", { ascending: false })
-        .limit(8);
+        .order("published_at", { ascending: false });
+
+      if (languageFilter !== "all") {
+        query = query.eq("language", languageFilter);
+      }
+
+      const { data, error } = await query.limit(8);
 
       if (error) throw error;
       setUpdates((data as any) || []);
@@ -72,8 +83,8 @@ const RecentUpdatesSection = () => {
   return (
     <section className="section-spacing section-container">
       <SectionHeader
-        title="Most Recently Updated"
-        subtitle="Fresh chapters hot off the press"
+        title={t("recent.title")}
+        subtitle={t("recent.subtitle")}
         viewAllLink="/series"
       />
 
@@ -82,10 +93,10 @@ const RecentUpdatesSection = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th className="text-left py-4 px-4 text-sm font-semibold text-foreground">Novel</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-foreground hidden md:table-cell">Latest Chapter</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-foreground hidden lg:table-cell">Author</th>
-                <th className="text-right py-4 px-4 text-sm font-semibold text-foreground">Updated</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-foreground">{t("recent.novel")}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-foreground hidden md:table-cell">{t("recent.latestChapter")}</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-foreground hidden lg:table-cell">{t("recent.author")}</th>
+                <th className="text-right py-4 px-4 text-sm font-semibold text-foreground">{t("recent.updated")}</th>
               </tr>
             </thead>
             <tbody>
@@ -100,12 +111,12 @@ const RecentUpdatesSection = () => {
                       {update.novels?.title}
                     </Link>
                     <Link to={`/series/${update.novels?.slug}/${update.chapter_number}`} className="text-sm text-muted-foreground md:hidden mt-1 line-clamp-1 hover:text-primary">
-                      Chapter {update.chapter_number}: {update.title}
+                      {t("recent.chapter")} {update.chapter_number}: {update.title}
                     </Link>
                   </td>
                   <td className="py-4 px-4 hidden md:table-cell">
                     <Link to={`/series/${update.novels?.slug}/${update.chapter_number}`} className="text-sm text-muted-foreground line-clamp-1 hover:text-primary">
-                      Chapter {update.chapter_number}: {update.title}
+                      {t("recent.chapter")} {update.chapter_number}: {update.title}
                     </Link>
                   </td>
                   <td className="py-4 px-4 hidden lg:table-cell">
@@ -116,7 +127,7 @@ const RecentUpdatesSection = () => {
                   <td className="py-4 px-4 text-right">
                     <div className="flex items-center justify-end gap-1 text-sm text-muted-foreground">
                       <Clock className="w-3.5 h-3.5" />
-                      {update.published_at ? formatDistanceToNow(new Date(update.published_at), { addSuffix: true }) : "Recently"}
+                      {update.published_at ? formatDistanceToNow(new Date(update.published_at), { addSuffix: true }) : t("recent.recently")}
                     </div>
                   </td>
                 </tr>

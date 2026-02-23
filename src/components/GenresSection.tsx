@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
 import { BarLoader } from "@/components/ui/BarLoader";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Genre = Tables<"genres">;
 type Novel = Tables<"novels"> & {
@@ -18,6 +19,7 @@ const GenresSection = () => {
   const [novels, setNovels] = useState<Novel[]>([]);
   const [loading, setLoading] = useState(true);
   const [novelsLoading, setNovelsLoading] = useState(false);
+  const { t, languageFilter } = useLanguage();
 
   // Fetch Genres
   useEffect(() => {
@@ -71,6 +73,7 @@ const GenresSection = () => {
             )
           `)
           .eq("novel.is_published", true)
+          .eq("novel.chapters.language", languageFilter)
           .neq("novel_id", "00000000-0000-0000-0000-000000000000")
           .eq("genre_id", activeGenre)
           .limit(8);
@@ -101,7 +104,7 @@ const GenresSection = () => {
     };
 
     fetchNovelsByGenre();
-  }, [activeGenre]);
+  }, [activeGenre, languageFilter]);
 
   if (loading) return null;
   if (genres.length === 0) return null;
@@ -109,8 +112,8 @@ const GenresSection = () => {
   return (
     <section className="section-spacing" id="genres">
       <SectionHeader
-        title="Popular Genres"
-        subtitle="Explore stories by category"
+        title={t("genres.title")}
+        subtitle={t("genres.subtitle")}
         viewAllLink="/genres"
       />
 
@@ -146,7 +149,7 @@ const GenresSection = () => {
               rating={novel.rating || 0}
               status={novel.status as any}
               chapters={novel.chapters?.[0]?.count || 0}
-              size="large"
+              size="auto"
               slug={novel.slug}
               lastUpdate={novel.latest_chapter_date || novel.updated_at}
             />
@@ -154,7 +157,7 @@ const GenresSection = () => {
         </div>
       ) : (
         <div className="h-40 flex flex-col items-center justify-center text-muted-foreground">
-          <p>No novels found in this genre yet.</p>
+          <p>{t("genres.noNovels")}</p>
         </div>
       )}
     </section>

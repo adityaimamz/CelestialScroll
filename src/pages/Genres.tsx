@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { HoverEffect } from "@/components/ui/card-hover-effect";
 import { BarLoader } from "@/components/ui/BarLoader";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Genre {
   id: string;
@@ -16,6 +17,7 @@ interface Genre {
 }
 
 const Genres = () => {
+  const { t } = useLanguage();
   const [genres, setGenres] = useState<Genre[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -56,8 +58,8 @@ const Genres = () => {
 
     return {
       title: genre.name,
-      description: `${genre.description || "No description available."}`,
-      novels: `${publishedCount} Novels`,
+      description: `${genre.description || t("genresPage.noDescription")}`,
+      novels: `${publishedCount} ${t("genresPage.novels")}`,
       link: `/series?genre=${genre.slug}`,
     };
   });
@@ -65,10 +67,9 @@ const Genres = () => {
   return (
     <div className="max-w-7xl mx-auto px-8 py-10">
       <div className="space-y-4 mb-8">
-        <h1 className="text-4xl font-bold tracking-tight text-center">Popular Genres</h1>
+        <h1 className="text-4xl font-bold tracking-tight text-center">{t("genresPage.title")}</h1>
         <p className="text-muted-foreground text-lg text-center max-w-2xl mx-auto">
-          Explore our vast collection of novels by genre. From action-packed martial arts to
-          mystical cultivation journeys, find your next favorite story.
+          {t("genresPage.subtitle")}
         </p>
       </div>
 
@@ -76,7 +77,7 @@ const Genres = () => {
 
       {genres.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
-          No genres found.
+          {t("genresPage.noGenres")}
         </div>
       )}
     </div>

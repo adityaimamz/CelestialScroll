@@ -22,6 +22,7 @@ import { formatDistanceToNow } from "date-fns";
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import CommentsSection from "@/components/CommentsSection";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Novel = Tables<"novels">;
 type Chapter = Tables<"chapters"> & { views: number };
@@ -31,6 +32,7 @@ const NovelDetail = () => {
   const { id } = useParams(); // 'id' acts as 'slug' here
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t,  } = useLanguage();
 
   const { user, isAdmin } = useAuth();
 
@@ -44,6 +46,7 @@ const NovelDetail = () => {
   const [isRatingLoading, setIsRatingLoading] = useState(false);
 
   // Chapter List State
+  const [chapterLanguage, setChapterLanguage] = useState<"en" | "id">("id");
   const [chapterSearchQuery, setChapterSearchQuery] = useState("");
   const [chapterSortOrder, setChapterSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,6 +55,24 @@ const NovelDetail = () => {
   const [firstChapterNumber, setFirstChapterNumber] = useState<number | null>(null);
   const [bookmarkCount, setBookmarkCount] = useState(0);
   const [lastReadChapterNumber, setLastReadChapterNumber] = useState<number | null>(null);
+
+
+  useEffect(() => {
+    const fetchFirstChapter = async () => {
+      if (!novel) return;
+      const { data: firstChapter } = await supabase
+        .from("chapters")
+        .select("chapter_number")
+        .eq("novel_id", novel.id)
+        .eq("language", chapterLanguage)
+        .order("chapter_number", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      setFirstChapterNumber(firstChapter?.chapter_number ?? null);
+    };
+    fetchFirstChapter();
+  }, [novel, chapterLanguage]);
 
   useEffect(() => {
     if (id && loading !== undefined) {
@@ -80,8 +101,8 @@ const NovelDetail = () => {
       if (novelError) throw novelError;
       if (!novelData) {
         toast({
-          title: "Not Found",
-          description: "Novel not found",
+          title: t("novelDetail.notFound"),
+          description: t("novelDetail.novelNotFound"),
           variant: "destructive"
         });
         setLoading(false);
@@ -91,8 +112,8 @@ const NovelDetail = () => {
       // Check access for unpublished novels
       if (!novelData.is_published && !isAdmin) {
         toast({
-          title: "Unavailable",
-          description: "This novel is not currently published.",
+          title: t("novelDetail.unavailable"),
+          description: t("novelDetail.notPublished"),
           variant: "destructive"
         });
         setLoading(false);
@@ -115,31 +136,15 @@ const NovelDetail = () => {
 
       setBookmarkCount(countData || 0);
 
-      // 2. Fetch total chapter count (lightweight)
-      const { count: chapterCount, error: countError } = await supabase
-        .from("chapters")
-        .select("id", { count: "exact", head: true })
-        .eq("novel_id", novelData.id);
-
-      if (countError) console.error("Error fetching chapter count:", countError);
-      setTotalChapterCount(chapterCount || 0);
-
-      // 3. Fetch first chapter number for "Read Now" button
-      const { data: firstChapter } = await supabase
-        .from("chapters")
-        .select("chapter_number")
-        .eq("novel_id", novelData.id)
-        .order("chapter_number", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-
-      setFirstChapterNumber(firstChapter?.chapter_number ?? null);
+      // 2. We don't fetch total chapter count and first chapter here anymore
+      // because they will be driven dynamically by `fetchChapters` and `fetchFirstChapter` 
+      // effect based on `chapterLanguage`.
 
     } catch (error) {
       console.error("Error fetching novel details:", error);
       toast({
-        title: "Error",
-        description: "Failed to load novel details",
+        title: t("novelDetail.error"),
+        description: t("novelDetail.loadError"),
         variant: "destructive",
       });
     } finally {
@@ -160,7 +165,7 @@ const NovelDetail = () => {
 
   const toggleBookmark = async () => {
     if (!user) {
-      toast({ title: "Login Required", description: "Please login to bookmark novels." });
+      toast({ title: t("bookmarks.loginRequired"), description: t("bookmarks.loginMessage") });
       return;
     }
     if (!novel) return;
@@ -176,12 +181,12 @@ const NovelDetail = () => {
         await supabase.from("bookmarks").delete().eq("user_id", user.id).eq("novel_id", novel.id);
         setIsFavorite(false);
         await fetchBookmarkCount(); // Re-fetch from DB
-        toast({ title: "Removed", description: "Removed from your library." });
+        toast({ title: t("novelDetail.removed"), description: t("novelDetail.removedMessage") });
       } else {
         await supabase.from("bookmarks").insert({ user_id: user.id, novel_id: novel.id });
         setIsFavorite(true);
         await fetchBookmarkCount(); // Re-fetch from DB
-        toast({ title: "Added", description: "Added to your library." });
+        toast({ title: t("novelDetail.added"), description: t("novelDetail.addedMessage") });
       }
     } catch (error) {
       toast({ title: "Error", description: "Failed to update bookmark.", variant: "destructive" });
@@ -201,7 +206,7 @@ const NovelDetail = () => {
 
   const handleRate = async (value: number) => {
     if (!user) {
-      toast({ title: "Login Required", description: "Please login to rate novels." });
+      toast({ title: t("bookmarks.loginRequired"), description: "Please login to rate novels." });
       return;
     }
     if (!novel) return;
@@ -219,7 +224,7 @@ const NovelDetail = () => {
       if (error) throw error;
 
       setUserRating(value);
-      toast({ title: "Rated", description: `You rated this novel ${value} stars.` });
+      toast({ title: t("novelDetail.rated"), description: `${t("novelDetail.ratedMessage")} ${value} ${t("novelDetail.stars")}.` });
 
       const { data } = await supabase.from("novels").select("rating").eq("id", novel.id).single();
       if (data) setNovel(prev => prev ? ({ ...prev, rating: data.rating }) : null);
@@ -276,7 +281,8 @@ const NovelDetail = () => {
       let query = supabase
         .from("chapters")
         .select("*, views", { count: "exact" })
-        .eq("novel_id", novel.id);
+        .eq("novel_id", novel.id)
+        .eq("language", chapterLanguage);
 
       // Server-side search (uses debounced value)
       if (debouncedSearch.trim()) {
@@ -304,17 +310,17 @@ const NovelDetail = () => {
     } finally {
       setChaptersLoading(false);
     }
-  }, [novel, currentPage, chapterSortOrder, debouncedSearch]);
+  }, [novel, currentPage, chapterSortOrder, debouncedSearch, chapterLanguage]);
 
   // Fetch chapters when dependencies change
   useEffect(() => {
     fetchChapters();
   }, [fetchChapters]);
 
-  // Reset page when search or sort changes
+  // Reset page when search or sort or language changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, chapterSortOrder]);
+  }, [debouncedSearch, chapterSortOrder, chapterLanguage]);
 
   const totalPages = Math.ceil(totalChapterCount / CHAPTERS_PER_PAGE);
 
@@ -344,8 +350,8 @@ const NovelDetail = () => {
       navigate(`/series/${id}/chapter/${firstChapterNumber}`);
     } else {
       toast({
-        title: "No Chapters",
-        description: "No chapters available to read yet.",
+        title: t("novelDetail.noChapters"),
+        description: t("novelDetail.noChaptersMessage"),
       });
     }
   };
@@ -362,9 +368,9 @@ const NovelDetail = () => {
   if (!novel) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4">
-        <h1 className="text-2xl font-bold">Novel Not Found</h1>
+        <h1 className="text-2xl font-bold">{t("novelDetail.novelNotFound")}</h1>
         <Button asChild>
-          <Link to="/series">Back to Catalog</Link>
+          <Link to="/series">{t("novelDetail.backToCatalog")}</Link>
         </Button>
       </div>
     );
@@ -387,7 +393,7 @@ const NovelDetail = () => {
           <Link to="/series">
             <Button variant="ghost" className="text-white hover:bg-white/20">
               <ChevronLeft className="w-5 h-5 mr-2" />
-              Back to Catalog
+              {t("novelDetail.backToCatalog")}
             </Button>
           </Link>
         </div>
@@ -406,7 +412,7 @@ const NovelDetail = () => {
         {/* Info */}
         <div className="flex-1 text-center md:text-left text-foreground mb-0 md:mb-6">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">{novel.title}</h1>
-          <p className="text-lg text-muted-foreground mb-4">By <span className="text-primary font-medium">{novel.author || "Unknown"}</span></p>
+          <p className="text-lg text-muted-foreground mb-4">{t("novelDetail.by")} <span className="text-primary font-medium">{novel.author || t("novelDetail.unknown")}</span></p>
 
           <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-6">
             <div className="flex items-center gap-1">
@@ -433,14 +439,14 @@ const NovelDetail = () => {
             </div>
             <div className="flex items-center gap-1 text-muted-foreground">
               <BookOpen className="w-4 h-4" />
-              <span>{totalChapterCount} Chapters</span>
+              <span>{totalChapterCount} {t("novelDetail.chaptersCount")}</span>
             </div>
             <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="w-4 h-4" />
               <span className="capitalize">{novel.status}</span>
             </div>
             {!novel.is_published && (
-              <Badge variant="destructive" className="ml-2">Draft</Badge>
+              <Badge variant="destructive" className="ml-2">{t("novelDetail.draft")}</Badge>
             )}
             <div className="flex items-center gap-1 text-muted-foreground">
               {/* Views could be implemented later if we track them per page load */}
@@ -463,7 +469,7 @@ const NovelDetail = () => {
           <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-3 w-full sm:w-auto">
             <Button size="lg" className="w-full sm:w-auto px-6 md:px-8 gap-2 btn-glow text-sm md:text-base h-10 md:h-11" onClick={handleReadNow}>
               <PlayCircle className="w-4 h-4 md:w-5 md:h-5" />
-              {lastReadChapterNumber ? `Continue Chapter ${lastReadChapterNumber}` : "Read Now"}
+              {lastReadChapterNumber ? `${t("novelDetail.continueChapter")} ${lastReadChapterNumber}` : t("novelDetail.readNow")}
             </Button>
             <Button
               size="lg"
@@ -475,7 +481,7 @@ const NovelDetail = () => {
               onClick={toggleBookmark}
             >
               <Tag className={`w-4 h-4 md:w-5 md:h-5 ${isFavorite ? "fill-current" : ""}`} />
-              {isFavorite ? "Saved" : "Add to Library"}
+              {isFavorite ? t("novelDetail.saved") : t("novelDetail.addToLibrary")}
             </Button>
           </div>
         </div>
@@ -487,17 +493,17 @@ const NovelDetail = () => {
           <TabsList className="grid w-full md:w-[400px] grid-cols-2 mb-8">
             <TabsTrigger value="about" className="gap-2">
               <Info className="w-4 h-4" />
-              About
+              {t("novelDetail.about")}
             </TabsTrigger>
             <TabsTrigger value="chapters" className="gap-2">
               <List className="w-4 h-4" />
-              Chapters
+              {t("novelDetail.chaptersCount")}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="about" className="animate-fade-in">
             <div className="bg-card rounded-xl p-6 md:p-8 shadow-sm">
-              <h3 className="text-xl font-semibold mb-4">Synopsis</h3>
+              <h3 className="text-xl font-semibold mb-4">{t("novelDetail.synopsis")}</h3>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
                 {novel.description}
               </p>
@@ -507,13 +513,34 @@ const NovelDetail = () => {
           <TabsContent value="chapters" className="animate-fade-in">
             <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
               <div className="p-4 bg-muted/30 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4">
-                <span className="font-medium text-muted-foreground mr-auto">Total {totalChapterCount} chapters</span>
+                <div className="flex flex-col sm:flex-row gap-4 items-center mr-auto w-full sm:w-auto">
+                  <span className="font-medium text-muted-foreground whitespace-nowrap">{t("novelDetail.totalChapters")} {totalChapterCount} {t("novelDetail.chaptersCount")}</span>
+
+                  <div className="flex bg-background rounded-lg p-1 border border-border">
+                    <Button
+                      variant={chapterLanguage === "id" ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => setChapterLanguage("id")}
+                      className="h-8 rounded-md px-4"
+                    >
+                      Indonesia
+                    </Button>
+                    <Button
+                      variant={chapterLanguage === "en" ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => setChapterLanguage("en")}
+                      className="h-8 rounded-md px-4"
+                    >
+                      English
+                    </Button>
+                  </div>
+                </div>
 
                 <div className="flex w-full sm:w-auto gap-2">
                   <div className="relative flex-1 sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search chapter..."
+                      placeholder={t("novelDetail.searchChapter")}
                       className="pl-10 h-9 bg-background"
                       value={chapterSearchQuery}
                       onChange={(e) => setChapterSearchQuery(e.target.value)}
@@ -524,7 +551,7 @@ const NovelDetail = () => {
                     size="icon"
                     className="h-9 w-9 shrink-0"
                     onClick={() => setChapterSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-                    title={chapterSortOrder === "asc" ? "Oldest First" : "Newest First"}
+                    title={chapterSortOrder === "asc" ? t("novelDetail.oldestFirst") : t("novelDetail.newestFirst")}
                   >
                     {chapterSortOrder === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
                   </Button>
@@ -538,7 +565,7 @@ const NovelDetail = () => {
                 )}
                 {chapters.length === 0 && !chaptersLoading ? (
                   <div className="p-8 text-center text-muted-foreground">
-                    {totalChapterCount === 0 ? "No chapters uploaded yet." : "No chapters found matching your search."}
+                    {totalChapterCount === 0 ? t("novelDetail.noChaptersUploaded") : t("novelDetail.noChaptersFound")}
                   </div>
                 ) : (
                   chapters.map((chapter) => (
@@ -549,11 +576,11 @@ const NovelDetail = () => {
                     >
                       <div>
                         <h4 className={`font-medium group-hover:text-primary transition-colors ${readChapterIds.has(chapter.id) ? "text-purple-500" : ""}`}>
-                          Chapter {chapter.chapter_number}: {chapter.title}
+                          {t("novelDetail.chapter")} {chapter.chapter_number}: {chapter.title}
                         </h4>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                           <span>
-                            {chapter.published_at ? formatDistanceToNow(new Date(chapter.published_at), { addSuffix: true }) : "Draft"}
+                            {chapter.published_at ? formatDistanceToNow(new Date(chapter.published_at), { addSuffix: true }) : t("novelDetail.draft")}
                           </span>
                           <span>•</span>
                           <span className="inline-flex items-center gap-1">
@@ -563,7 +590,7 @@ const NovelDetail = () => {
                         </div>
                       </div>
                       <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        Read
+                        {t("novelDetail.readBtn")}
                       </Button>
                     </div>
                   ))
@@ -574,7 +601,7 @@ const NovelDetail = () => {
               {totalPages > 1 && (
                 <div className="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
                   <span className="text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages}
+                    {t("novelDetail.page")} {currentPage} {t("novelDetail.of")} {totalPages}
                   </span>
                   <Pagination>
                     <PaginationContent>

@@ -4,12 +4,14 @@ import { Trophy, BookOpen, Star, Eye } from 'lucide-react'
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Novel = Tables<"novels"> & {
     chapters_count?: number;
 };
 
 const Rankings = () => {
+    const { t } = useLanguage();
     const [novels, setNovels] = useState<Novel[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -53,9 +55,9 @@ const Rankings = () => {
                         <div>
                             <h1 className='text-3xl lg:text-4xl font-bold flex items-center justify-center md:justify-start gap-3'>
                                 <Trophy className="w-8 h-8 lg:w-10 lg:h-10 text-yellow-500" />
-                                Most Popular Series
+                                {t("rankings.title")}
                             </h1>
-                            <p className="text-muted-foreground mt-2 flex items-center justify-center text-lg">The most read novels on Celestial Scrolls</p>
+                            <p className="text-muted-foreground mt-2 flex items-center justify-center text-lg">{t("rankings.subtitle")}</p>
                         </div>
                     </div>
                 </div>
@@ -66,7 +68,7 @@ const Rankings = () => {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-                        <p className="text-muted-foreground">Loading rankings...</p>
+                        <p className="text-muted-foreground">{t("rankings.loading")}</p>
                     </div>
                 ) : (
                     <>
@@ -190,17 +192,17 @@ const Rankings = () => {
                         <div className='max-w-5xl mx-auto'>
                             <h2 className='text-2xl font-bold mb-6 flex items-center gap-2 px-2'>
                                 <BookOpen className="w-6 h-6 text-primary" />
-                                Full Leaderboard
+                                {t("rankings.leaderboard")}
                             </h2>
                             <div className='overflow-hidden rounded-xl border border-border/40 bg-card shadow-sm'>
                                 <table className='w-full text-sm md:text-base'>
                                     <thead>
                                         <tr className='border-b border-border/40 text-muted-foreground bg-muted/40'>
-                                            <th className='text-left py-4 px-4 md:px-6 font-medium w-16 md:w-24'>Rank</th>
-                                            <th className='text-left py-4 px-4 md:px-6 font-medium'>Series Title</th>
-                                            <th className='hidden sm:table-cell text-center py-4 px-4 md:px-6 font-medium'>Chapters</th>
-                                            <th className='text-center py-4 px-4 md:px-6 font-medium'>Rating</th>
-                                            <th className='text-right py-4 px-4 md:px-6 font-medium'>Total Views</th>
+                                            <th className='text-left py-4 px-4 md:px-6 font-medium w-16 md:w-24'>{t("rankings.rank")}</th>
+                                            <th className='text-left py-4 px-4 md:px-6 font-medium'>{t("rankings.seriesTitle")}</th>
+                                            <th className='hidden sm:table-cell text-center py-4 px-4 md:px-6 font-medium'>{t("rankings.chapters")}</th>
+                                            <th className='text-center py-4 px-4 md:px-6 font-medium'>{t("rankings.rating")}</th>
+                                            <th className='text-right py-4 px-4 md:px-6 font-medium'>{t("rankings.totalViews")}</th>
                                         </tr>
                                     </thead>
                                     <tbody>

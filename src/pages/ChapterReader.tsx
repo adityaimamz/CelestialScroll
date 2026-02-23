@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Chapter = Tables<"chapters">;
 type Novel = Tables<"novels">;
@@ -44,6 +44,7 @@ const ChapterReader = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isAdmin } = useAuth();
+  const { t } = useLanguage();
 
   const [novel, setNovel] = useState<Novel | null>(null);
   const [chapter, setChapter] = useState<Chapter | null>(null);
@@ -90,16 +91,15 @@ const ChapterReader = () => {
 
       if (novelError) throw novelError;
       if (!novelData) {
-        toast({ title: "Error", description: "Novel not found", variant: "destructive" });
+        toast({ title: t("novelDetail.error"), description: t("reader.novelNotFound"), variant: "destructive" });
         navigate("/series");
         return;
       }
 
-      // Check access for unpublished novels
       if (!novelData.is_published && !isAdmin) {
         toast({
-          title: "Unavailable",
-          description: "This novel is not published.",
+          title: t("novelDetail.unavailable"),
+          description: t("reader.notPublished"),
           variant: "destructive"
         });
         navigate("/series");
@@ -138,7 +138,7 @@ const ChapterReader = () => {
       if (error) throw error;
 
       if (!data) {
-        toast({ title: "Error", description: "Chapter not found", variant: "destructive" });
+        toast({ title: t("novelDetail.error"), description: t("reader.chapterNotFound"), variant: "destructive" });
       } else {
         setChapter(data);
         // Stop autoscroll & scroll to top on new chapter
@@ -312,8 +312,8 @@ const ChapterReader = () => {
   const handleReportSubmit = async () => {
     if (!user) {
       toast({
-        title: "Login Required",
-        description: "Please login to report issues.",
+        title: t("bookmarks.loginRequired"),
+        description: t("reader.loginRequired"),
         variant: "destructive",
       });
       return;
@@ -321,8 +321,8 @@ const ChapterReader = () => {
 
     if (!reportReason.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a reason for the report.",
+        title: t("novelDetail.error"),
+        description: t("reader.emptyReason"),
         variant: "destructive",
       });
       return;
@@ -339,16 +339,16 @@ const ChapterReader = () => {
       if (error) throw error;
 
       toast({
-        title: "Report Submitted",
-        description: "Thank you for detecting the error. We will fix it soon.",
+        title: t("reader.reportSubmitted"),
+        description: t("reader.reportThankYou"),
       });
       setIsReportOpen(false);
       setReportReason("");
     } catch (error) {
       console.error("Error submitting report:", error);
       toast({
-        title: "Error",
-        description: "Failed to submit report.",
+        title: t("novelDetail.error"),
+        description: t("reader.reportFailed"),
         variant: "destructive",
       });
     } finally {
@@ -379,15 +379,15 @@ const ChapterReader = () => {
       >
         <div className="section-container h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} title="Home">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} title={t("reader.home")}>
               <Home className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/series/${novelSlug}`)} title="Back to Series">
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/series/${novelSlug}`)} title={t("reader.backToSeries")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex flex-col">
               <span className="text-sm font-semibold line-clamp-1">{novel?.title}</span>
-              <span className="text-xs text-muted-foreground">Chapter {chapter.chapter_number}</span>
+              <span className="text-xs text-muted-foreground">{t("reader.chapter")} {chapter.chapter_number}</span>
             </div>
           </div>
 
@@ -413,7 +413,7 @@ const ChapterReader = () => {
               </SheetTrigger>
               <SheetContent side="right">
                 <SheetHeader>
-                  <SheetTitle>Table of Contents</SheetTitle>
+                  <SheetTitle>{t("reader.toc")}</SheetTitle>
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100vh-80px)] mt-4">
                   <div className="flex flex-col gap-1 pr-4">
@@ -429,7 +429,7 @@ const ChapterReader = () => {
                         }}
                       >
                         <span className="truncate">
-                          Chapter {ch.chapter_number}: {ch.title}
+                          {t("reader.chapter")} {ch.chapter_number}: {ch.title}
                         </span>
                       </Button>
                     ))}
@@ -454,7 +454,7 @@ const ChapterReader = () => {
             remarkPlugins={markdownPlugins}
             components={markdownComponents}
           >
-            {chapter.content || "No content."}
+            {chapter.content || t("reader.noContent")}
           </ReactMarkdown>
         </article>
 
@@ -464,22 +464,22 @@ const ChapterReader = () => {
             <DialogTrigger asChild>
               <Button variant="ghost" className="text-muted-foreground hover:text-destructive gap-2 text-sm">
                 <Flag className="h-4 w-4" />
-                Ada terjemahan yang salah? Laporkan
+                {t("reader.reportIssue")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Lapor Kesalahan Terjemahan</DialogTitle>
+                <DialogTitle>{t("reader.reportTitle")}</DialogTitle>
                 <DialogDescription>
-                  Bantu kami memperbaiki kualitas terjemahan dengan melaporkan kesalahan yang Anda temukan.
+                  {t("reader.reportDescription")}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="reason">Detail Kesalahan</Label>
+                  <Label htmlFor="reason">{t("reader.reportDetailLabel")}</Label>
                   <Textarea
                     id="reason"
-                    placeholder="Contoh: Pada paragraf ke-3, kata 'Apple' seharusnya diterjemahkan menjadi 'Apel', bukan 'Jeruk'."
+                    placeholder={t("reader.reportPlaceholder")}
                     value={reportReason}
                     onChange={(e) => setReportReason(e.target.value)}
                     rows={4}
@@ -488,11 +488,11 @@ const ChapterReader = () => {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsReportOpen(false)}>
-                  Batal
+                  {t("reader.cancel")}
                 </Button>
                 <Button onClick={handleReportSubmit} disabled={isSubmittingReport}>
                   {isSubmittingReport && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Kirim Laporan
+                  {t("reader.submitReport")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -520,7 +520,7 @@ const ChapterReader = () => {
             className="w-1/3"
           >
             <ChevronLeft className="h-4 w-4 mr-2" />
-            Prev
+            {t("reader.prev")}
           </Button>
 
           <span className="text-sm font-medium text-muted-foreground cursor-pointer" onClick={() => setIsTocOpen(true)}>
@@ -534,7 +534,7 @@ const ChapterReader = () => {
             onClick={handleNext}
             className="w-1/3"
           >
-            Next
+            {t("reader.next")}
             <ChevronRight className="h-4 w-4 ml-2" />
           </Button>
         </div>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { BookOpen, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Novel = Tables<"novels"> & {
   chapters_count?: number;
@@ -12,6 +13,7 @@ const PopularSection = () => {
   const [novels, setNovels] = useState<Novel[]>([]);
   const [timeFilter, setTimeFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchPopularNovels();
@@ -61,7 +63,7 @@ const PopularSection = () => {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold flex items-center gap-2">
           <Trophy className="w-5 h-5 text-yellow-500" />
-          Popular Series
+          {t("popular.title")}
         </h2>
       </div>
 
@@ -94,7 +96,7 @@ const PopularSection = () => {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute top-3 left-3 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded shadow-lg z-10">
-            #1 RANKING
+            {t("popular.ranking")}
           </div>
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-4">
@@ -103,11 +105,11 @@ const PopularSection = () => {
           </h3>
           <div className="flex items-center gap-2 text-white/70 text-xs mt-2">
             <BookOpen className="w-3 h-3" />
-            <span>{featured.chapters_count} Chapters</span>
+            <span>{featured.chapters_count} {t("popular.chapters")}</span>
             <span>•</span>
             <span className="text-yellow-500">★ {featured.rating?.toFixed(1) || "N/A"}</span>
             <span>•</span>
-            <span>{featured.views.toLocaleString()} views</span>
+            <span>{featured.views.toLocaleString()} {t("popular.views")}</span>
           </div>
         </div>
       </Link>
@@ -151,7 +153,7 @@ const PopularSection = () => {
                   {(novel.genres as string[])?.[0]}
                 </span> */}
                 <span className="text-[10px] ml-auto">
-                  {novel.views.toLocaleString()} views
+                  {novel.views.toLocaleString()} {t("popular.views")}
                 </span>
               </div>
             </div>
@@ -161,7 +163,7 @@ const PopularSection = () => {
 
       <div className="mt-4 pt-4 border-t border-border text-center">
         <Link to="/series/rankings" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
-          View Full Rankings
+          {t("popular.viewFull")}
         </Link>
       </div>
     </div>

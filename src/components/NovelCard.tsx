@@ -9,7 +9,7 @@ interface NovelCardProps {
   status?: "ongoing" | "completed";
   chapters?: number;
   genre?: string;
-  size?: "small" | "medium" | "large";
+  size?: "small" | "medium" | "large" | "auto";
   id?: string | number;
   slug?: string;
   lastUpdate?: string;
@@ -67,12 +67,14 @@ const NovelCard = ({
     small: "w-32",
     medium: "w-40",
     large: "w-48",
+    auto: "w-full",
   };
 
   const imageHeights = {
     small: "h-44",
     medium: "h-56",
     large: "h-64",
+    auto: "aspect-[2/3]",
   };
 
   const Content = () => (

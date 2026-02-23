@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Search, Menu, X, BookOpen, Bookmark, Home, Layers, LogOut, Settings, Shield } from "lucide-react";
+import { Search, Menu, X, BookOpen, Bookmark, Home, Layers, LogOut, Settings, Shield, Languages, Send } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 
 export default function Navbar() {
@@ -25,6 +26,7 @@ export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { user, signOut, isAdmin, userRole } = useAuth();
   const navigate = useNavigate();
+  const { t, languageFilter, setLanguageFilter } = useLanguage();
 
   // Search State
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,11 +92,11 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { label: "Home", href: "/", icon: Home },
-    { label: "Series", href: "/series", icon: BookOpen },
-    { label: "Bookmarks", href: "/bookmarks", icon: Bookmark },
-    { label: "Genres", href: "/genres", icon: Layers },
-    { label: "Request", href: "/request", icon: Layers },
+    { label: t("nav.home"), href: "/", icon: Home },
+    { label: t("nav.series"), href: "/series", icon: BookOpen },
+    { label: t("nav.bookmarks"), href: "/bookmarks", icon: Bookmark },
+    { label: t("nav.genres"), href: "/genres", icon: Layers },
+    { label: t("nav.request"), href: "/request", icon: Send },
   ];
 
   return (
@@ -112,7 +114,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden xl:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
@@ -127,11 +129,11 @@ export default function Navbar() {
           {/* Right Side */}
           <div className="flex items-center gap-2">
             {/* Search - Desktop */}
-            <div className="hidden md:flex items-center relative" ref={searchRef}>
+            <div className="hidden xl:flex items-center relative" ref={searchRef}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search novels..."
+                  placeholder={t("nav.search")}
                   className="w-64 pl-10 bg-surface border-border focus:border-primary"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -164,7 +166,7 @@ export default function Navbar() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-sm font-medium leading-tight line-clamp-2 mb-1">{novel.title}</h4>
-                            <p className="text-xs text-muted-foreground">{novel.chapters_count} chapters</p>
+                            <p className="text-xs text-muted-foreground">{novel.chapters_count} {t("nav.chapters")}</p>
                           </div>
                         </Link>
                       ))}
@@ -172,7 +174,7 @@ export default function Navbar() {
                   ) : (
                     !isSearching && (
                       <div className="p-4 text-center text-sm text-muted-foreground">
-                        No results found.
+                        {t("nav.noResults")}
                       </div>
                     )
                   )}
@@ -184,7 +186,7 @@ export default function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="xl:hidden"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
             >
               <Search className="w-5 h-5" />
@@ -193,11 +195,28 @@ export default function Navbar() {
             {/* Theme Toggle */}
             <ThemeToggle />
 
+            {/* Language Toggle */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-9 h-9">
+                  <Languages className="w-5 h-5 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setLanguageFilter('id')}>
+                  {t('index.language.id')} {languageFilter === 'id' && '✓'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguageFilter('en')}>
+                  {t('index.language.en')} {languageFilter === 'en' && '✓'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* Notification Dropdown */}
             {user && <NotificationDropdown />}
 
             {/* Auth Buttons */}
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden xl:flex items-center gap-2">
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -228,30 +247,30 @@ export default function Navbar() {
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="cursor-pointer">
                           <Shield className="mr-2 h-4 w-4" />
-                          <span>Admin Dashboard</span>
+                          <span>{t("nav.admin")}</span>
                         </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem asChild>
                       <Link to="/settings" className="cursor-pointer">
                         <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
+                        <span>{t("nav.settings")}</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
                       <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
+                      <span>{t("nav.logout")}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 <>
                   <Link to="/login">
-                    <Button variant="ghost" size="sm">Sign In</Button>
+                    <Button variant="ghost" size="sm">{t("nav.signIn")}</Button>
                   </Link>
                   <Link to="/register">
-                    <Button variant="default" size="sm">Sign Up</Button>
+                    <Button variant="default" size="sm">{t("nav.signUp")}</Button>
                   </Link>
                 </>
               )}
@@ -261,7 +280,7 @@ export default function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="xl:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -271,11 +290,11 @@ export default function Navbar() {
 
         {/* Mobile Search */}
         {isSearchOpen && (
-          <div className="md:hidden py-3 border-t border-border animate-fade-in relative">
+          <div className="xl:hidden py-3 border-t border-border animate-fade-in relative">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search novels..."
+                placeholder={t("nav.search")}
                 className="w-full pl-10 bg-surface border-border"
                 autoFocus
                 value={searchQuery}
@@ -287,7 +306,7 @@ export default function Navbar() {
             {/* Mobile Search Results */}
             {isSearchOpen && (
               <div
-                className="md:hidden py-3 border-t border-border animate-fade-in relative"
+                className="xl:hidden py-3 border-t border-border animate-fade-in relative"
                 ref={mobileSearchRef}
               >
                 <div className="relative">
@@ -319,13 +338,13 @@ export default function Navbar() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="text-sm font-medium leading-tight line-clamp-2 mb-1">{novel.title}</h4>
-                              <p className="text-xs text-muted-foreground">{novel.chapters_count} chapters</p>
+                              <p className="text-xs text-muted-foreground">{novel.chapters_count} {t("nav.chapters")}</p>
                             </div>
                           </Link>
                         ))}
                       </div>
                     ) : (
-                      !isSearching && <div className="p-4 text-center text-sm text-muted-foreground">No results found.</div>
+                      !isSearching && <div className="p-4 text-center text-sm text-muted-foreground">{t("nav.noResults")}</div>
                     )}
                   </div>
                 )}
@@ -336,24 +355,28 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border animate-fade-in">
+          <div className="xl:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-1">
-              {/* {navLinks.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.label}
-                    to={link.href}
-                    className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-surface rounded-lg transition-all"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {link.label}
-                  </Link>
-                );
-              })} */}
+              <div className="hidden md:flex flex-col gap-1">
+                {navLinks.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <Link
+                      key={link.label}
+                      to={link.href}
+                      className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-surface rounded-lg transition-all"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Icon className="w-5 h-5" />
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
 
-              <div className="px-4">
+              <div className="border-t border-border my-2 hidden md:block" />
+
+              <div className="px-4 md:mt-0 mt-4">
                 {user ? (
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-3 px-2 py-2 mb-2">
@@ -369,29 +392,29 @@ export default function Navbar() {
                     <Link to="/settings" onClick={() => setIsMenuOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start">
                         <Settings className="mr-2 h-4 w-4" />
-                        Settings
+                        {t("nav.settings")}
                       </Button>
                     </Link>
                     {(isAdmin || userRole === "moderator") && (
                       <Link to="/admin" onClick={() => setIsMenuOpen(false)}>
                         <Button variant="ghost" className="w-full justify-start">
                           <Shield className="mr-2 h-4 w-4" />
-                          Admin
+                          {t("nav.admin")}
                         </Button>
                       </Link>
                     )}
                     <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
-                      Log out
+                      {t("nav.logout")}
                     </Button>
                   </div>
                 ) : (
                   <div className="flex gap-2">
                     <Link to="/login" className="flex-1">
-                      <Button variant="outline" className="w-full">Sign In</Button>
+                      <Button variant="outline" className="w-full">{t("nav.signIn")}</Button>
                     </Link>
                     <Link to="/register" className="flex-1">
-                      <Button className="w-full">Sign Up</Button>
+                      <Button className="w-full">{t("nav.signUp")}</Button>
                     </Link>
                   </div>
                 )}

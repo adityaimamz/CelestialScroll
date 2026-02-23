@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +28,13 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { logAdminAction } from "@/services/adminLogger";
+import { EpubImporter } from "@/components/EpubImporter";
+
+interface Novel {
+  id: string;
+  title: string;
+  slug: string;
+}
 
 interface Chapter {
   id: string;
@@ -34,12 +42,7 @@ interface Chapter {
   title: string;
   published_at: string | null;
   created_at: string;
-}
-
-interface Novel {
-  id: string;
-  title: string;
-  slug: string;
+  language?: string;
 }
 
 type SortConfig = {
@@ -55,6 +58,7 @@ export default function ChapterList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "chapter_number", direction: "desc" });
+  const [activeTab, setActiveTab] = useState<string>("id");
   const { toast } = useToast();
   const { userRole } = useAuth();
 
@@ -151,10 +155,12 @@ export default function ChapterList() {
     return sortConfig.direction === "asc" ? compareResult : -compareResult;
   });
 
-  const filteredChapters = sortedChapters.filter((chapter) =>
-    chapter.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    chapter.chapter_number.toString().includes(searchQuery)
-  );
+  const filteredChapters = sortedChapters.filter((chapter) => {
+    const matchesSearch = chapter.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      chapter.chapter_number.toString().includes(searchQuery);
+    const matchesLanguage = (chapter.language || 'id') === activeTab;
+    return matchesSearch && matchesLanguage;
+  });
 
   const SortIcon = ({ columnKey }: { columnKey: keyof Chapter }) => {
     if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground/30" />;
@@ -183,23 +189,35 @@ export default function ChapterList() {
           <h2 className="text-3xl font-bold text-foreground">Chapters</h2>
           <p className="text-muted-foreground">Novel: {novel?.title}</p>
         </div>
-        <Button asChild>
-          <Link to={`/admin/novels/${novelId}/chapters/new`}>
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Chapter
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {novelId && <EpubImporter novelId={novelId} onImportSuccess={fetchData} />}
+          <Button asChild>
+            <Link to={`/admin/novels/${novelId}/chapters/new`}>
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Chapter
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Cari chapter..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <Tabs defaultValue="id" value={activeTab} onValueChange={setActiveTab} className="w-[400px]">
+          <TabsList>
+            <TabsTrigger value="id">Indonesia</TabsTrigger>
+            <TabsTrigger value="en">Inggris</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className="relative max-w-sm w-full sm:w-auto">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Cari chapter..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
 
       {/* Table */}

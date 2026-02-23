@@ -2,6 +2,7 @@
 import { User, Shield, Key } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SettingsLayoutProps {
     children: React.ReactNode;
@@ -10,27 +11,28 @@ interface SettingsLayoutProps {
 }
 
 export function SettingsLayout({ children, activeTab, onTabChange }: SettingsLayoutProps) {
+    const { t } = useLanguage();
     const sidebarItems = [
         {
             id: "profile" as const,
-            label: "Profile",
+            label: t("settings.profile.label"),
             icon: User,
-            description: "Manage your public profile",
+            description: t("settings.profile.desc"),
         },
         {
             id: "security" as const,
-            label: "Security",
+            label: t("settings.security.label"),
             icon: Shield,
-            description: "Manage your password and account security",
+            description: t("settings.security.desc"),
         },
     ];
 
     return (
         <div className="container max-w-6xl py-10 animate-fade-in">
             <div className="flex flex-col gap-2 mb-8">
-                <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{t("settings.title")}</h1>
                 <p className="text-muted-foreground">
-                    Manage your account settings and set e-mail preferences.
+                    {t("settings.subtitle")}
                 </p>
             </div>
 

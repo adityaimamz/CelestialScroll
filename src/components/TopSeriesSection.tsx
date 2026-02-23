@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import SectionHeader from "@/components/SectionHeader";
 import { BarLoader } from "./ui/BarLoader";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Novel = Tables<"novels">;
 
@@ -26,6 +27,7 @@ import {
 const TopSeriesSection = () => {
   const [novels, setNovels] = useState<Novel[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchTopSeries();
@@ -63,8 +65,8 @@ const TopSeriesSection = () => {
   return (
     <section className="section-spacing section-container" id="popular">
       <SectionHeader
-        title="Top Series"
-        subtitle="Series with highest ratings"
+        title={t("topSeries.title")}
+        subtitle={t("topSeries.subtitle")}
         viewAllLink="/series"
       />
 
@@ -122,7 +124,7 @@ const TopSeriesSection = () => {
                   </div>
 
                   <Button variant="secondary" size="sm" asChild className="w-fit">
-                    <Link to={`/series/${novel.slug}`}>Learn More</Link>
+                    <Link to={`/series/${novel.slug}`}>{t("topSeries.learnMore")}</Link>
                   </Button>
 
                   {/* Decorative gradient inside the content area */}

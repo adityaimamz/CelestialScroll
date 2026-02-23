@@ -13,6 +13,7 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { AdminRoute } from "@/components/auth/AdminRoute";
 import { AuthListener } from "@/components/auth/AuthListener";
 import FollowCursor from "@/components/ui/FollowCursor";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 // Public pages
 const Index = lazy(() => import("./pages/Index"));
@@ -58,66 +59,68 @@ const RouteFallback = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AuthListener />
-            <ScrollToTop />
-            <ScrollButtons />
-            <div className="hidden md:block">
-              <FollowCursor color="#19202f" zIndex={50} />
-            </div>
-            <Suspense fallback={<RouteFallback />}>
-              <Routes>
-                {/* Public Routes with MainLayout */}
-                <Route element={<MainLayout />}>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/series" element={<Catalog />} />
-                  <Route path="/series/:id" element={<NovelDetail />} />
-                  <Route path="/bookmarks" element={<Bookmark />} />
-                  <Route path="/series/rankings" element={<Rankings />} />
-                  <Route path="/genres" element={<Genres />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/update-password" element={<UpdatePassword />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/request" element={<RequestNovel />} />
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-
-                {/* Reader Route (No MainLayout/Navbar/Footer) */}
-                <Route path="/series/:id/chapter/:chapterId" element={<ChapterReader />} />
-
-                {/* Admin Routes - Protected */}
-                <Route element={<AdminRoute />}>
-                  <Route element={<AdminLayout />}>
-                    <Route path="/admin" element={<Dashboard />} />
-                    <Route path="/admin/novels" element={<NovelList />} />
-                    <Route path="/admin/novels/new" element={<NovelForm />} />
-                    <Route path="/admin/novels/:id/edit" element={<NovelForm />} />
-                    <Route path="/admin/novels/:novelId/chapters" element={<ChapterList />} />
-                    <Route path="/admin/novels/:novelId/chapters/new" element={<ChapterForm />} />
-                    <Route path="/admin/novels/:novelId/chapters/:chapterId/edit" element={<ChapterForm />} />
-                    <Route path="/admin/users" element={<UserList />} />
-                    <Route path="/admin/genres" element={<GenresList />} />
-                    <Route path="/admin/announcements" element={<AnnouncementsList />} />
-                    <Route path="/admin/reports/comments" element={<CommentReports />} />
-                    <Route path="/admin/reports/chapters" element={<ChapterReports />} />
-                    <Route path="/admin/activity" element={<Activity />} />
-                    <Route path="/admin/logs" element={<AdminLogs />} /> {/* New logs route */}
+    <LanguageProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AuthListener />
+              <ScrollToTop />
+              <ScrollButtons />
+              <div className="hidden md:block">
+                <FollowCursor color="#19202f" zIndex={50} />
+              </div>
+              <Suspense fallback={<RouteFallback />}>
+                <Routes>
+                  {/* Public Routes with MainLayout */}
+                  <Route element={<MainLayout />}>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/series" element={<Catalog />} />
+                    <Route path="/series/:id" element={<NovelDetail />} />
+                    <Route path="/bookmarks" element={<Bookmark />} />
+                    <Route path="/series/rankings" element={<Rankings />} />
+                    <Route path="/genres" element={<Genres />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/update-password" element={<UpdatePassword />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/request" element={<RequestNovel />} />
+                    <Route path="*" element={<NotFound />} />
                   </Route>
-                </Route>
-              </Routes>
-            </Suspense>
-            <Analytics />
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </ThemeProvider>
+
+                  {/* Reader Route (No MainLayout/Navbar/Footer) */}
+                  <Route path="/series/:id/chapter/:chapterId" element={<ChapterReader />} />
+
+                  {/* Admin Routes - Protected */}
+                  <Route element={<AdminRoute />}>
+                    <Route element={<AdminLayout />}>
+                      <Route path="/admin" element={<Dashboard />} />
+                      <Route path="/admin/novels" element={<NovelList />} />
+                      <Route path="/admin/novels/new" element={<NovelForm />} />
+                      <Route path="/admin/novels/:id/edit" element={<NovelForm />} />
+                      <Route path="/admin/novels/:novelId/chapters" element={<ChapterList />} />
+                      <Route path="/admin/novels/:novelId/chapters/new" element={<ChapterForm />} />
+                      <Route path="/admin/novels/:novelId/chapters/:chapterId/edit" element={<ChapterForm />} />
+                      <Route path="/admin/users" element={<UserList />} />
+                      <Route path="/admin/genres" element={<GenresList />} />
+                      <Route path="/admin/announcements" element={<AnnouncementsList />} />
+                      <Route path="/admin/reports/comments" element={<CommentReports />} />
+                      <Route path="/admin/reports/chapters" element={<ChapterReports />} />
+                      <Route path="/admin/activity" element={<Activity />} />
+                      <Route path="/admin/logs" element={<AdminLogs />} /> {/* New logs route */}
+                    </Route>
+                  </Route>
+                </Routes>
+              </Suspense>
+              <Analytics />
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 

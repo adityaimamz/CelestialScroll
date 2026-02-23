@@ -15,6 +15,7 @@ import {
 import { ChevronDown, ArrowUp, ArrowDown, Bookmark as BookmarkIcon } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Defines the shape of data we get from the join
 type BookmarkWithNovel = {
@@ -33,14 +34,15 @@ type NovelDisplay = Tables<"novels"> & {
 
 const ITEMS_PER_PAGE = 10;
 const SORT_OPTIONS = [
-  { label: "Waktu Ditambahkan", value: "time_added" },
-  { label: "Rating", value: "rating" },
-  { label: "Chapter Terbaru", value: "latest_chapter" },
+  { labelKey: "bookmarks.timeAdded", value: "time_added" },
+  { labelKey: "bookmarks.rating", value: "rating" },
+  { labelKey: "bookmarks.latestChapter", value: "latest_chapter" },
 ];
 
 const Bookmark = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t, languageFilter } = useLanguage();
 
   const [bookmarks, setBookmarks] = useState<NovelDisplay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +58,7 @@ const Bookmark = () => {
     } else {
       setLoading(false); // Not logged in
     }
-  }, [user]);
+  }, [user, languageFilter]);
 
   const fetchBookmarks = async () => {
     setLoading(true);
@@ -74,6 +76,7 @@ const Bookmark = () => {
         `)
         .eq("user_id", user!.id)
         .eq("novels.is_published", true)
+        .eq("novels.chapters.language", languageFilter)
         .neq("novel_id", "00000000-0000-0000-0000-000000000000");
 
       if (error) throw error;
@@ -135,8 +138,8 @@ const Bookmark = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4">
         <BookmarkIcon className="w-16 h-16 text-muted-foreground/50" />
-        <h1 className="text-2xl font-bold">Login Required</h1>
-        <p className="text-muted-foreground">Please login to view your bookmarks.</p>
+        <h1 className="text-2xl font-bold">{t("bookmarks.loginRequired")}</h1>
+        <p className="text-muted-foreground">{t("bookmarks.loginMessage")}</p>
         <Link to="/login"><Button>Sign In</Button></Link>
       </div>
     );
@@ -146,7 +149,7 @@ const Bookmark = () => {
     <div className="min-h-screen bg-background pb-20">
       <div className="bg-surface border-b border-border py-8">
         <div className="section-container">
-          <h1 className="text-3xl font-bold mb-4">My Bookmarks</h1>
+          <h1 className="text-3xl font-bold mb-4">{t("bookmarks.title")}</h1>
 
           {/* Controls */}
           <div className="flex flex-wrap gap-4 items-center">
@@ -154,7 +157,7 @@ const Bookmark = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-48 justify-between">
                   <span className="truncate">
-                    {SORT_OPTIONS.find(opt => opt.value === sortBy)?.label}
+                    {t(SORT_OPTIONS.find(opt => opt.value === sortBy)?.labelKey || "")}
                   </span>
                   <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
                 </Button>
@@ -162,7 +165,7 @@ const Bookmark = () => {
               <DropdownMenuContent>
                 {SORT_OPTIONS.map(option => (
                   <DropdownMenuItem key={option.value} onClick={() => setSortBy(option.value)}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -172,7 +175,7 @@ const Bookmark = () => {
               variant="outline"
               size="icon"
               onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-              title={sortOrder === "asc" ? "Ascending" : "Descending"}
+              title={sortOrder === "asc" ? t("bookmarks.ascending") : t("bookmarks.descending")}
             >
               {sortOrder === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
             </Button>
@@ -181,7 +184,7 @@ const Bookmark = () => {
       </div>
 
       <div className="section-container py-8">
-        <SectionHeader title={`Saved Series (${bookmarks.length})`} />
+        <SectionHeader title={`${t("bookmarks.savedSeries")} (${bookmarks.length})`} />
 
         {loading ? (
           <div className="flex justify-center py-20">
@@ -199,7 +202,7 @@ const Bookmark = () => {
                   status={novel.status as any}
                   chapters={novel.chapters_count}
                   // genre={novel.genres?.[0] || "Unknown"}
-                  size="medium"
+                  size="auto"
                   id={novel.id}
                   slug={novel.slug}
                 />
@@ -214,17 +217,17 @@ const Bookmark = () => {
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 >
-                  Previous
+                  {t("bookmarks.previous")}
                 </Button>
                 <div className="flex items-center px-4 font-medium">
-                  Page {currentPage} of {totalPages}
+                  {t("bookmarks.page")} {currentPage} {t("bookmarks.of")} {totalPages}
                 </div>
                 <Button
                   variant="outline"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 >
-                  Next
+                  {t("bookmarks.next")}
                 </Button>
               </div>
             )}
@@ -232,9 +235,9 @@ const Bookmark = () => {
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-4">
             <BookmarkIcon className="w-12 h-12 opacity-20" />
-            <p>You haven't bookmarked any novels yet.</p>
+            <p>{t("bookmarks.empty")}</p>
             <Link to="/series">
-              <Button variant="link">Browse Series</Button>
+              <Button variant="link">{t("bookmarks.browse")}</Button>
             </Link>
           </div>
         )}

@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, ArrowLeft } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ForgotPassword() {
+    const { t } = useLanguage();
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
@@ -25,15 +27,15 @@ export default function ForgotPassword() {
             if (error) throw error;
 
             toast({
-                title: "Email terkirim!",
-                description: "Silakan cek email untuk link reset password Anda.",
+                title: t("forgot.successTitle"),
+                description: t("forgot.successDesc"),
             });
 
             // Optional: Navigate back to login after some time or let them stay
         } catch (error) {
             toast({
-                title: "Gagal mengirim email",
-                description: (error as Error).message || "Terjadi kesalahan.",
+                title: t("forgot.failedTitle"),
+                description: (error as Error).message || t("forgot.failedDesc"),
                 variant: "destructive",
             });
         } finally {
@@ -55,15 +57,15 @@ export default function ForgotPassword() {
                             </span>
                         </Link>
                     </div>
-                    <CardTitle className="text-2xl">Lupa Password?</CardTitle>
+                    <CardTitle className="text-2xl">{t("forgot.title")}</CardTitle>
                     <CardDescription>
-                        Masukkan email Anda, kami akan mengirimkan link reset password.
+                        {t("forgot.subtitle")}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleResetPassword} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">{t("auth.email")}</Label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
@@ -79,14 +81,14 @@ export default function ForgotPassword() {
                         </div>
                         <Button type="submit" className="w-full" disabled={loading}>
                             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Kirim Link Reset
+                            {t("forgot.sendBtn")}
                         </Button>
                     </form>
                 </CardContent>
                 <CardFooter className="flex justify-center">
                     <Link to="/login" className="flex items-center text-sm text-muted-foreground hover:text-primary">
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Kembali ke Login
+                        {t("forgot.backToLogin")}
                     </Link>
                 </CardFooter>
             </Card>

@@ -15,6 +15,7 @@ import SectionHeader from "@/components/SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Novel = Tables<"novels"> & {
   chapters_count?: number;
@@ -24,6 +25,7 @@ const genres = ["All", "Wuxia", "Xianxia", "Xuanhuan", "Fantasy", "Martial Arts"
 const sortOptions = ["Popular", "Newest", "Rating", "Alphabetical"];
 
 const Catalog = () => {
+  const { t, languageFilter } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const genreParam = searchParams.get("genre");
 
@@ -62,7 +64,7 @@ const Catalog = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [selectedGenre, sortBy, searchQuery]);
+  }, [selectedGenre, sortBy, searchQuery, languageFilter]);
 
   const fetchNovels = async (pageNum: number) => {
     if (pageNum === 0) setLoading(true);
@@ -72,6 +74,7 @@ const Catalog = () => {
         .from("novels")
         .select("*, chapters(count)")
         .eq("is_published", true)
+        .eq("chapters.language", languageFilter)
         .neq("id", "00000000-0000-0000-0000-000000000000");
 
       // Search
@@ -151,13 +154,13 @@ const Catalog = () => {
       <div className="bg-surface border-b border-border py-8">
         <div className="section-container">
           <h1 className="text-3xl font-bold mb-4">
-            {selectedGenre !== "All" ? `Archive for ${selectedGenre}` : "Browse Series"}
+            {selectedGenre !== "All" ? `${t("catalog.archive")} ${selectedGenre}` : t("catalog.browse")}
           </h1>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search series..."
+                placeholder={t("catalog.search")}
                 className="pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -168,7 +171,7 @@ const Catalog = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-40 justify-between">
-                    <span className="truncate">Genre: {selectedGenre}</span>
+                    <span className="truncate">{t("catalog.genre")}: {selectedGenre}</span>
                     <Filter className="w-4 h-4 ml-2 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -184,14 +187,14 @@ const Catalog = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-40 justify-between">
-                    <span className="truncate">Sort: {sortBy}</span>
+                    <span className="truncate">{t("catalog.sort")}: {t(`sort.${sortBy.toLowerCase()}`) !== `sort.${sortBy.toLowerCase()}` ? t(`sort.${sortBy.toLowerCase()}`) : sortBy}</span>
                     <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   {sortOptions.map((option) => (
                     <DropdownMenuItem key={option} onClick={() => setSortBy(option)}>
-                      {option}
+                      {t(`sort.${option.toLowerCase()}`) !== `sort.${option.toLowerCase()}` ? t(`sort.${option.toLowerCase()}`) : option}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -203,7 +206,7 @@ const Catalog = () => {
 
       {/* Grid */}
       <div className="section-container py-8">
-        <SectionHeader title={`All Series (${novels.length})`} />
+        <SectionHeader title={`${t("catalog.allSeries")} (${novels.length})`} />
 
         {loading && page === 0 ? (
           <div className="flex justify-center py-20">
@@ -221,7 +224,7 @@ const Catalog = () => {
                   status={novel.status as any}
                   chapters={novel.chapters_count || 0}
                   // genre={novel.genres?.[0] || "Unknown"}
-                  size="medium"
+                  size="auto"
                   id={novel.id}
                   slug={novel.slug}
                 />
@@ -240,14 +243,14 @@ const Catalog = () => {
                   }}
                   disabled={loading}
                 >
-                  {loading ? <BarLoader /> : "Load More Series"}
+                  {loading ? <BarLoader /> : t("catalog.loadMore")}
                 </Button>
               </div>
             )}
           </>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-            <p>No novels found matching your criteria.</p>
+            <p>{t("catalog.noNovels")}</p>
             <Button
               variant="link"
               onClick={() => {
@@ -255,7 +258,7 @@ const Catalog = () => {
                 setSearchQuery("");
               }}
             >
-              Clear filters
+              {t("catalog.clearFilters")}
             </Button>
           </div>
         )}

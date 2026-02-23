@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, Lock } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Login() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,13 +48,13 @@ export default function Login() {
       }
 
       toast({
-        title: "Login berhasil!",
-        description: "Selamat datang kembali.",
+        title: t("login.success"),
+        description: t("login.welcome"),
       });
     } catch (error) {
       toast({
-        title: "Login gagal",
-        description: (error as Error).message || "Terjadi kesalahan saat login.",
+        title: t("login.failed"),
+        description: (error as Error).message || t("login.errorDesc"),
         variant: "destructive",
       });
     } finally {
@@ -72,8 +74,8 @@ export default function Login() {
       if (error) throw error;
     } catch (error) {
       toast({
-        title: "Login gagal",
-        description: (error as Error).message || "Terjadi kesalahan saat login with Google.",
+        title: t("login.failed"),
+        description: (error as Error).message || t("login.googleErrorDesc"),
         variant: "destructive",
       });
     }
@@ -93,15 +95,15 @@ export default function Login() {
               </span>
             </Link>
           </div>
-          <CardTitle className="text-2xl">Masuk ke Akun</CardTitle>
+          <CardTitle className="text-2xl">{t("login.title")}</CardTitle>
           <CardDescription>
-            Masukkan email dan password untuk melanjutkan
+            {t("login.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -116,7 +118,7 @@ export default function Login() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("auth.password")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -135,12 +137,12 @@ export default function Login() {
                 to="/forgot-password"
                 className="text-sm font-medium text-primary hover:underline"
               >
-                Lupa password?
+                {t("login.forgotPassword")}
               </Link>
             </div>
             <Button type="submit" className="w-full mt-4" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Masuk
+              {t("login.loginBtn")}
             </Button>
           </form>
 
@@ -149,7 +151,7 @@ export default function Login() {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">atau</span>
+              <span className="bg-card px-2 text-muted-foreground">{t("auth.or")}</span>
             </div>
           </div>
 
@@ -177,14 +179,14 @@ export default function Login() {
                 fill="#EA4335"
               />
             </svg>
-            Masuk dengan Google
+            {t("login.googleBtn")}
           </Button>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Belum punya akun?{" "}
+            {t("login.noAccount")}{" "}
             <Link to="/register" className="text-primary hover:underline">
-              Daftar sekarang
+              {t("login.registerLink")}
             </Link>
           </p>
         </CardFooter>

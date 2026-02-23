@@ -22,6 +22,7 @@ interface ChapterFormData {
   title: string;
   content: string;
   published: boolean;
+  language: string;
 }
 
 export default function ChapterForm() {
@@ -40,6 +41,7 @@ export default function ChapterForm() {
     title: "",
     content: "",
     published: true,
+    language: "id",
   });
 
   useEffect(() => {
@@ -47,9 +49,15 @@ export default function ChapterForm() {
     if (isEditing) {
       fetchChapter();
     } else {
-      fetchNextChapterNumber();
+      fetchNextChapterNumber(formData.language);
     }
   }, [novelId, chapterId]);
+
+  useEffect(() => {
+    if (!isEditing && novelId) {
+      fetchNextChapterNumber(formData.language);
+    }
+  }, [formData.language]);
 
   const fetchNovelInfo = async () => {
     const { data } = await supabase
@@ -63,11 +71,12 @@ export default function ChapterForm() {
     }
   };
 
-  const fetchNextChapterNumber = async () => {
+  const fetchNextChapterNumber = async (lang: string) => {
     const { data } = await supabase
       .from("chapters")
       .select("chapter_number")
       .eq("novel_id", novelId)
+      .eq("language", lang)
       .order("chapter_number", { ascending: false })
       .limit(1);
 
@@ -75,6 +84,11 @@ export default function ChapterForm() {
       setFormData((prev) => ({
         ...prev,
         chapter_number: data[0].chapter_number + 1,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        chapter_number: 1,
       }));
     }
   };
@@ -95,6 +109,7 @@ export default function ChapterForm() {
         title: data.title,
         content: data.content || "",
         published: !!data.published_at,
+        language: data.language || "id",
       });
 
       fetchAdjacentChapters(data.chapter_number);
@@ -155,6 +170,7 @@ export default function ChapterForm() {
         title: formData.title.trim(), // Can be empty string now
         content: formData.content.trim() || null,
         published_at: formData.published ? new Date().toISOString() : null,
+        language: formData.language,
       };
 
       if (isEditing) {
@@ -285,6 +301,18 @@ export default function ChapterForm() {
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       placeholder="Judul chapter"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Bahasa</Label>
+                    <select
+                      id="language"
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={formData.language}
+                      onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                    >
+                      <option value="id">Indonesia</option>
+                      <option value="en">Inggris</option>
+                    </select>
                   </div>
                 </div>
 

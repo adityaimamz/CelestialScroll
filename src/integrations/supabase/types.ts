@@ -20,6 +20,7 @@ export type Database = {
           content: string | null
           created_at: string
           id: string
+          language: string
           novel_id: string
           published_at: string | null
           title: string
@@ -29,6 +30,7 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          language?: string
           novel_id: string
           published_at?: string | null
           title: string
@@ -38,6 +40,7 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          language?: string
           novel_id?: string
           published_at?: string | null
           title?: string

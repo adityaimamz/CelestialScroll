@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, Lock, User } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Register() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -29,8 +31,8 @@ export default function Register() {
       if (error) throw error;
     } catch (error) {
       toast({
-        title: "Login gagal",
-        description: (error as Error).message || "Terjadi kesalahan saat login dengan Google.",
+        title: t("register.failedTitle"),
+        description: (error as Error).message || t("login.googleErrorDesc"),
         variant: "destructive",
       });
     }
@@ -41,8 +43,8 @@ export default function Register() {
 
     if (password !== confirmPassword) {
       toast({
-        title: "Password tidak cocok",
-        description: "Pastikan password dan konfirmasi password sama.",
+        title: t("register.passwordMismatchTitle"),
+        description: t("register.passwordMismatchDesc"),
         variant: "destructive",
       });
       return;
@@ -50,8 +52,8 @@ export default function Register() {
 
     if (password.length < 6) {
       toast({
-        title: "Password terlalu pendek",
-        description: "Password minimal 6 karakter.",
+        title: t("register.passwordShortTitle"),
+        description: t("register.passwordShortDesc"),
         variant: "destructive",
       });
       return;
@@ -74,16 +76,16 @@ export default function Register() {
       if (error) throw error;
 
       toast({
-        title: "Registrasi berhasil!",
-        description: "Silakan cek email untuk verifikasi akun Anda.",
+        title: t("register.successTitle"),
+        description: t("register.successDesc"),
       });
 
       navigate("/login");
     } catch (error) {
       console.error("FULL REGISTRATION ERROR:", error);
       toast({
-        title: "Registrasi gagal",
-        description: (error as Error).message || "Terjadi kesalahan saat registrasi.",
+        title: t("register.failedTitle"),
+        description: (error as Error).message || t("register.failedDesc"),
         variant: "destructive",
       });
     } finally {
@@ -105,15 +107,15 @@ export default function Register() {
               </span>
             </Link>
           </div>
-          <CardTitle className="text-2xl">Buat Akun Baru</CardTitle>
+          <CardTitle className="text-2xl">{t("register.title")}</CardTitle>
           <CardDescription>
-            Isi form di bawah untuk membuat akun
+            {t("register.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">{t("register.username")}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -128,7 +130,7 @@ export default function Register() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -143,7 +145,7 @@ export default function Register() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("auth.password")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -158,7 +160,7 @@ export default function Register() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+              <Label htmlFor="confirmPassword">{t("register.confirmPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -174,7 +176,7 @@ export default function Register() {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Daftar
+              {t("register.registerBtn")}
             </Button>
           </form>
 
@@ -183,7 +185,7 @@ export default function Register() {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">atau</span>
+              <span className="bg-card px-2 text-muted-foreground">{t("auth.or")}</span>
             </div>
           </div>
 
@@ -211,14 +213,14 @@ export default function Register() {
                 fill="#EA4335"
               />
             </svg>
-            Daftar dengan Google
+            {t("register.googleBtn")}
           </Button>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Sudah punya akun?{" "}
+            {t("register.hasAccount")}{" "}
             <Link to="/login" className="text-primary hover:underline">
-              Masuk
+              {t("register.loginLink")}
             </Link>
           </p>
         </CardFooter>

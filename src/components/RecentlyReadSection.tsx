@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { BookOpen, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Define the type for the joined data
 type ReadingHistoryEntry = {
@@ -25,6 +26,7 @@ const RecentlyReadSection = () => {
     const { user } = useAuth();
     const [recentlyRead, setRecentlyRead] = useState<ReadingHistoryEntry | null>(null);
     const [loading, setLoading] = useState(true);
+    const { t } = useLanguage();
 
     useEffect(() => {
         const fetchRecentlyRead = async () => {
@@ -84,7 +86,7 @@ const RecentlyReadSection = () => {
         <section className="section-container pb-6 animate-fade-in">
             <div className="flex items-center gap-2 mb-4">
                 <Clock className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-foreground">Pick Up Where You Left Off</h3>
+                <h3 className="font-semibold text-foreground">{t("recentlyRead.title")}</h3>
             </div>
 
             <Link
@@ -111,16 +113,16 @@ const RecentlyReadSection = () => {
                         <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
                             <span className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded text-xs font-medium">
                                 <BookOpen className="w-3.5 h-3.5" />
-                                Chapter {chapter.chapter_number}
+                                {t("recentlyRead.chapter")} {chapter.chapter_number}
                             </span>
                             <span className="text-xs opacity-75">
-                                Last read {new Date(recentlyRead.read_at).toLocaleDateString()}
+                                {t("recentlyRead.lastRead")} {new Date(recentlyRead.read_at).toLocaleDateString()}
                             </span>
                         </div>
 
                         <div className="mt-auto">
                             <span className="text-sm font-medium text-primary group-hover:underline decoration-primary/50 underline-offset-4">
-                                Continue Reading →
+                                {t("recentlyRead.continue")}
                             </span>
                         </div>
                     </div>

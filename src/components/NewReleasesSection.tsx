@@ -4,30 +4,40 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import NovelCard from "@/components/NovelCard";
 import SectionHeader from "@/components/SectionHeader";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Novel = Tables<"novels"> & {
   chapters_count?: number;
   latest_chapter_date?: string | null;
 };
+interface NewReleasesSectionProps {
+  languageFilter?: string;
+}
 
-const NewReleasesSection = () => {
+const NewReleasesSection = ({ languageFilter = "all" }: NewReleasesSectionProps) => {
   const [novels, setNovels] = useState<Novel[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchNewReleases();
-  }, []);
+  }, [languageFilter]);
 
   const fetchNewReleases = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("novels")
-        .select("*, chapters(count), latest_chapter:chapters(created_at)")
+        .select("*, chapters(count, language), latest_chapter:chapters(created_at, language)")
         .order("created_at", { ascending: false })
         .order("created_at", { referencedTable: "latest_chapter", ascending: false })
         .eq("is_published", true)
         .neq("id", "00000000-0000-0000-0000-000000000000")
-        .limit(6);
+
+      if (languageFilter !== "all") {
+        query = query.eq("chapters.language", languageFilter).eq("latest_chapter.language", languageFilter);
+      }
+
+      const { data, error } = await query.limit(6);
 
       if (error) throw error;
 
@@ -59,8 +69,8 @@ const NewReleasesSection = () => {
   return (
     <section className="section-spacing" id="new">
       <SectionHeader
-        title="New Releases"
-        subtitle="Fresh stories just started"
+        title={t("newReleases.title")}
+        subtitle={t("newReleases.subtitle")}
         viewAllLink="/series"
       />
 

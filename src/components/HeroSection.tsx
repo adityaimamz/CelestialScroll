@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import heroBanner from "@/assets/hero-banner.jpg";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Carousel,
   CarouselContent,
@@ -20,6 +21,7 @@ type Novel = Tables<"novels"> & {
 const HeroSection = () => {
   const [novels, setNovels] = useState<Novel[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchFeaturedNovels();
@@ -127,15 +129,15 @@ const HeroSection = () => {
                   <div className="flex items-center gap-4 mb-8 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <span className="text-accent font-semibold">{novel.rating || "N/A"}</span>
-                      ★ Rating
+                      ★ {t("hero.rating")}
                     </span>
                     <span className="w-1 h-1 rounded-full bg-muted-foreground" />
-                    <span>{novel.chapters_count || 0} Chapters</span>
+                    <span>{novel.chapters_count || 0} {t("nav.chapters")}</span>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <Button variant="hero" size="lg" asChild className="btn-glow">
-                      <Link to={`/series/${novel.slug}`}>Start Reading</Link>
+                      <Link to={`/series/${novel.slug}`}>{t("hero.startReading")}</Link>
                     </Button>
                   </div>
                 </div>

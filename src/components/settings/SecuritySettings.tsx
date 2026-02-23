@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function SecuritySettings() {
+    const { t } = useLanguage();
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [currentPassword, setCurrentPassword] = useState("");
@@ -17,17 +19,17 @@ export function SecuritySettings() {
 
     async function updatePassword() {
         if (password !== confirmPassword) {
-            toast.error("Passwords do not match");
+            toast.error(t("security.errorMismatch"));
             return;
         }
 
         if (password.length < 6) {
-            toast.error("Password must be at least 6 characters");
+            toast.error(t("security.errorLength"));
             return;
         }
 
         if (!currentPassword) {
-            toast.error("Please enter your current password");
+            toast.error(t("security.errorMissing"));
             return;
         }
 
@@ -41,7 +43,7 @@ export function SecuritySettings() {
             });
 
             if (signInError) {
-                toast.error("Current password is incorrect");
+                toast.error(t("security.errorIncorrect"));
                 setLoading(false);
                 return;
             }
@@ -52,7 +54,7 @@ export function SecuritySettings() {
             });
 
             if (error) throw error;
-            toast.success("Password updated successfully");
+            toast.success(t("security.success"));
             setCurrentPassword("");
             setPassword("");
             setConfirmPassword("");
@@ -66,43 +68,43 @@ export function SecuritySettings() {
     return (
         <div className="space-y-8 animate-fade-in">
             <div>
-                <h3 className="text-lg font-medium">Security</h3>
+                <h3 className="text-lg font-medium">{t("security.title")}</h3>
                 <p className="text-sm text-muted-foreground">
-                    Manage your password and account security settings.
+                    {t("security.subtitle")}
                 </p>
             </div>
 
             <div className="flex flex-col gap-4">
                 <div className="grid gap-2">
-                    <Label htmlFor="current-password">Current Password</Label>
+                    <Label htmlFor="current-password">{t("security.currentPassword")}</Label>
                     <Input
                         id="current-password"
                         type="password"
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
-                        placeholder="Enter current password"
+                        placeholder={t("security.currentPasswordPlaceholder")}
                     />
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="new-password">New Password</Label>
+                    <Label htmlFor="new-password">{t("security.newPassword")}</Label>
                     <Input
                         id="new-password"
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter new password"
+                        placeholder={t("security.newPasswordPlaceholder")}
                     />
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Label htmlFor="confirm-password">{t("security.confirmPassword")}</Label>
                     <Input
                         id="confirm-password"
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Confirm new password"
+                        placeholder={t("security.confirmPasswordPlaceholder")}
                     />
                 </div>
             </div>
@@ -110,7 +112,7 @@ export function SecuritySettings() {
             <div className="flex gap-2">
                 <Button onClick={updatePassword} disabled={loading || !password || !currentPassword}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Update Password
+                    {t("security.updateBtn")}
                 </Button>
             </div>
         </div>

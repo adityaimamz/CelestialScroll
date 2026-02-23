@@ -11,8 +11,10 @@ import { toast } from "sonner";
 import { Loader2, Upload, Eye } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import UserProfileModal from "@/components/UserProfileModal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function ProfileSettings() {
+    const { t } = useLanguage();
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [username, setUsername] = useState("");
@@ -45,7 +47,7 @@ export function ProfileSettings() {
                 setAvatarUrl(data.avatar_url || "");
             }
         } catch (error) {
-            console.error("Error loading user data!", error);
+            console.error(t("profile.error"), error);
         } finally {
             setLoading(false);
         }
@@ -66,7 +68,7 @@ export function ProfileSettings() {
             const { error } = await supabase.from("profiles").upsert(updates);
 
             if (error) throw error;
-            toast.success("Profile updated successfully");
+            toast.success(t("profile.success"));
         } catch (error: any) {
             toast.error(error.message);
         } finally {
@@ -81,9 +83,9 @@ export function ProfileSettings() {
         <div className="space-y-8 animate-fade-in">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-medium">Profile</h3>
+                    <h3 className="text-lg font-medium">{t("profile.title")}</h3>
                     <p className="text-sm text-muted-foreground">
-                        This is how others will see you on the site.
+                        {t("profile.subtitle")}
                     </p>
                 </div>
                 <Button
@@ -93,7 +95,7 @@ export function ProfileSettings() {
                     className="gap-2"
                 >
                     <Eye className="w-4 h-4" />
-                    View Public Profile
+                    {t("profile.viewPublic")}
                 </Button>
             </div>
 
@@ -118,41 +120,41 @@ export function ProfileSettings() {
                                 endpoint="imageUploader"
                             />
                             <div className="text-xs text-muted-foreground">
-                                <p>Upload a new avatar image.</p>
-                                <p>Max size 4MB.</p>
+                                <p>{t("profile.avatarUpload")}</p>
+                                <p>{t("profile.avatarMaxSize")}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t("profile.email")}</Label>
                     <Input id="email" value={user?.email} disabled className="bg-muted text-muted-foreground" />
                     <p className="text-[0.8rem] text-muted-foreground">
-                        This is your e-mail and cannot be changed.
+                        {t("profile.emailDesc")}
                     </p>
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="username">Username</Label>
+                    <Label htmlFor="username">{t("profile.username")}</Label>
                     <Input
                         id="username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        placeholder="Your username"
+                        placeholder={t("profile.usernamePlaceholder")}
                     />
                     <p className="text-[0.8rem] text-muted-foreground">
-                        This is your public display name.
+                        {t("profile.usernameDesc")}
                     </p>
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="bio">Bio</Label>
+                    <Label htmlFor="bio">{t("profile.bio")}</Label>
                     <Textarea
                         id="bio"
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
-                        placeholder="Tell us a little bit about yourself"
+                        placeholder={t("profile.bioPlaceholder")}
                         className="resize-none h-24"
                     />
                 </div>
@@ -161,7 +163,7 @@ export function ProfileSettings() {
             <div className="flex gap-2">
                 <Button onClick={updateProfile} disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Update profile
+                    {t("profile.updateBtn")}
                 </Button>
             </div>
 
