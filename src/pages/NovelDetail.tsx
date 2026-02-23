@@ -579,7 +579,7 @@ const NovelDetail = () => {
                     >
                       <div>
                         <h4 className={`font-medium group-hover:text-primary transition-colors ${readChapterIds.has(chapter.id) ? "text-purple-500" : ""}`}>
-                          {t("novelDetail.chapter")} {chapter.chapter_number}: {chapter.title}
+                          {languageFilter === "id" ? `${t("novelDetail.chapter")} ${chapter.chapter_number}: ` : ""}{chapter.title}
                         </h4>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                           <span>
