@@ -39,7 +39,9 @@ const NovelDetail = () => {
   const { id } = useParams(); // 'id' acts as 'slug' here
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t, languageFilter, setLanguageFilter } = useLanguage();
+  const { t, languageFilter } = useLanguage();
+
+  const [chapterLangFilter, setChapterLangFilter] = useState(languageFilter);
 
   const { user, isAdmin } = useAuth();
 
@@ -68,7 +70,7 @@ const NovelDetail = () => {
         .from("chapters")
         .select("chapter_number")
         .eq("novel_id", novel.id)
-        .eq("language", languageFilter)
+        .eq("language", chapterLangFilter)
         .order("chapter_number", { ascending: true })
         .limit(1)
         .maybeSingle();
@@ -76,7 +78,7 @@ const NovelDetail = () => {
       setFirstChapterNumber(firstChapter?.chapter_number ?? null);
     };
     fetchFirstChapter();
-  }, [novel, languageFilter]);
+  }, [novel, chapterLangFilter]);
 
   useEffect(() => {
     if (id && loading !== undefined) {
@@ -288,7 +290,7 @@ const NovelDetail = () => {
         .from("chapters")
         .select("*, views", { count: "exact" })
         .eq("novel_id", novel.id)
-        .eq("language", languageFilter);
+        .eq("language", chapterLangFilter);
 
       // Server-side search (uses debounced value)
       if (debouncedSearch.trim()) {
@@ -316,7 +318,7 @@ const NovelDetail = () => {
     } finally {
       setChaptersLoading(false);
     }
-  }, [novel, currentPage, chaptersPerPage, chapterSortOrder, debouncedSearch, languageFilter]);
+  }, [novel, currentPage, chaptersPerPage, chapterSortOrder, debouncedSearch, chapterLangFilter]);
 
   // Fetch chapters when dependencies change
   useEffect(() => {
@@ -326,7 +328,7 @@ const NovelDetail = () => {
   // Reset page when search or sort or language or limit changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, chapterSortOrder, languageFilter, chaptersPerPage]);
+  }, [debouncedSearch, chapterSortOrder, chapterLangFilter, chaptersPerPage]);
 
   const totalPages = Math.ceil(totalChapterCount / chaptersPerPage);
 
@@ -524,17 +526,17 @@ const NovelDetail = () => {
 
                   <div className="flex bg-background rounded-lg p-1 border border-border">
                     <Button
-                      variant={languageFilter === "id" ? "secondary" : "ghost"}
+                      variant={chapterLangFilter === "id" ? "secondary" : "ghost"}
                       size="sm"
-                      onClick={() => setLanguageFilter("id")}
+                      onClick={() => setChapterLangFilter("id")}
                       className="h-8 rounded-md px-4"
                     >
                       Indonesia
                     </Button>
                     <Button
-                      variant={languageFilter === "en" ? "secondary" : "ghost"}
+                      variant={chapterLangFilter === "en" ? "secondary" : "ghost"}
                       size="sm"
-                      onClick={() => setLanguageFilter("en")}
+                      onClick={() => setChapterLangFilter("en")}
                       className="h-8 rounded-md px-4"
                     >
                       English
@@ -582,7 +584,7 @@ const NovelDetail = () => {
                     >
                       <div>
                         <h4 className={`font-medium group-hover:text-primary transition-colors ${readChapterIds.has(chapter.id) ? "text-purple-500" : ""}`}>
-                          {languageFilter === "id" ? `${t("novelDetail.chapter")} ${chapter.chapter_number}: ` : ""}{chapter.title}
+                          {chapterLangFilter === "id" ? `${t("novelDetail.chapter")} ${chapter.chapter_number}: ` : ""}{chapter.title}
                         </h4>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                           <span>
