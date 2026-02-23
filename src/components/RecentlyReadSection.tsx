@@ -19,6 +19,7 @@ type ReadingHistoryEntry = {
     chapters: {
         chapter_number: number;
         title: string;
+        language: string;
     } | null;
 };
 
@@ -49,7 +50,8 @@ const RecentlyReadSection = () => {
             ),
             chapters (
               chapter_number,
-              title
+              title,
+              language
             )
           `)
                     .eq("novels.is_published", true)
@@ -90,7 +92,7 @@ const RecentlyReadSection = () => {
             </div>
 
             <Link
-                to={`/series/${novel.slug}/chapter/${chapter.chapter_number}`}
+                to={`/series/${novel.slug}/chapter/${chapter.chapter_number}?lang=${chapter.language}`}
                 className="block group relative overflow-hidden rounded-xl border border-border bg-card hover:border-primary/50 transition-all duration-300"
             >
                 <div className="flex flex-col sm:flex-row h-full">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Home, ArrowLeft, List, Loader2 } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,24 @@ const ChapterReader = () => {
   const { toast } = useToast();
   const { user, isAdmin } = useAuth();
   const { t, languageFilter } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Bahasa lokal reader: dari ?lang= param atau fallback ke languageFilter global
+  // Ini TIDAK mengubah bahasa global app
+  const [readerLanguage, setReaderLanguage] = useState<string>(() => {
+    const lp = new URLSearchParams(window.location.search).get('lang');
+    if (lp === 'en' || lp === 'id') return lp;
+    return languageFilter;
+  });
+
+  // Bersihkan ?lang= dari URL setelah dibaca
+  useEffect(() => {
+    const lp = searchParams.get('lang');
+    if (lp) {
+      searchParams.delete('lang');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
 
   const [novel, setNovel] = useState<Novel | null>(null);
   const [chapter, setChapter] = useState<Chapter | null>(null);
@@ -65,7 +83,6 @@ const ChapterReader = () => {
   const lastTimeRef = useRef<number>(0);
   const scrollAccumulatorRef = useRef<number>(0);
 
-
   // Fetch data
   useEffect(() => {
     if (novelSlug && chapterId) {
@@ -73,7 +90,7 @@ const ChapterReader = () => {
         // Initial load: Fetch Novel & All Chapters list (for sidebar/navigation)
         fetchNovelAndAllChapters(novelSlug, parseFloat(chapterId));
       } else {
-        // Novel already loaded, just fetch specific chapter content if we changed chapters
+        // Novel sudah loaded, hanya fetch chapter content (navigasi antar chapter)
         fetchChapterContent(novel.id, parseFloat(chapterId));
       }
     }
@@ -113,7 +130,7 @@ const ChapterReader = () => {
         .from("chapters")
         .select("id, title, chapter_number")
         .eq("novel_id", novelData.id)
-        .eq("language", languageFilter)
+        .eq("language", readerLanguage)
         .order("chapter_number", { ascending: true });
 
       if (listError) throw listError;
@@ -134,7 +151,7 @@ const ChapterReader = () => {
         .select("*")
         .eq("novel_id", novelId)
         .eq("chapter_number", chapterNum)
-        .eq("language", languageFilter)
+        .eq("language", readerLanguage)
         .maybeSingle();
 
       if (error) throw error;
