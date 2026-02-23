@@ -27,27 +27,54 @@ const NewReleasesSection = ({ languageFilter = "all" }: NewReleasesSectionProps)
     try {
       let query = supabase
         .from("novels")
-        .select("*, chapters(count, language), latest_chapter:chapters(created_at, language)")
+        .select(`
+          *,
+          chapters (count),
+          latest_chapter:chapters (created_at, language)
+        `)
         .order("created_at", { ascending: false })
-        .order("created_at", { referencedTable: "latest_chapter", ascending: false })
         .eq("is_published", true)
-        .neq("id", "00000000-0000-0000-0000-000000000000")
+        .neq("id", "00000000-0000-0000-0000-000000000000");
 
-      if (languageFilter !== "all") {
-        query = query.eq("chapters.language", languageFilter).eq("latest_chapter.language", languageFilter);
+      if (languageFilter && languageFilter !== "all") {
+        query = query.eq("chapters.language", languageFilter)
       }
 
-      const { data, error } = await query.limit(6);
+      const { data, error } = await query; // limit we can do in JS to ensure cross-check
 
       if (error) throw error;
 
       if (data) {
-        const novelsWithChapterCount = data.map((novel: any) => ({
-          ...novel,
-          chapters_count: novel.chapters?.[0]?.count || 0,
-          latest_chapter_date: novel.latest_chapter?.[0]?.created_at || null,
-        }));
-        setNovels(novelsWithChapterCount);
+        let formattedNovels = data.map((novel: any) => {
+          let chaptersInfo = novel.latest_chapter || [];
+          if (languageFilter && languageFilter !== "all") {
+            chaptersInfo = chaptersInfo.filter((ch: any) => ch.language === languageFilter);
+          }
+
+          const latest_date = chaptersInfo.length > 0
+            ? chaptersInfo.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
+            : null;
+
+          return {
+            ...novel,
+            chapters_count: novel.chapters?.[0]?.count || 0,
+            latest_chapter_date: latest_date || null,
+          };
+        });
+
+        // Filter out novels that have 0 chapters for that language? (optional, depending on UX)
+        if (languageFilter && languageFilter !== "all") {
+          formattedNovels = formattedNovels.filter(n => n.chapters_count > 0);
+        }
+
+        // Resort by latest chapter date desc
+        formattedNovels = formattedNovels.sort((a, b) => {
+          const dateA = a.latest_chapter_date ? new Date(a.latest_chapter_date).getTime() : new Date(a.created_at).getTime();
+          const dateB = b.latest_chapter_date ? new Date(b.latest_chapter_date).getTime() : new Date(b.created_at).getTime();
+          return dateB - dateA;
+        });
+
+        setNovels(formattedNovels.slice(0, 6)); // limit to 6
       }
     } catch (error) {
       console.error("Error fetching new releases:", error);

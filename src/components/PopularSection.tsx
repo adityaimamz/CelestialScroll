@@ -11,26 +11,31 @@ type Novel = Tables<"novels"> & {
 
 const PopularSection = () => {
   const [novels, setNovels] = useState<Novel[]>([]);
-  const [timeFilter, setTimeFilter] = useState("all");
+  const [timeFilter] = useState("all");
   const [loading, setLoading] = useState(true);
-  const { t } = useLanguage();
+  const { t, languageFilter } = useLanguage();
 
   useEffect(() => {
     fetchPopularNovels();
-  }, [timeFilter]);
+  }, [timeFilter, languageFilter]);
 
   const fetchPopularNovels = async () => {
     setLoading(true);
     try {
       // For now, we only have 'views' which is effectively "All Time"
       // In a real app with 'novel_stats' table, we could filter by date.
-      const { data, error } = await supabase
+      let query = supabase
         .from("novels")
         .select("*, chapters(count)")
         .order("views", { ascending: false })
         .eq("is_published", true)
-        .neq("id", "00000000-0000-0000-0000-000000000000")
-        .limit(6);
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+
+      if (languageFilter) {
+        query = query.eq("chapters.language", languageFilter);
+      }
+
+      const { data, error } = await query.limit(6);
 
       if (error) throw error;
 

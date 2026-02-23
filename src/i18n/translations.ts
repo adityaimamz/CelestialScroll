@@ -33,8 +33,8 @@ export const translations: Translations = {
     "hero.startReading": "Mulai Baca",
 
     // New Releases
-    "newReleases.title": "Rilis Baru",
-    "newReleases.subtitle": "Cerita yang baru mulai",
+    "newReleases.title": "Rilisan Baru",
+    "newReleases.subtitle": "Novel yang baru diupdate",
 
     // Popular
     "popular.title": "Seri Populer",
@@ -341,7 +341,7 @@ export const translations: Translations = {
 
     // New Releases Section
     "newReleases.title": "New Releases",
-    "newReleases.subtitle": "Fresh stories just started",
+    "newReleases.subtitle": "Fresh novels just updated",
 
     // Popular Section
     "popular.title": "Popular Series",
