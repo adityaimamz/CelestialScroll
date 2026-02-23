@@ -79,6 +79,22 @@ Deployed on **Vercel**
   * Dedicated page for readers to request new novels via the comment system
   * DMCA guidelines displayed to inform users of content restrictions
 
+* **🌐 Multi-Language Content Support**
+
+  * **Language Filter**: Switch between 🇮🇩 **Indonesian** and 🇺🇸 **English** chapter content from the navbar
+  * **Persistent Preference**: Selected language is saved to `localStorage` and applied across sessions
+  * **Separate Chapter Counts**: Novel detail pages display distinct chapter counts per language
+  * **Language-Aware Chapter List**: Tabs to browse Indonesian or English chapters independently
+
+* **🔔 Real-Time Notification System**
+
+  * **Bell Icon with Unread Badge**: Red dot indicator for unread notifications in the navbar
+  * **Notification Types**: Receive alerts for comment replies, comment likes, system messages, and report status updates
+  * **Admin Notifications**: Admins and moderators receive instant alerts when a new chapter or comment report is submitted
+  * **Report Reply Dialog**: When an admin replies to your report, a dedicated dialog shows the admin's message
+  * **Mark as Read / Mark All Read**: Mark individual or all notifications as read with a single click
+  * **Real-time Subscription**: Powered by Supabase Realtime for instant push notifications without page refresh
+
 * **User Interaction**
 
   * **Authentication**: Seamless login via **Google** or Email
@@ -95,7 +111,7 @@ Deployed on **Vercel**
 
 * **🎨 UI / UX Enhancements**
 
-  * **Dark / Light Theme Toggle**: Site-wide theme switching with persistence
+  * **Dark / Light / System Theme Toggle**: Site-wide theme switching with radio-style active state indicator and persistence
   * **Floating Dock Navigation**: Mobile-optimized bottom navigation dock for quick access
   * **Follow Cursor Effect**: Custom interactive cursor on desktop for an immersive feel
   * **Scroll-to-Top Button**: Quick navigation back to the top of long pages
@@ -123,8 +139,25 @@ Deployed on **Vercel**
   * **Image Upload**: Upload novel cover images via UploadThing integration
   * **Chapter Management**: Add, edit, and delete chapters per novel with rich text (Markdown) editor
   * **Server-side Pagination**: Efficient browsing of large datasets
+  * **Language-Tagged Chapters**: Chapters are tagged with Indonesian (`id`) or English (`en`) language to support bilingual content
 
-* **👥 User Management**
+* **� EPUB Importer**
+
+  * **Bulk Import**: Upload `.epub` files to automatically extract and import multiple chapters at once
+  * **Smart Parsing**: Reads the EPUB's OPF manifest and spine to correctly order and extract chapter content
+  * **Selective Import**: Preview extracted chapters with a checkbox list — select or deselect individual chapters before saving
+  * **Language Selection**: Choose whether the imported chapters are in Indonesian or English before importing
+  * **Auto Chapter Numbering**: Imported chapters are numbered sequentially based on existing chapters in the database
+
+* **✍️ Smart Chapter Editor**
+
+  * **Live Markdown Preview**: Toggle between write and preview tabs to see rendered chapter content in real time
+  * **Auto Title Detection**: When pasting chapter content that begins with a pattern like `Chapter 5: Title Name`, the editor automatically fills in the chapter number and title fields
+  * **Inline Image Upload**: Upload images directly from the chapter editor using UploadThing — the Markdown image tag is automatically appended to content
+  * **Previous / Next Navigation**: When editing a chapter, use arrow buttons to navigate directly to the previous or next chapter without returning to the list
+  * **Publish Toggle**: Switch chapter visibility between published and draft state
+
+* **�👥 User Management**
 
   * View all registered users with search and pagination
   * **Role Management**: Change user roles between Admin, Moderator, and User
@@ -147,12 +180,20 @@ Deployed on **Vercel**
 
   * **Comment Reports**: Review reported comments, view reporter info, update status (pending/resolved/ignored), and delete reports
   * **Chapter Reports**: Review reported chapters with links to the problematic content, update status, and manage reports
+  * **Admin Reply**: Reply directly to the reporter — they receive a notification with the admin's message
   * Status badge system for quick visual identification
 
 * **📋 Activity Log**
 
   * View recent comment activity across all novels and chapters
   * User info, timestamps, and direct links to the relevant content
+
+* **🛡️ Admin Audit Log**
+
+  * **Full Audit Trail**: Every admin and moderator action (CREATE, UPDATE, DELETE, BAN) is logged automatically
+  * **Action Details**: Each log entry records the action type, target entity (Novel, Chapter, User, Comment), details, and timestamp
+  * **Admin Identity**: Logs show which admin or moderator performed the action with their avatar and username
+  * Built on the `admin_logs` table with automatic logging via the `adminLogger` service
 
 * **Moderation & Management**
 
@@ -185,7 +226,8 @@ This project is built using modern technologies for performance and scalability:
 * **TanStack Query** – Efficient server state management
 * **React Router** – SPA navigation
 * **Recharts** – Dashboard data visualization
-* **React Markdown** – Markdown rendering for chapter content
+* **React Markdown** + **remark-gfm** – Markdown rendering with GitHub-Flavored Markdown support
+* **JSZip** – Client-side EPUB parsing and ZIP file extraction
 * **date-fns** – Date formatting and manipulation
 * **Vercel Analytics** – Website analytics and performance monitoring
 
@@ -275,12 +317,18 @@ src/
 │   ├── layout/     # Layout components (MainLayout, AdminLayout)
 │   ├── settings/   # Settings page components (Profile, Security)
 │   └── ui/         # Base UI components (shadcn/ui, BarLoader, FloatingDock, etc.)
+├── contexts/       # React Context providers
+│   └── LanguageContext.tsx  # Multi-language filter context with localStorage persistence
 ├── hooks/          # Custom React Hooks (use-mobile, use-toast, useScrollHideNav)
+├── i18n/           # Internationalization
+│   └── translations.ts     # Translation strings for Indonesian & English UI
 ├── integrations/   # Third-party service configuration (Supabase client & types)
 ├── lib/            # Utilities and helper functions (badgeSystem, etc.)
 ├── pages/          # Application pages
-│   ├── admin/      # Admin pages (Dashboard, NovelList, UserList, Reports, etc.)
+│   ├── admin/      # Admin pages (Dashboard, NovelList, UserList, Reports, AdminLogs, etc.)
 │   └── auth/       # Auth pages (Login, Register, ForgotPassword, etc.)
+├── services/       # Business logic services
+│   └── adminLogger.ts      # Utility to log admin/moderator actions to the audit trail
 ├── utils/          # Utility functions (UploadThing config)
 └── index.css       # Global styles & design tokens
 ```
