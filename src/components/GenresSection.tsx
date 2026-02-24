@@ -62,43 +62,47 @@ const GenresSection = () => {
     const fetchNovelsByGenre = async () => {
       setNovelsLoading(true);
       try {
-        // Query novels through the junction table
         const { data, error } = await supabase
           .from("novel_genres")
           .select(`
             novel:novels!inner (
               *,
-              chapters (created_at, language)
+              chapters_count:chapters(count),
+              latest_chapters:chapters(created_at, language)
             )
           `)
           .eq("novel.is_published", true)
           .neq("novel_id", "00000000-0000-0000-0000-000000000000")
           .eq("genre_id", activeGenre)
+          .eq("novel.chapters.language", "id") // Only count 'id' language chapters
+          .eq("novel.latest_chapters.language", "id") // Only fetch 'id' for latest
+          .order("created_at", { foreignTable: "novel.latest_chapters", ascending: false })
+          .limit(1, { foreignTable: "novel.latest_chapters" })
           .limit(8);
 
         if (error) throw error;
 
         // Extract the novel objects from the junction result
         let formattedNovels = data.map((item: any) => {
-          const allChapters = item.novel?.chapters || [];
+          const novel = item.novel;
+          if (!novel) return null;
 
-          const idChaptersCount = allChapters.filter((ch: any) => ch.language === 'id').length;
+          const countArr = novel.chapters_count || [];
+          const chapters_count = countArr?.[0]?.count || 0;
 
-          const latestChapters = allChapters.filter((ch: any) => ch.language === 'id');
-
-          const latestDate = latestChapters.length > 0
-            ? latestChapters.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
-            : null;
+          const latestArr = novel.latest_chapters || [];
+          const latest_date = latestArr.length > 0 ? latestArr[0].created_at : null;
 
           return {
-            ...item.novel,
-            chapters_count: idChaptersCount,
-            latest_chapter_date: latestDate
+            ...novel,
+            chapters_count: chapters_count,
+            latest_chapter_date: latest_date || null,
+            has_id: chapters_count > 0
           };
         }).filter(Boolean);
 
         // Hanya tampilkan yang mempunyai chapter indonesia
-        formattedNovels = formattedNovels.filter((n: any) => n.chapters_count > 0);
+        formattedNovels = formattedNovels.filter((n: any) => n.has_id);
 
         setNovels(formattedNovels);
       } catch (error) {

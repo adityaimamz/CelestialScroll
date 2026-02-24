@@ -29,11 +29,16 @@ const NewReleasesSection = ({ languageFilter = "all" }: NewReleasesSectionProps)
         .from("novels")
         .select(`
           *,
-          chapters (created_at, language)
+          chapters_count:chapters(count),
+          latest_chapters:chapters(created_at, language)
         `)
         .order("created_at", { ascending: false })
         .eq("is_published", true)
-        .neq("id", "00000000-0000-0000-0000-000000000000");
+        .neq("id", "00000000-0000-0000-0000-000000000000")
+        .eq("chapters.language", "id")
+        .eq("latest_chapters.language", "id")
+        .order("created_at", { foreignTable: "latest_chapters", ascending: false })
+        .limit(1, { foreignTable: "latest_chapters" });
 
       const { data, error } = await query;
 
@@ -41,26 +46,22 @@ const NewReleasesSection = ({ languageFilter = "all" }: NewReleasesSectionProps)
 
       if (data) {
         let formattedNovels = data.map((novel: any) => {
-          const allChapters = novel.chapters || [];
+          const countArr = novel.chapters_count || [];
+          const chapters_count = countArr?.[0]?.count || 0;
 
-          const idChaptersCount = allChapters.filter((ch: any) => ch.language === 'id').length;
-
-          // Hitung chapter terbaru berdasarkan chapter Indonesia
-          const latestChapters = allChapters.filter((ch: any) => ch.language === 'id');
-
-          const latest_date = latestChapters.length > 0
-            ? latestChapters.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
-            : null;
+          const latestArr = novel.latest_chapters || [];
+          const latest_date = latestArr.length > 0 ? latestArr[0].created_at : null;
 
           return {
             ...novel,
-            chapters_count: idChaptersCount,
-            latest_chapter_date: latest_date || null
+            chapters_count: chapters_count,
+            latest_chapter_date: latest_date || null,
+            has_id: chapters_count > 0
           };
         });
 
         // Tampilkan semua novel yang memiliki chapter indonesia
-        formattedNovels = formattedNovels.filter((n: any) => n.chapters_count > 0);
+        formattedNovels = formattedNovels.filter((n: any) => n.has_id);
 
         // Resort by latest chapter date desc
         formattedNovels = formattedNovels.sort((a: any, b: any) => {
