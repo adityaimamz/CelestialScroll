@@ -382,7 +382,7 @@ export default function ChapterForm() {
                               endpoint="imageUploader"
                               onClientUploadComplete={(res) => {
                                 if (res && res[0]) {
-                                  const imageUrl = res[0].url;
+                                  const imageUrl = res[0].ufsUrl ;
                                   const imageMarkdown = `\n![Image](${imageUrl})\n`;
                                   setFormData(prev => ({
                                     ...prev,
