@@ -368,46 +368,51 @@ export default function ChapterForm() {
                         rows={20}
                         className="font-mono"
                       />
-                      <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center justify-between gap-2 mt-2">
                         <p className="text-xs text-muted-foreground flex-1">
                           Mendukung format Markdown: **bold**, *italic*, # Heading, dll.
                         </p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Insert Image:</span>
-                          <UploadButton
-                            endpoint="imageUploader"
-                            onClientUploadComplete={(res) => {
-                              if (res && res[0]) {
-                                const imageUrl = res[0].url;
-                                const imageMarkdown = `\n![Image](${imageUrl})\n`;
-                                setFormData(prev => ({
-                                  ...prev,
-                                  content: prev.content + imageMarkdown
-                                }));
+                        <div className="flex items-center gap-4">
+                          <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-md">
+                            {formData.content.length} Karakter
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Insert Image:</span>
+                            <UploadButton
+                              endpoint="imageUploader"
+                              onClientUploadComplete={(res) => {
+                                if (res && res[0]) {
+                                  const imageUrl = res[0].url;
+                                  const imageMarkdown = `\n![Image](${imageUrl})\n`;
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    content: prev.content + imageMarkdown
+                                  }));
+                                  toast({
+                                    title: "Image Uploaded",
+                                    description: "Image code appended to content",
+                                  });
+                                }
+                              }}
+                              onUploadError={(error: Error) => {
                                 toast({
-                                  title: "Image Uploaded",
-                                  description: "Image code appended to content",
+                                  title: "Upload Failed",
+                                  description: error.message,
+                                  variant: "destructive",
                                 });
-                              }
-                            }}
-                            onUploadError={(error: Error) => {
-                              toast({
-                                title: "Upload Failed",
-                                description: error.message,
-                                variant: "destructive",
-                              });
-                            }}
-                            appearance={{
-                              button: "bg-secondary text-secondary-foreground hover:bg-secondary/80 h-8 text-xs px-2",
-                              allowedContent: "hidden"
-                            }}
-                            content={{
-                              button({ ready }) {
-                                if (ready) return <div className="flex items-center gap-1"><ImageIcon className="w-3 h-3" /> Upload</div>;
-                                return "Loading...";
-                              }
-                            }}
-                          />
+                              }}
+                              appearance={{
+                                button: "bg-secondary text-secondary-foreground hover:bg-secondary/80 h-8 text-xs px-2",
+                                allowedContent: "hidden"
+                              }}
+                              content={{
+                                button({ ready }) {
+                                  if (ready) return <div className="flex items-center gap-1"><ImageIcon className="w-3 h-3" /> Upload</div>;
+                                  return "Loading...";
+                                }
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
                     </TabsContent>
