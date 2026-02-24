@@ -310,6 +310,24 @@ export const translations: Translations = {
     "updatePw.confirmPassword": "Konfirmasi Password",
     "updatePw.btn": "Ubah Password",
 
+    // Footer
+    "footer.description": "Tempat baca novel dengan kualitas terjemahan terbaik.",
+    "footer.discover": "Discover",
+    "footer.topNovels": "Top Novels",
+    "footer.newReleases": "Rilisan Baru",
+    "footer.popularGenres": "Genre Populer",
+    "footer.announcements": "Pengumuman",
+    "footer.menu": "Menu",
+    "footer.home": "Beranda",
+    "footer.series": "Seri",
+    "footer.bookmarks": "Bookmark",
+    "footer.genres": "Genre",
+    "footer.legal": "Legal",
+    "footer.terms": "Syarat & Ketentuan",
+    "footer.privacy": "Kebijakan Privasi",
+    "footer.dmca": "DMCA",
+    "footer.rights": "© {year} CelestialScrolls. Semua hak dilindungi undang-undang. Semua novel dan materi yang tersedia di website ini disediakan semata-mata untuk tujuan hiburan dan edukasi. Hak cipta tetap menjadi milik masing-masing penulis dan penerbit. Kami tidak menegaskan kepemilikan apapun atas konten yang dibagikan disini. Jika Anda pemegang hak cipta dan merasa karya Anda telah diposting tanpa otorisasi, silakan tinggalkan komentar di postingan yang bersangkutan. Kami akan segera menyelidiki dan menghapus materi tersebut jika diperlukan. Terima kasih atas pengertian dan dukungan Anda.",
+
     // Common
     "common.loading": "Memuat...",
   },
@@ -621,6 +639,24 @@ export const translations: Translations = {
     "updatePw.newPassword": "New Password",
     "updatePw.confirmPassword": "Confirm Password",
     "updatePw.btn": "Change Password",
+
+    // Footer
+    "footer.description": "The best place to read novels with high-quality translations.",
+    "footer.discover": "Discover",
+    "footer.topNovels": "Top Novels",
+    "footer.newReleases": "New Releases",
+    "footer.popularGenres": "Popular Genres",
+    "footer.announcements": "Announcements",
+    "footer.menu": "Menu",
+    "footer.home": "Home",
+    "footer.series": "Series",
+    "footer.bookmarks": "Bookmarks",
+    "footer.genres": "Genres",
+    "footer.legal": "Legal",
+    "footer.terms": "Terms of Service",
+    "footer.privacy": "Privacy Policy",
+    "footer.dmca": "DMCA",
+    "footer.rights": "© {year} CelestialScrolls. All rights reserved. All novels and materials available on this website are provided solely for entertainment and educational purposes. The copyrights remain with their respective authors and publishers. We do not assert any ownership over the content shared here. If you are a copyright holder and believe that your work has been posted without authorization, please leave a comment on the corresponding post. We will promptly investigate and remove the material if necessary. Thank you for your understanding and support.",
 
     // Other common words
     "common.loading": "Loading...",

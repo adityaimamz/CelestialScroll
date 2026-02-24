@@ -1,27 +1,29 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Github, Twitter, MessageCircle } from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const Footer = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const footerLinks = {
     discover: [
-      { label: "Top Novels", href: "#popular" },
-      { label: "New Releases", href: "#new" },
-      { label: "Popular Genres", href: "#genres" },
-      { label: "Announcements", href: "#announcements" },
+      { label: t("footer.topNovels"), href: "#popular" },
+      { label: t("footer.newReleases"), href: "#new" },
+      { label: t("footer.popularGenres"), href: "#genres" },
+      { label: t("footer.announcements"), href: "#announcements" },
     ],
     menu: [
-      { label: "Home", href: "/" },
-      { label: "Series", href: "/series" },
-      { label: "Bookmarks", href: "/bookmarks" },
-      { label: "Genres", href: "/genres" },
+      { label: t("footer.home"), href: "/" },
+      { label: t("footer.series"), href: "/series" },
+      { label: t("footer.bookmarks"), href: "/bookmarks" },
+      { label: t("footer.genres"), href: "/genres" },
     ],
     legal: [
-      { label: "Terms of Service", href: "/" },
-      { label: "Privacy Policy", href: "/" },
-      { label: "DMCA", href: "/" },
+      { label: t("footer.terms"), href: "/" },
+      { label: t("footer.privacy"), href: "/" },
+      { label: t("footer.dmca"), href: "/" },
     ],
   };
 
@@ -64,7 +66,7 @@ const Footer = () => {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">
-              Tempat baca novel dengan kualitas terjemahan terbaik.
+              {t("footer.description")}
             </p>
             <div className="flex gap-3">
               {socialLinks.map((social) => {
@@ -85,7 +87,7 @@ const Footer = () => {
 
           {/* Discover */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Discover</h4>
+            <h4 className="font-semibold text-foreground mb-4">{t("footer.discover")}</h4>
             <ul className="space-y-2">
               {footerLinks.discover.map((link) => (
                 <li key={link.label}>
@@ -103,7 +105,7 @@ const Footer = () => {
 
           {/* Company */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Menu</h4>
+            <h4 className="font-semibold text-foreground mb-4">{t("footer.menu")}</h4>
             <ul className="space-y-2">
               {footerLinks.menu.map((link) => (
                 <li key={link.label}>
@@ -120,7 +122,7 @@ const Footer = () => {
 
           {/* Legal */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Legal</h4>
+            <h4 className="font-semibold text-foreground mb-4">{t("footer.legal")}</h4>
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.label}>
@@ -139,8 +141,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground text-justify">
-            © 2026 CelestialScrolls. All rights reserved.
-            All novels and materials available on this website are provided solely for entertainment and educational purposes. The copyrights remain with their respective authors and publishers. We do not assert any ownership over the content shared here. If you are a copyright holder and believe that your work has been posted without authorization, please leave a comment on the corresponding post. We will promptly investigate and remove the material if necessary. Thank you for your understanding and support.
+            {t("footer.rights").replace("{year}", new Date().getFullYear().toString())}
           </p>
           {/* <p className="text-xs text-muted-foreground">
             Made for 
