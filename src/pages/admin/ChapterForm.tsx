@@ -112,7 +112,7 @@ export default function ChapterForm() {
         language: data.language || "id",
       });
 
-      fetchAdjacentChapters(data.chapter_number);
+      fetchAdjacentChapters(data.chapter_number, data.language || "id");
     } catch (error) {
       console.error("Error fetching chapter:", error);
       toast({
@@ -126,13 +126,14 @@ export default function ChapterForm() {
     }
   };
 
-  const fetchAdjacentChapters = async (currentNumber: number) => {
+  const fetchAdjacentChapters = async (currentNumber: number, language: string) => {
     try {
       // Prev
       const { data: prevData } = await supabase
         .from("chapters")
         .select("id")
         .eq("novel_id", novelId)
+        .eq("language", language)
         .lt("chapter_number", currentNumber)
         .order("chapter_number", { ascending: false })
         .limit(1)
@@ -145,6 +146,7 @@ export default function ChapterForm() {
         .from("chapters")
         .select("id")
         .eq("novel_id", novelId)
+        .eq("language", language)
         .gt("chapter_number", currentNumber)
         .order("chapter_number", { ascending: true })
         .limit(1)
@@ -382,7 +384,7 @@ export default function ChapterForm() {
                               endpoint="imageUploader"
                               onClientUploadComplete={(res) => {
                                 if (res && res[0]) {
-                                  const imageUrl = res[0].ufsUrl ;
+                                  const imageUrl = res[0].ufsUrl;
                                   const imageMarkdown = `\n![Image](${imageUrl})\n`;
                                   setFormData(prev => ({
                                     ...prev,
