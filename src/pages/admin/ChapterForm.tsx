@@ -208,9 +208,8 @@ export default function ChapterForm() {
           title: "Berhasil",
           description: "Chapter berhasil ditambahkan",
         });
+        navigate(`/admin/novels/${novelId}/chapters`);
       }
-
-      navigate(`/admin/novels/${novelId}/chapters`);
     } catch (error) {
       console.error("Error saving chapter:", error);
       toast({
