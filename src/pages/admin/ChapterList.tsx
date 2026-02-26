@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,22 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -22,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Pencil, Trash2, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -55,22 +71,28 @@ export default function ChapterList() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [novel, setNovel] = useState<Novel | null>(null);
   const [loading, setLoading] = useState(true);
+  const [chaptersLoading, setChaptersLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "chapter_number", direction: "desc" });
   const [activeTab, setActiveTab] = useState<string>("id");
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [chaptersPerPage, setChaptersPerPage] = useState(20);
+  const [totalChapterCount, setTotalChapterCount] = useState(0);
+
   const { toast } = useToast();
   const { userRole } = useAuth();
 
   useEffect(() => {
     if (novelId) {
-      fetchData();
+      fetchNovelInfo();
     }
   }, [novelId]);
 
-  const fetchData = async () => {
+  const fetchNovelInfo = async () => {
     try {
-      // Fetch novel info
       const { data: novelData, error: novelError } = await supabase
         .from("novels")
         .select("id, title, slug")
@@ -79,27 +101,68 @@ export default function ChapterList() {
 
       if (novelError) throw novelError;
       setNovel(novelData);
-
-      // Fetch chapters
-      const { data: chaptersData, error: chaptersError } = await supabase
-        .from("chapters")
-        .select("*")
-        .eq("novel_id", novelId)
-        .order("chapter_number", { ascending: false });
-
-      if (chaptersError) throw chaptersError;
-      setChapters(chaptersData || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
         title: "Error",
-        description: "Gagal memuat data",
+        description: "Gagal memuat data novel",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const fetchChapters = useCallback(async () => {
+    if (!novelId) return;
+    setChaptersLoading(true);
+    try {
+      const from = (currentPage - 1) * chaptersPerPage;
+      const to = from + chaptersPerPage - 1;
+
+      let query = supabase
+        .from("chapters")
+        .select("*", { count: "exact" })
+        .eq("novel_id", novelId)
+        .eq("language", activeTab);
+
+      if (debouncedSearch.trim()) {
+        const searchTerm = debouncedSearch.trim();
+        const isNumber = /^\d+$/.test(searchTerm);
+        if (isNumber) {
+          query = query.eq("chapter_number", parseFloat(searchTerm));
+        } else {
+          query = query.ilike("title", `%${searchTerm}%`);
+        }
+      }
+
+      query = query
+        .order(sortConfig.key as string, { ascending: sortConfig.direction === "asc" })
+        .range(from, to);
+
+      const { data, count, error } = await query;
+      if (error) throw error;
+      setChapters(data || []);
+      setTotalChapterCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching chapters:", error);
+    } finally {
+      setChaptersLoading(false);
+    }
+  }, [novelId, currentPage, chaptersPerPage, sortConfig, debouncedSearch, activeTab]);
+
+  useEffect(() => {
+    fetchChapters();
+  }, [fetchChapters]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, sortConfig, activeTab, chaptersPerPage]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -113,6 +176,7 @@ export default function ChapterList() {
       if (error) throw error;
 
       setChapters(chapters.filter((c) => c.id !== deleteId));
+      setTotalChapterCount((prev) => prev - 1);
 
       await logAdminAction("DELETE", "CHAPTER", deleteId, {
         novel_id: novelId,
@@ -141,32 +205,29 @@ export default function ChapterList() {
     }));
   };
 
-  const sortedChapters = [...chapters].sort((a, b) => {
-    const aValue = a[sortConfig.key];
-    const bValue = b[sortConfig.key];
-
-    if (aValue === bValue) return 0;
-
-    // Handle null values
-    if (aValue === null) return 1;
-    if (bValue === null) return -1;
-
-    const compareResult = aValue < bValue ? -1 : 1;
-    return sortConfig.direction === "asc" ? compareResult : -compareResult;
-  });
-
-  const filteredChapters = sortedChapters.filter((chapter) => {
-    const matchesSearch = chapter.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      chapter.chapter_number.toString().includes(searchQuery);
-    const matchesLanguage = (chapter.language || 'id') === activeTab;
-    return matchesSearch && matchesLanguage;
-  });
-
   const SortIcon = ({ columnKey }: { columnKey: keyof Chapter }) => {
     if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground/30" />;
     return sortConfig.direction === "asc" ?
       <ArrowUp className="ml-2 h-4 w-4 text-primary" /> :
       <ArrowDown className="ml-2 h-4 w-4 text-primary" />;
+  };
+
+  const totalPages = Math.ceil(totalChapterCount / chaptersPerPage);
+
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("ellipsis");
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push("ellipsis");
+      pages.push(totalPages);
+    }
+    return pages;
   };
 
   if (loading) {
@@ -190,7 +251,7 @@ export default function ChapterList() {
           <p className="text-muted-foreground">Novel: {novel?.title}</p>
         </div>
         <div className="flex items-center gap-2">
-          {novelId && <EpubImporter novelId={novelId} onImportSuccess={fetchData} />}
+          {novelId && <EpubImporter novelId={novelId} onImportSuccess={fetchChapters} />}
           <Button asChild>
             <Link to={`/admin/novels/${novelId}/chapters/new`}>
               <Plus className="mr-2 h-4 w-4" />
@@ -221,7 +282,12 @@ export default function ChapterList() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border border-border max-h-[600px] overflow-y-auto">
+      <div className="rounded-md border border-border max-h-[600px] overflow-y-auto relative">
+        {chaptersLoading && (
+          <div className="absolute inset-0 bg-background/60 z-10 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
@@ -256,14 +322,14 @@ export default function ChapterList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredChapters.length === 0 ? (
+            {chapters.length === 0 && !chaptersLoading ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? "Tidak ada chapter yang cocok" : "Belum ada chapter"}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredChapters.map((chapter) => (
+              chapters.map((chapter) => (
                 <TableRow key={chapter.id}>
                   <TableCell className="font-medium">{chapter.chapter_number}</TableCell>
                   <TableCell>{chapter.title}</TableCell>
@@ -296,6 +362,88 @@ export default function ChapterList() {
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 0 && (
+        <div className="flex flex-col items-center justify-between gap-4 w-full mt-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>Tampilkan</span>
+              <Select
+                value={chaptersPerPage.toString()}
+                onValueChange={(val) => setChaptersPerPage(Number(val))}
+              >
+                <SelectTrigger className="h-8 w-[70px]">
+                  <SelectValue placeholder="20" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+              <span>chapter</span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <span>
+                Halaman <span className="font-medium text-foreground">{currentPage}</span> dari <span className="font-medium text-foreground">{totalPages}</span>
+              </span>
+              <div className="flex items-center gap-2">
+                <span>Ke</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={totalPages || 1}
+                  className="h-8 w-[60px] text-center"
+                  placeholder={currentPage.toString()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = parseInt(e.currentTarget.value);
+                      if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                        setCurrentPage(val);
+                        e.currentTarget.value = "";
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {getPageNumbers().map((page, idx) => (
+                <PaginationItem key={idx}>
+                  {page === "ellipsis" ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      isActive={page === currentPage}
+                      onClick={() => setCurrentPage(page as number)}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {/* Delete Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

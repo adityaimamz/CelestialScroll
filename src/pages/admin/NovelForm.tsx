@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -100,16 +109,26 @@ export default function NovelForm() {
   const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "chapter_number", direction: "desc" });
   const [chapterSearchQuery, setChapterSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeChapterTab, setActiveChapterTab] = useState<string>("id");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [chaptersPerPage, setChaptersPerPage] = useState(20);
+  const [totalChapterCount, setTotalChapterCount] = useState(0);
+
   const { userRole } = useAuth();
 
   useEffect(() => {
     fetchGenres();
     if (isEditing) {
       fetchNovel();
-      fetchChapters();
     }
   }, [id]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(chapterSearchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [chapterSearchQuery]);
 
   const fetchGenres = async () => {
     try {
@@ -167,17 +186,38 @@ export default function NovelForm() {
     }
   };
 
-  const fetchChapters = async () => {
+  const fetchChapters = useCallback(async () => {
+    if (!id || !isEditing) return;
     setLoadingChapters(true);
     try {
-      const { data, error } = await supabase
-        .from("chapters")
-        .select("*")
-        .eq("novel_id", id)
-        .order("chapter_number", { ascending: false });
+      const from = (currentPage - 1) * chaptersPerPage;
+      const to = from + chaptersPerPage - 1;
 
+      let query = supabase
+        .from("chapters")
+        .select("*", { count: "exact" })
+        .eq("novel_id", id)
+        .eq("language", activeChapterTab);
+
+      if (debouncedSearch.trim()) {
+        const searchTerm = debouncedSearch.trim();
+        const isNumber = /^\d+$/.test(searchTerm);
+        if (isNumber) {
+          query = query.eq("chapter_number", parseFloat(searchTerm));
+        } else {
+          query = query.ilike("title", `%${searchTerm}%`);
+        }
+      }
+
+      query = query
+        .order(sortConfig.key as string, { ascending: sortConfig.direction === "asc" })
+        .range(from, to);
+
+      const { data, count, error } = await query;
       if (error) throw error;
+
       setChapters(data || []);
+      setTotalChapterCount(count || 0);
     } catch (error) {
       console.error("Error fetching chapters:", error);
       toast({
@@ -188,7 +228,15 @@ export default function NovelForm() {
     } finally {
       setLoadingChapters(false);
     }
-  };
+  }, [id, isEditing, currentPage, chaptersPerPage, sortConfig, debouncedSearch, activeChapterTab]);
+
+  useEffect(() => {
+    fetchChapters();
+  }, [fetchChapters]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, sortConfig, activeChapterTab, chaptersPerPage]);
 
   const generateSlug = (title: string) => {
     return title
@@ -262,7 +310,7 @@ export default function NovelForm() {
 
         if (error) throw error;
 
-        await logAdminAction("UPDATE", "NOVEL", id, {
+        await logAdminAction("UPDATE", "NOVEL", id as string, {
           title: novelData.title,
           slug: novelData.slug,
         });
@@ -337,6 +385,7 @@ export default function NovelForm() {
       if (error) throw error;
 
       setChapters(chapters.filter((c) => c.id !== deleteChapterId));
+      setTotalChapterCount(prev => prev - 1);
 
       await logAdminAction("DELETE", "CHAPTER", deleteChapterId, {
         novel_id: id,
@@ -365,33 +414,29 @@ export default function NovelForm() {
     }));
   };
 
-  const sortedChapters = [...chapters].sort((a, b) => {
-    const aValue = a[sortConfig.key];
-    const bValue = b[sortConfig.key];
-
-    if (aValue === bValue) return 0;
-
-    // Handle null values
-    if (aValue === null) return 1;
-    if (bValue === null) return -1;
-
-    const compareResult = aValue < bValue ? -1 : 1;
-    return sortConfig.direction === "asc" ? compareResult : -compareResult;
-  });
-
-  // Filter chapters based on search query
-  const filteredChapters = sortedChapters.filter((chapter) => {
-    const matchesSearch = chapter.title.toLowerCase().includes(chapterSearchQuery.toLowerCase()) ||
-      chapter.chapter_number.toString().includes(chapterSearchQuery);
-    const matchesLanguage = (chapter.language || 'id') === activeChapterTab;
-    return matchesSearch && matchesLanguage;
-  });
-
   const SortIcon = ({ columnKey }: { columnKey: keyof Chapter }) => {
     if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground/30" />;
     return sortConfig.direction === "asc" ?
       <ArrowUp className="ml-2 h-4 w-4 text-primary" /> :
       <ArrowDown className="ml-2 h-4 w-4 text-primary" />;
+  };
+
+  const totalPages = Math.ceil(totalChapterCount / chaptersPerPage);
+
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("ellipsis");
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push("ellipsis");
+      pages.push(totalPages);
+    }
+    return pages;
   };
 
   if (loading) {
@@ -614,7 +659,12 @@ export default function NovelForm() {
                   />
                 </div>
               </div>
-              <div className="rounded-md border max-h-[500px] overflow-y-auto">
+              <div className="rounded-md border max-h-[500px] overflow-y-auto relative">
+                {loadingChapters && (
+                  <div className="absolute inset-0 bg-background/60 z-10 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                )}
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -649,20 +699,14 @@ export default function NovelForm() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {loadingChapters ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8">
-                          <BarLoader />
-                        </TableCell>
-                      </TableRow>
-                    ) : filteredChapters.length === 0 ? (
+                    {chapters.length === 0 && !loadingChapters ? (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                          {chapters.length === 0 ? "Belum ada chapter. Silakan tambah chapter baru." : "Tidak ada chapter yang cocok dengan pencarian."}
+                          {chapterSearchQuery ? "Tidak ada chapter yang cocok dengan pencarian." : "Belum ada chapter. Silakan tambah chapter baru."}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredChapters.map((chapter) => (
+                      chapters.map((chapter) => (
                         <TableRow key={chapter.id}>
                           <TableCell className="font-medium">{chapter.chapter_number}</TableCell>
                           <TableCell>{chapter.title}</TableCell>
@@ -695,6 +739,88 @@ export default function NovelForm() {
                   </TableBody>
                 </Table>
               </div>
+
+              {totalPages > 0 && (
+                <div className="flex flex-col items-center justify-between gap-4 w-full mt-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span>Tampilkan</span>
+                      <Select
+                        value={chaptersPerPage.toString()}
+                        onValueChange={(val) => setChaptersPerPage(Number(val))}
+                      >
+                        <SelectTrigger className="h-8 w-[70px]">
+                          <SelectValue placeholder="20" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                          <SelectItem value="100">100</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span>chapter</span>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <span>
+                        Halaman <span className="font-medium text-foreground">{currentPage}</span> dari <span className="font-medium text-foreground">{totalPages}</span>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span>Ke</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={totalPages || 1}
+                          className="h-8 w-[60px] text-center"
+                          placeholder={currentPage.toString()}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const val = parseInt(e.currentTarget.value);
+                              if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                                setCurrentPage(val);
+                                e.currentTarget.value = "";
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      {getPageNumbers().map((page, idx) => (
+                        <PaginationItem key={idx}>
+                          {page === "ellipsis" ? (
+                            <PaginationEllipsis />
+                          ) : (
+                            <PaginationLink
+                              isActive={page === currentPage}
+                              onClick={() => setCurrentPage(page as number)}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          )}
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
