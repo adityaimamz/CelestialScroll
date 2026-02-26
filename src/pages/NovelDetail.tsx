@@ -350,12 +350,12 @@ const NovelDetail = () => {
 
   const handleReadNow = () => {
     if (user && lastReadChapterNumber !== null) {
-      navigate(`/series/${id}/chapter/${lastReadChapterNumber}`);
+      navigate(`/series/${id}/chapter/${lastReadChapterNumber}?lang=${chapterLangFilter}`);
       return;
     }
 
     if (firstChapterNumber !== null) {
-      navigate(`/series/${id}/chapter/${firstChapterNumber}`);
+      navigate(`/series/${id}/chapter/${firstChapterNumber}?lang=${chapterLangFilter}`);
     } else {
       toast({
         title: t("novelDetail.noChapters"),
@@ -580,7 +580,7 @@ const NovelDetail = () => {
                     <div
                       key={chapter.id}
                       className="p-4 hover:bg-muted/50 transition-colors flex justify-between items-center group cursor-pointer"
-                      onClick={() => navigate(`/series/${id}/chapter/${chapter.chapter_number}`)}
+                      onClick={() => navigate(`/series/${id}/chapter/${chapter.chapter_number}?lang=${chapterLangFilter}`)}
                     >
                       <div>
                         <h4 className={`font-medium group-hover:text-primary transition-colors ${readChapterIds.has(chapter.id) ? "text-purple-500" : ""}`}>
