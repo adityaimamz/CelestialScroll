@@ -55,14 +55,14 @@ const ChapterReader = () => {
     return languageFilter;
   });
 
-  // Bersihkan ?lang= dari URL setelah dibaca
+  // Pertahankan ?lang= di URL agar saat direfresh membaca bahasa yang sama
   useEffect(() => {
-    const lp = searchParams.get('lang');
-    if (lp) {
-      searchParams.delete('lang');
+    const currentLangParam = searchParams.get('lang');
+    if (currentLangParam !== readerLanguage) {
+      searchParams.set('lang', readerLanguage);
       setSearchParams(searchParams, { replace: true });
     }
-  }, []);
+  }, [readerLanguage, searchParams, setSearchParams]);
 
   const [novel, setNovel] = useState<Novel | null>(null);
   const [chapter, setChapter] = useState<Chapter | null>(null);
@@ -315,13 +315,13 @@ const ChapterReader = () => {
 
   const handleNext = () => {
     if (nextChapter) {
-      navigate(`/series/${novelSlug}/chapter/${nextChapter.chapter_number}`);
+      navigate(`/series/${novelSlug}/chapter/${nextChapter.chapter_number}?lang=${readerLanguage}`);
     }
   };
 
   const handlePrev = () => {
     if (prevChapter) {
-      navigate(`/series/${novelSlug}/chapter/${prevChapter.chapter_number}`);
+      navigate(`/series/${novelSlug}/chapter/${prevChapter.chapter_number}?lang=${readerLanguage}`);
     }
   };
 
@@ -445,7 +445,7 @@ const ChapterReader = () => {
                         variant={ch.chapter_number === currentChapterNum ? "secondary" : "ghost"}
                         className="justify-start w-full text-left font-normal"
                         onClick={() => {
-                          navigate(`/series/${novelSlug}/chapter/${ch.chapter_number}`);
+                          navigate(`/series/${novelSlug}/chapter/${ch.chapter_number}?lang=${readerLanguage}`);
                           setIsTocOpen(false);
                         }}
                       >
