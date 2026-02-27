@@ -126,7 +126,7 @@ const TopSeriesSection = () => {
                   </div>
 
                   <Button variant="secondary" size="sm" asChild className="w-fit">
-                    <Link to={`/series/${novel.slug}`}>{t("topSeries.learnMore")}</Link>
+                    <Link to={`/series/${novel.slug}`} aria-label={`${t("topSeries.learnMore")} - ${novel.title}`}>{t("topSeries.learnMore")}</Link>
                   </Button>
 
                   {/* Decorative gradient inside the content area */}
