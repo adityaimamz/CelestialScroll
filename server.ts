@@ -3,6 +3,7 @@ import express from "express";
 import { createRouteHandler } from "uploadthing/express";
 import { ourFileRouter } from "./api/uploadthing";
 import { z } from "zod";
+import sitemapHandler from "./api/sitemap";
 
 const app = express();
 const port = 3000;
@@ -27,6 +28,16 @@ app.use(
         },
     })
 );
+
+// Serve dynamic sitemap
+app.get("/sitemap.xml", async (req, res) => {
+    try {
+        await sitemapHandler(req, res);
+    } catch (error) {
+        console.error("Error loading sitemap handler:", error);
+        res.status(500).send("Error generating sitemap");
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
