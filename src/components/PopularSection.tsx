@@ -53,7 +53,7 @@ const PopularSection = () => {
   };
 
   if (loading && novels.length === 0) {
-    return <div className="w-full h-96 bg-card/50 animate-pulse rounded-lg" />;
+    return <div className="w-full min-h-[500px] bg-card/50 animate-pulse rounded-lg" />;
   }
 
   if (novels.length === 0) return null;

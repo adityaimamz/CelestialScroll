@@ -54,7 +54,7 @@ const TopSeriesSection = () => {
 
   if (loading) {
     return (
-      <section className="section-spacing section-container flex justify-center py-10">
+      <section className="section-spacing section-container min-h-[400px] flex justify-center py-10">
         <BarLoader />
       </section>
     );
@@ -89,6 +89,8 @@ const TopSeriesSection = () => {
                     <img
                       src={novel.cover_url}
                       alt={novel.title}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (

@@ -58,7 +58,7 @@ const Footer = () => {
             <Link to="/" className="flex items-center gap-3 mb-4">
               <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
                 <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
-                  <img src="/favicon.ico" alt="Logo" className="w-full h-full object-cover" />
+                  <img src="/logo-small.webp" alt="Logo" className="w-full h-full object-cover" />
                 </div>
               </div>
               <span className="text-lg font-bold text-foreground">

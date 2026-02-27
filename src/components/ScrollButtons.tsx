@@ -76,7 +76,7 @@ const ScrollButtons = ({ customVisibility, isAutoScrolling, onToggleAutoScroll }
                 variant="secondary"
                 size="icon"
                 className={cn(
-                    "rounded-full shadow-md transition-all duration-300 opacity-0 transform translate-y-4 pointer-events-none bg-primary text-primary-foreground hover:bg-primary/90",
+                    "rounded-full shadow-md transition-all duration-300 opacity-0 translate-y-4 pointer-events-none bg-primary text-primary-foreground hover:bg-primary/90 will-change-[transform,opacity]",
                     showTopBtn && "opacity-100 translate-y-0 pointer-events-auto"
                 )}
                 onClick={scrollToTop}
@@ -107,7 +107,7 @@ const ScrollButtons = ({ customVisibility, isAutoScrolling, onToggleAutoScroll }
                 variant="secondary"
                 size="icon"
                 className={cn(
-                    "rounded-full shadow-md transition-all duration-300 opacity-0 transform translate-y-4 pointer-events-none bg-primary text-primary-foreground hover:bg-primary/90",
+                    "rounded-full shadow-md transition-all duration-300 opacity-0 translate-y-4 pointer-events-none bg-primary text-primary-foreground hover:bg-primary/90 will-change-[transform,opacity]",
                     showBottomBtn && "opacity-100 translate-y-0 pointer-events-auto"
                 )}
                 onClick={scrollToBottom}
