@@ -28,9 +28,10 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ['favicon.ico', 'logo.png', 'robots.txt'],
       workbox: {
         globIgnores: ["bundle-report.html"],
+        navigateFallbackDenylist: [/^\/sitemap\.xml$/, /^\/api\//],
       },
       manifest: {
-        name: 'Celestial Scrolls - Immortal Library',
+        name: 'Celestial Scrolls - Baca Novel Sub Indo',
         short_name: 'CelestialScrolls',
         description: 'Tempat baca novel bahasa indonesia.',
         theme_color: '#ffffff',
@@ -49,12 +50,12 @@ export default defineConfig(({ mode }) => ({
       }
     }),
     mode === "analyze" &&
-      visualizer({
-        filename: "dist/bundle-report.html",
-        gzipSize: true,
-        brotliSize: true,
-        open: true,
-      }),
+    visualizer({
+      filename: "dist/bundle-report.html",
+      gzipSize: true,
+      brotliSize: true,
+      open: true,
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
