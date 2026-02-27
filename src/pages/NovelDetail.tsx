@@ -63,6 +63,7 @@ const NovelDetail = () => {
   const [firstChapterNumber, setFirstChapterNumber] = useState<number | null>(null);
   const [bookmarkCount, setBookmarkCount] = useState(0);
   const [lastReadChapterNumber, setLastReadChapterNumber] = useState<number | null>(null);
+  const [lastReadChapterLanguage, setLastReadChapterLanguage] = useState<string | null>(null);
   useEffect(() => {
     const fetchFirstChapter = async () => {
       if (!novel) return;
@@ -252,7 +253,8 @@ const NovelDetail = () => {
         chapter_id,
         read_at,
         chapters (
-          chapter_number
+          chapter_number,
+          language
         )
       `)
       .eq("user_id", user.id)
@@ -266,7 +268,8 @@ const NovelDetail = () => {
       // Get the latest read chapter number
       const latest = data[0];
       if (latest.chapters) {
-        setLastReadChapterNumber(latest.chapters.chapter_number);
+        setLastReadChapterNumber((latest.chapters as any).chapter_number);
+        setLastReadChapterLanguage((latest.chapters as any).language);
       }
     }
   };
@@ -350,7 +353,7 @@ const NovelDetail = () => {
 
   const handleReadNow = () => {
     if (user && lastReadChapterNumber !== null) {
-      navigate(`/series/${id}/chapter/${lastReadChapterNumber}?lang=${chapterLangFilter}`);
+      navigate(`/series/${id}/chapter/${lastReadChapterNumber}?lang=${lastReadChapterLanguage || chapterLangFilter}`);
       return;
     }
 
