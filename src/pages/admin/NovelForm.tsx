@@ -633,7 +633,7 @@ export default function NovelForm() {
               <div className="flex items-center gap-2">
                 {id && <EpubImporter novelId={id} onImportSuccess={fetchChapters} />}
                 <Button asChild>
-                  <Link to={`/admin/novels/${id}/chapters/new`}>
+                  <Link to={`/admin/novels/${id}/chapters/new?lang=${activeChapterTab}`}>
                     <Plus className="mr-2 h-4 w-4" />
                     Tambah Chapter
                   </Link>

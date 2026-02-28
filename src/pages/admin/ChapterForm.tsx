@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,12 +36,15 @@ export default function ChapterForm() {
   const [novelTitle, setNovelTitle] = useState("");
   const [prevChapterId, setPrevChapterId] = useState<string | null>(null);
   const [nextChapterId, setNextChapterId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const initialLang = searchParams.get('lang') || "id";
+
   const [formData, setFormData] = useState<ChapterFormData>({
     chapter_number: 1,
     title: "",
     content: "",
     published: true,
-    language: "id",
+    language: initialLang,
   });
 
   useEffect(() => {

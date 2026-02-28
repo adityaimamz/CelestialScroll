@@ -77,7 +77,7 @@ export default function ChapterList() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "chapter_number", direction: "desc" });
   const [activeTab, setActiveTab] = useState<string>("id");
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const [chaptersPerPage, setChaptersPerPage] = useState(20);
   const [totalChapterCount, setTotalChapterCount] = useState(0);
@@ -253,7 +253,7 @@ export default function ChapterList() {
         <div className="flex items-center gap-2">
           {novelId && <EpubImporter novelId={novelId} onImportSuccess={fetchChapters} />}
           <Button asChild>
-            <Link to={`/admin/novels/${novelId}/chapters/new`}>
+            <Link to={`/admin/novels/${novelId}/chapters/new?lang=${activeTab}`}>
               <Plus className="mr-2 h-4 w-4" />
               Tambah Chapter
             </Link>
