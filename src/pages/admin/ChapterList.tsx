@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Pagination,
@@ -81,6 +82,9 @@ export default function ChapterList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [chaptersPerPage, setChaptersPerPage] = useState(20);
   const [totalChapterCount, setTotalChapterCount] = useState(0);
+  const [selectedChapters, setSelectedChapters] = useState<string[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
 
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -162,6 +166,7 @@ export default function ChapterList() {
 
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedChapters([]);
   }, [debouncedSearch, sortConfig, activeTab, chaptersPerPage]);
 
   const handleDelete = async () => {
@@ -177,6 +182,7 @@ export default function ChapterList() {
 
       setChapters(chapters.filter((c) => c.id !== deleteId));
       setTotalChapterCount((prev) => prev - 1);
+      setSelectedChapters(prev => prev.filter(id => id !== deleteId));
 
       await logAdminAction("DELETE", "CHAPTER", deleteId, {
         novel_id: novelId,
@@ -195,6 +201,92 @@ export default function ChapterList() {
       });
     } finally {
       setDeleteId(null);
+    }
+  };
+
+  const handleSelectAll = async (checked: boolean) => {
+    if (checked) {
+      // Set a temporary loading state or just indicate we are fetching
+      setChaptersLoading(true);
+      try {
+        let query = supabase
+          .from("chapters")
+          .select("id")
+          .eq("novel_id", novelId)
+          .eq("language", activeTab);
+
+        if (debouncedSearch.trim()) {
+          const searchTerm = debouncedSearch.trim();
+          const isNumber = /^\d+$/.test(searchTerm);
+          if (isNumber) {
+            query = query.eq("chapter_number", parseFloat(searchTerm));
+          } else {
+            query = query.ilike("title", `%${searchTerm}%`);
+          }
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        setSelectedChapters(data.map((c) => c.id));
+      } catch (error) {
+        console.error("Error fetching all chapter ids for selection:", error);
+        toast({
+          title: "Error",
+          description: "Gagal memilih semua chapter",
+          variant: "destructive",
+        });
+      } finally {
+        setChaptersLoading(false);
+      }
+    } else {
+      setSelectedChapters([]);
+    }
+  };
+
+  const handleSelectChapter = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedChapters((prev) => [...prev, id]);
+    } else {
+      setSelectedChapters((prev) => prev.filter((cId) => cId !== id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedChapters.length === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("chapters")
+        .delete()
+        .in("id", selectedChapters);
+
+      if (error) throw error;
+
+      setChapters(chapters.filter((c) => !selectedChapters.includes(c.id)));
+      setTotalChapterCount((prev) => prev - selectedChapters.length);
+
+      // Since we might have deleted items not on the current page, it's safer to re-fetch
+      fetchChapters();
+
+      for (const id of selectedChapters) {
+        await logAdminAction("DELETE", "CHAPTER", id, { novel_id: novelId });
+      }
+
+      toast({
+        title: "Berhasil",
+        description: `${selectedChapters.length} chapter berhasil dihapus`,
+      });
+      setSelectedChapters([]);
+    } catch (error) {
+      console.error("Error bulk deleting chapters:", error);
+      toast({
+        title: "Error",
+        description: "Gagal menghapus chapter yang dipilih",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBulkDeleting(false);
+      setBulkDeleteConfirmOpen(false);
     }
   };
 
@@ -251,6 +343,11 @@ export default function ChapterList() {
           <p className="text-muted-foreground">Novel: {novel?.title}</p>
         </div>
         <div className="flex items-center gap-2">
+          {selectedChapters.length > 0 && userRole === "admin" && (
+            <Button variant="destructive" onClick={() => setBulkDeleteConfirmOpen(true)}>
+              Hapus yang Dipilih ({selectedChapters.length})
+            </Button>
+          )}
           {novelId && <EpubImporter novelId={novelId} onImportSuccess={fetchChapters} />}
           <Button asChild>
             <Link to={`/admin/novels/${novelId}/chapters/new?lang=${activeTab}`}>
@@ -291,6 +388,12 @@ export default function ChapterList() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={totalChapterCount > 0 && selectedChapters.length === totalChapterCount}
+                  onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                />
+              </TableHead>
               <TableHead
                 className="w-20 cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => handleSort("chapter_number")}
@@ -324,13 +427,19 @@ export default function ChapterList() {
           <TableBody>
             {chapters.length === 0 && !chaptersLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? "Tidak ada chapter yang cocok" : "Belum ada chapter"}
                 </TableCell>
               </TableRow>
             ) : (
               chapters.map((chapter) => (
                 <TableRow key={chapter.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedChapters.includes(chapter.id)}
+                      onCheckedChange={(checked) => handleSelectChapter(chapter.id, !!checked)}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{chapter.chapter_number}</TableCell>
                   <TableCell>{chapter.title}</TableCell>
                   <TableCell>
@@ -458,6 +567,24 @@ export default function ChapterList() {
             <AlertDialogCancel>Batal</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
               Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Dialog */}
+      <AlertDialog open={bulkDeleteConfirmOpen} onOpenChange={setBulkDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus {selectedChapters.length} Chapter?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tindakan ini tidak dapat dibatalkan. Semua chapter yang dipilih akan dihapus permanen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={isBulkDeleting} className="bg-destructive text-destructive-foreground">
+              {isBulkDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Hapus Semua"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

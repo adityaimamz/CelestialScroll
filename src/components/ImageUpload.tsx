@@ -43,13 +43,13 @@ export const ImageUpload = ({ value, onChange, endpoint = "imageUploader" }: Ima
                         const optimizedUrl = uploadedFile.serverData?.webpUrl;
                         const wasConverted = uploadedFile.serverData?.wasConverted;
                         const originalType = uploadedFile.serverData?.originalType;
-                        
+
                         // Use optimized URL if available, otherwise fall back to the uploaded file URL
                         // eslint-disable-next-line deprecation/deprecation
                         const fileUrl = optimizedUrl || uploadedFile.url;
-                        
+
                         onChange(fileUrl);
-                        
+
                         if (optimizedUrl && wasConverted) {
                             console.log(`✓ Image optimized to WebP from ${originalType}:`, optimizedUrl);
                         } else if (optimizedUrl && !wasConverted) {
@@ -67,8 +67,8 @@ export const ImageUpload = ({ value, onChange, endpoint = "imageUploader" }: Ima
                 }}
                 appearance={{
                     button: "ut-ready:bg-primary ut-uploading:cursor-not-allowed rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 w-auto",
-                    container: "w-max flex-col items-center gap-1",
-                    allowedContent: "text-xs text-muted-foreground"
+                    container: "w-max flex-col items-start gap-1",
+                    allowedContent: "hidden"
                 }}
                 content={{
                     button: "Upload Image"
