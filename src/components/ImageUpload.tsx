@@ -1,7 +1,8 @@
 
 import { UploadButton } from "../utils/uploadthing";
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface ImageUploadProps {
     value?: string;
@@ -11,6 +12,8 @@ interface ImageUploadProps {
 
 export const ImageUpload = ({ value, onChange, endpoint = "imageUploader" }: ImageUploadProps) => {
     const [error, setError] = useState<string>("");
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     if (value) {
         return (
@@ -35,7 +38,17 @@ export const ImageUpload = ({ value, onChange, endpoint = "imageUploader" }: Ima
         <div className="w-full">
             <UploadButton
                 endpoint={endpoint}
+                onUploadBegin={() => {
+                    setIsUploading(true);
+                    setUploadProgress(0);
+                    setError("");
+                }}
+                onUploadProgress={(p) => {
+                    setUploadProgress(p);
+                }}
                 onClientUploadComplete={(res) => {
+                    setIsUploading(false);
+                    setUploadProgress(100);
                     // Do something with the response
                     console.log("Files: ", res);
                     const uploadedFile = res?.[0];
@@ -61,6 +74,7 @@ export const ImageUpload = ({ value, onChange, endpoint = "imageUploader" }: Ima
                     }
                 }}
                 onUploadError={(error: Error) => {
+                    setIsUploading(false);
                     // Do something with the error.
                     console.error(`ERROR! ${error.message}`);
                     setError(error.message);
@@ -74,7 +88,19 @@ export const ImageUpload = ({ value, onChange, endpoint = "imageUploader" }: Ima
                     button: "Upload Image"
                 }}
             />
-            {error && <p className="text-xs text-destructive mt-2">{error}</p>}
+            {isUploading && (
+                <div className="w-40 mt-3 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Uploading...
+                        </span>
+                        <span>{uploadProgress}%</span>
+                    </div>
+                    <Progress value={uploadProgress} className="h-1.5 w-full bg-muted" />
+                </div>
+            )}
+            {error && !isUploading && <p className="text-xs text-destructive mt-2">{error}</p>}
         </div>
     );
 };

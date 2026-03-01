@@ -134,10 +134,71 @@ export function EpubImporter({ novelId, onImportSuccess }: EpubImporterProps) {
                         }
                     }
 
-                    if (content.trim()) {
+                    let finalContent = content.trim();
+                    let finalTitle = title;
+
+                    if (finalContent) {
+                        // Extract title from the first lines of the content, if it matches the pattern
+                        const lines = finalContent.split('\n');
+                        let firstLineMatch = false;
+
+                        // Pattern 1: "Chapter X: Title" or "Chapter X Title" on the same line
+                        const TITLE_REGEX = /^(?:.*?\s+)?(?:chapter|bab|babak|episode|eps)\s+(\d+(?:\.\d+)?)(?:\s*[:\-\.─—–_=]\s*|\s+)(.+)$/i;
+                        // Pattern 2: "Chapter X" alone on a line (title on next line)
+                        const CHAPTER_ONLY_REGEX = /^(?:.*?\s+)?(?:chapter|bab|babak|episode|eps)\s+(\d+(?:\.\d+)?)\s*$/i;
+
+                        for (let i = 0; i < Math.min(3, lines.length); i++) {
+                            const firstLine = lines[i].trim();
+                            const cleanLine = firstLine.replace(/^[\*\#\s]+|[\*\#\s]+$/g, '');
+
+                            // Try Pattern 1 first (title on same line)
+                            const match = cleanLine.match(TITLE_REGEX);
+                            if (match) {
+                                finalTitle = match[2].trim();
+                                finalContent = lines.slice(i + 1).join('\n').trim();
+                                firstLineMatch = true;
+                                break;
+                            }
+
+                            // Try Pattern 2 (title on next line)
+                            const m2 = cleanLine.match(CHAPTER_ONLY_REGEX);
+                            if (m2) {
+                                for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+                                    const nextLine = lines[j].trim();
+                                    if (nextLine) {
+                                        finalTitle = nextLine;
+                                        finalContent = lines.slice(j + 1).join('\n').trim();
+                                        firstLineMatch = true;
+                                        break;
+                                    }
+                                }
+                                if (firstLineMatch) break;
+                            }
+                        }
+
+                        // If not found in content lines, check if the previously extracted HTML title has this format
+                        if (!firstLineMatch) {
+                            const cleanTitle = finalTitle.replace(/^[\*\#\s]+|[\*\#\s]+$/g, '');
+                            const matchTitle = cleanTitle.match(TITLE_REGEX);
+                            if (matchTitle) {
+                                finalTitle = matchTitle[2].trim();
+                            } else {
+                                // Check if HTML title is just "Chapter X" - use first content line as title
+                                const matchOnly = cleanTitle.match(CHAPTER_ONLY_REGEX);
+                                if (matchOnly && lines.length > 0) {
+                                    const firstNonEmpty = lines.find(l => l.trim());
+                                    if (firstNonEmpty) {
+                                        finalTitle = firstNonEmpty.trim();
+                                        const idx = lines.indexOf(firstNonEmpty);
+                                        finalContent = lines.slice(idx + 1).join('\n').trim();
+                                    }
+                                }
+                            }
+                        }
+
                         extractedChapters.push({
-                            title,
-                            content: content.trim(),
+                            title: finalTitle,
+                            content: finalContent,
                             selected: true,
                             order
                         });

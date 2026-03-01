@@ -337,18 +337,52 @@ export default function ChapterForm() {
 
                           if (value) {
                             const lines = value.split('\n');
-                            const firstLine = lines[0].trim();
-                            const cleanLine = firstLine.replace(/^[\*\#\s]+|[\*\#\s]+$/g, '');
+                            let match = null;
+                            let chapterNum = 0;
+                            let realTitle = "";
+                            let removeUpTo = 0;
 
-                            const match = cleanLine.match(/^(?:chapter|bab)\s+(\d+(?:\.\d+)?)\s*[:\-\.]\s*(.+)$/i);
+                            // Pattern 1: "Chapter X: Title" or "Chapter X Title" on the same line
+                            const TITLE_REGEX = /^(?:.*?\s+)?(?:chapter|bab|babak|episode|eps)\s+(\d+(?:\.\d+)?)(?:\s*[:\-\.─—–_=]\s*|\s+)(.+)$/i;
+                            // Pattern 2: "Chapter X" alone on a line (title on next line)
+                            const CHAPTER_ONLY_REGEX = /^(?:.*?\s+)?(?:chapter|bab|babak|episode|eps)\s+(\d+(?:\.\d+)?)\s*$/i;
+
+                            for (let i = 0; i < Math.min(3, lines.length); i++) {
+                              const firstLine = lines[i].trim();
+                              const cleanLine = firstLine.replace(/^[\*\#\s]+|[\*\#\s]+$/g, '');
+
+                              // Try Pattern 1 first (title on same line)
+                              const m = cleanLine.match(TITLE_REGEX);
+                              if (m) {
+                                match = m;
+                                chapterNum = parseFloat(m[1]);
+                                realTitle = m[2].trim();
+                                removeUpTo = i + 1;
+                                break;
+                              }
+
+                              // Try Pattern 2 (title on next line)
+                              const m2 = cleanLine.match(CHAPTER_ONLY_REGEX);
+                              if (m2) {
+                                chapterNum = parseFloat(m2[1]);
+                                // Find next non-empty line as title
+                                for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+                                  const nextLine = lines[j].trim();
+                                  if (nextLine) {
+                                    match = m2;
+                                    realTitle = nextLine;
+                                    removeUpTo = j + 1;
+                                    break;
+                                  }
+                                }
+                                if (match) break;
+                              }
+                            }
 
                             if (match) {
-                              const chapterNum = parseFloat(match[1]);
-                              const realTitle = match[2];
-
                               // Avoid infinite loop / unnecessary updates
                               if (realTitle !== formData.title) {
-                                const contentWithoutFirstLine = lines.slice(1).join('\n').trim();
+                                const contentWithoutFirstLine = lines.slice(removeUpTo).join('\n').trim();
 
                                 setFormData((prev) => ({
                                   ...prev,

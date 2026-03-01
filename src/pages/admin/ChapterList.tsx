@@ -254,37 +254,42 @@ export default function ChapterList() {
   const handleBulkDelete = async () => {
     if (selectedChapters.length === 0) return;
     setIsBulkDeleting(true);
+    let deletedCount = 0;
     try {
-      const { error } = await supabase
-        .from("chapters")
-        .delete()
-        .in("id", selectedChapters);
+      const BATCH_SIZE = 100; // Approx 1500 chars limit for UUIDs in URL
+      for (let i = 0; i < selectedChapters.length; i += BATCH_SIZE) {
+        const batch = selectedChapters.slice(i, i + BATCH_SIZE);
+        const { error } = await supabase
+          .from("chapters")
+          .delete()
+          .in("id", batch);
 
-      if (error) throw error;
+        if (error) throw error;
+        deletedCount += batch.length;
+      }
 
-      setChapters(chapters.filter((c) => !selectedChapters.includes(c.id)));
-      setTotalChapterCount((prev) => prev - selectedChapters.length);
-
-      // Since we might have deleted items not on the current page, it's safer to re-fetch
-      fetchChapters();
-
-      for (const id of selectedChapters) {
-        await logAdminAction("DELETE", "CHAPTER", id, { novel_id: novelId });
+      const LOG_BATCH_SIZE = 100;
+      for (let i = 0; i < selectedChapters.length; i += LOG_BATCH_SIZE) {
+        const batch = selectedChapters.slice(i, i + LOG_BATCH_SIZE);
+        await Promise.all(
+          batch.map(id => logAdminAction("DELETE", "CHAPTER", id, { novel_id: novelId }))
+        );
       }
 
       toast({
         title: "Berhasil",
-        description: `${selectedChapters.length} chapter berhasil dihapus`,
+        description: `${deletedCount} chapter berhasil dihapus`,
       });
-      setSelectedChapters([]);
     } catch (error) {
       console.error("Error bulk deleting chapters:", error);
       toast({
-        title: "Error",
-        description: "Gagal menghapus chapter yang dipilih",
+        title: "Pemberitahuan",
+        description: `Hanya ${deletedCount} chapter yang berhasil dihapus karena koneksi. Silakan ulangi sisanya.`,
         variant: "destructive",
       });
     } finally {
+      setSelectedChapters([]);
+      fetchChapters();
       setIsBulkDeleting(false);
       setBulkDeleteConfirmOpen(false);
     }
