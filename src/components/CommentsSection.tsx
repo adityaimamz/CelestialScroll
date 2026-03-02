@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import { UploadButton } from "../utils/uploadthing";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -569,6 +570,7 @@ const CommentInput = ({
 }) => {
   const [content, setContent] = useState(initialValue);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -590,9 +592,14 @@ const CommentInput = ({
         <div className="flex-shrink-0">
           <UploadButton
             endpoint="imageUploader"
-            onUploadBegin={() => setIsUploadingImage(true)}
+            onUploadBegin={() => {
+              setIsUploadingImage(true);
+              setUploadProgress(0);
+            }}
+            onUploadProgress={(p) => setUploadProgress(p)}
             onClientUploadComplete={(res) => {
               setIsUploadingImage(false);
+              setUploadProgress(100);
               const uploadedFile = res?.[0];
               if (uploadedFile) {
                 const optimizedUrl = uploadedFile.serverData?.webpUrl;
@@ -619,6 +626,18 @@ const CommentInput = ({
               )
             }}
           />
+          {isUploadingImage && (
+            <div className="w-32 mt-2 space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Uploading...
+                </span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-1.5 w-full bg-muted" />
+            </div>
+          )}
         </div>
         <div className="flex justify-end gap-2">
           {onCancel && (
