@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { Send, User as UserIcon, Trash2, MessageCircle, ThumbsUp, ThumbsDown, Flag, MoreHorizontal, Edit2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Send, User as UserIcon, Trash2, MessageCircle, ThumbsUp, ThumbsDown, Flag, MoreHorizontal, Edit2, ChevronDown, ChevronUp, Loader2, ImageIcon } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { UploadButton } from "../utils/uploadthing";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -565,6 +568,7 @@ const CommentInput = ({
   onCancel?: () => void;
 }) => {
   const [content, setContent] = useState(initialValue);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -582,16 +586,51 @@ const CommentInput = ({
         onChange={(e) => setContent(e.target.value)}
         className="min-h-[100px] bg-card border-border placeholder:text-muted-foreground"
       />
-      <div className="flex justify-end gap-2">
-        {onCancel && (
-          <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+      <div className="flex justify-between items-end gap-2">
+        <div className="flex-shrink-0">
+          <UploadButton
+            endpoint="imageUploader"
+            onUploadBegin={() => setIsUploadingImage(true)}
+            onClientUploadComplete={(res) => {
+              setIsUploadingImage(false);
+              const uploadedFile = res?.[0];
+              if (uploadedFile) {
+                const optimizedUrl = uploadedFile.serverData?.webpUrl;
+                // eslint-disable-next-line deprecation/deprecation
+                const fileUrl = optimizedUrl || uploadedFile.url;
+                setContent(prev => prev + (prev.length > 0 ? '\n\n' : '') + `![image](${fileUrl})`);
+              }
+            }}
+            onUploadError={(error: Error) => {
+              setIsUploadingImage(false);
+              console.error(`Upload error: ${error.message}`);
+            }}
+            appearance={{
+              button: "ut-ready:bg-secondary ut-uploading:cursor-not-allowed rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 h-9 px-4 py-2 w-auto",
+              container: "w-max flex-col items-start gap-1",
+              allowedContent: "hidden"
+            }}
+            content={{
+              button: (
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  <span>Image</span>
+                </div>
+              )
+            }}
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          {onCancel && (
+            <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting || isUploadingImage}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" disabled={isSubmitting || isUploadingImage || !content.trim()} className="gap-2">
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            Post
           </Button>
-        )}
-        <Button type="submit" disabled={isSubmitting || !content.trim()} className="gap-2">
-          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          Post
-        </Button>
+        </div>
       </div>
     </form>
   );
@@ -679,7 +718,6 @@ const CommentItem = ({
           </div>
 
           {/* Content */}
-          {/* Content */}
           {isEditing ? (
             <div className="mt-2">
               <CommentInput
@@ -696,9 +734,38 @@ const CommentItem = ({
               />
             </div>
           ) : (
-            <p className="text-foreground/90 whitespace-pre-wrap text-sm leading-relaxed">
-              {comment.content}
-            </p>
+            <div className="text-foreground/90 text-sm leading-relaxed break-words markdown-comment space-y-2">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  img: ({ node: _n, ...props }) => <img {...props} className="max-w-full max-h-[400px] object-contain rounded-md border border-border mt-2" loading="lazy" />,
+                  a: ({ node: _n, ...props }) => <a {...props} className="text-primary hover:underline break-all" target="_blank" rel="noopener noreferrer" />,
+                  p: ({ node: _n, ...props }) => <p {...props} className="whitespace-pre-wrap leading-relaxed" />,
+                  table: ({ node: _n, ...props }) => <div className="overflow-x-auto"><table {...props} className="border-collapse border border-border w-full my-2 text-sm" /></div>,
+                  th: ({ node: _n, ...props }) => <th {...props} className="border border-border p-2 bg-muted/50 font-semibold text-left" />,
+                  td: ({ node: _n, ...props }) => <td {...props} className="border border-border p-2" />,
+                  ol: ({ node: _n, ...props }) => <ol {...props} className="list-decimal list-inside space-y-1 my-1" />,
+                  ul: ({ node: _n, ...props }) => <ul {...props} className="list-disc list-inside space-y-1 my-1" />,
+                  blockquote: ({ node: _n, ...props }) => <blockquote {...props} className="border-l-4 border-primary pl-4 italic text-muted-foreground my-2 bg-muted/30 py-1" />,
+                  code: ({ node: _n, className, children, ...props }) => {
+                    const match = /language-(\w+)/.exec(className || '')
+                    return match ? (
+                      <div className="rounded-md bg-muted/50 p-3 my-2 overflow-x-auto text-xs font-mono border border-border">
+                        <code {...props} className={className}>
+                          {children}
+                        </code>
+                      </div>
+                    ) : (
+                      <code {...props} className="bg-muted px-1.5 py-0.5 rounded-md text-xs font-mono">
+                        {children}
+                      </code>
+                    )
+                  }
+                }}
+              >
+                {comment.content}
+              </ReactMarkdown>
+            </div>
           )}
 
           {/* Footer Actions */}
