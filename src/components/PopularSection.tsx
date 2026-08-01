@@ -15,21 +15,37 @@ const PopularSection = () => {
   const { data: novels = [], isLoading } = useQuery({
     queryKey: ["popular-novels", languageFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Simplified query - fetch novels first, then count chapters separately
+      const { data: novelsData, error: novelsError } = await supabase
         .from("novels")
-        .select("id, title, cover_url, rating, slug, views, chapters(count)")
+        .select("id, title, cover_url, rating, slug, views")
         .order("views", { ascending: false })
         .eq("is_published", true)
         .neq("id", "00000000-0000-0000-0000-000000000000")
-        .eq("chapters.language", "id")
         .limit(6);
 
-      if (error) throw error;
-      if (!data) return [];
+      if (novelsError) throw novelsError;
+      if (!novelsData) return [];
 
-      return data.map(novel => ({
+      // Fetch chapter counts separately for better performance
+      const novelIds = novelsData.map(n => n.id);
+      const { data: chaptersData, error: chaptersError } = await supabase
+        .from("chapters")
+        .select("novel_id")
+        .eq("language", "id")
+        .in("novel_id", novelIds);
+
+      if (chaptersError) throw chaptersError;
+
+      // Count chapters per novel
+      const chapterCounts = (chaptersData || []).reduce((acc, ch) => {
+        acc[ch.novel_id] = (acc[ch.novel_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      return novelsData.map(novel => ({
         ...novel,
-        chapters_count: novel.chapters?.[0]?.count || 0,
+        chapters_count: chapterCounts[novel.id] || 0,
       }));
     },
     staleTime: 5 * 60 * 1000, // Cache 5 minutes - popular novels

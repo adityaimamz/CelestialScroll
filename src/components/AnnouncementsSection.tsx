@@ -14,7 +14,7 @@ const AnnouncementsSection = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
-        .select("*")
+        .select("id, title, content")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 

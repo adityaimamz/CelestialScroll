@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Trophy, BookOpen, Star, Eye } from 'lucide-react'
 
 import { supabase } from "@/integrations/supabase/client";
@@ -17,23 +17,43 @@ const Rankings = () => {
     const { data: novels = [], isLoading } = useQuery({
         queryKey: ["rankings"],
         queryFn: async () => {
-            const { data, error } = await supabase
+            // Split query to avoid LATERAL join timeout
+            // Query 1: Get top 50 novels
+            const { data: novelsData, error: novelsError } = await supabase
                 .from("novels")
-                .select("*, chapters(count)")
+                .select("id, title, slug, cover_url, views, rating")
                 .order("views", { ascending: false })
                 .eq("is_published", true)
-                .eq("chapters.language", "id")
                 .neq("id", "00000000-0000-0000-0000-000000000000")
                 .limit(50);
 
-            if (error) throw error;
-            if (!data) return [];
+            if (novelsError) throw novelsError;
+            if (!novelsData || novelsData.length === 0) return [];
 
-            return data.map(novel => ({
+            // Query 2: Get chapter counts for all novels
+            const novelIds = novelsData.map(n => n.id);
+            const { data: chaptersData, error: chaptersError } = await supabase
+                .from("chapters")
+                .select("novel_id")
+                .in("novel_id", novelIds)
+                .eq("language", "id");
+
+            if (chaptersError) throw chaptersError;
+
+            // Count chapters per novel
+            const chapterCounts = new Map<string, number>();
+            chaptersData?.forEach(ch => {
+                chapterCounts.set(ch.novel_id, (chapterCounts.get(ch.novel_id) || 0) + 1);
+            });
+
+            // Combine results
+            return novelsData.map(novel => ({
                 ...novel,
-                chapters_count: novel.chapters?.[0]?.count || 0,
+                chapters_count: chapterCounts.get(novel.id) || 0,
             }));
         },
+        staleTime: 5 * 60 * 1000, // Cache 5 minutes - rankings change slowly
+        gcTime: 15 * 60 * 1000, // Keep in memory 15 minutes
     });
 
     return (

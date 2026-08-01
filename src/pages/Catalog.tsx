@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
-type Novel = Tables<"novels"> & {
+type Novel = Pick<Tables<"novels">, "id" | "title" | "cover_url" | "rating" | "status" | "slug"> & {
   chapters_count?: number;
 };
 
@@ -70,11 +70,12 @@ const Catalog = () => {
   const { data: queryData, isLoading, isFetching, error } = useQuery({
     queryKey: ["catalog", selectedGenre, sortBy, debouncedSearchQuery, languageFilter, page],
     queryFn: async () => {
+      // Split query to avoid LATERAL join timeout
+      // Query 1: Get novels with filters and pagination
       let query = supabase
         .from("novels")
-        .select("*, chapters(count)")
+        .select("id, title, cover_url, rating, status, slug")
         .eq("is_published", true)
-        .eq("chapters.language", "id")
         .neq("id", "00000000-0000-0000-0000-000000000000");
 
       if (debouncedSearchQuery) {
@@ -104,11 +105,35 @@ const Catalog = () => {
 
       query = query.range(page * NOVELS_PER_PAGE, (page + 1) * NOVELS_PER_PAGE - 1);
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
+      const { data: novelsData, error: novelsError } = await query;
+      if (novelsError) throw novelsError;
+      if (!novelsData || novelsData.length === 0) return [];
+
+      // Query 2: Get chapter counts for the novels on this page
+      const novelIds = novelsData.map(n => n.id);
+      const { data: chaptersData, error: chaptersError } = await supabase
+        .from("chapters")
+        .select("novel_id")
+        .in("novel_id", novelIds)
+        .eq("language", "id");
+
+      if (chaptersError) throw chaptersError;
+
+      // Count chapters per novel
+      const chapterCounts = new Map<string, number>();
+      chaptersData?.forEach(ch => {
+        chapterCounts.set(ch.novel_id, (chapterCounts.get(ch.novel_id) || 0) + 1);
+      });
+
+      // Combine results
+      return novelsData.map(novel => ({
+        ...novel,
+        chapters_count: chapterCounts.get(novel.id) || 0,
+      }));
     },
     placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000, // Cache 2 minutes - catalog updates moderately
+    gcTime: 10 * 60 * 1000, // Keep in memory 10 minutes
   });
 
   // Sync queryData to novels state for load-more functionality
@@ -120,17 +145,13 @@ const Catalog = () => {
         setHasMore(true);
       }
 
-      const novelsWithChapterCount = queryData.map(novel => ({
-        ...novel,
-        chapters_count: novel.chapters?.[0]?.count || 0,
-      }));
-
+      // Data already has chapters_count from query
       setNovels(prev => {
         if (page === 0) {
-          return novelsWithChapterCount;
+          return queryData;
         } else {
           const existingIds = new Set(prev.map(n => n.id));
-          const filteredNew = novelsWithChapterCount.filter(n => !existingIds.has(n.id));
+          const filteredNew = queryData.filter(n => !existingIds.has(n.id));
           return [...prev, ...filteredNew];
         }
       });

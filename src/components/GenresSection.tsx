@@ -54,48 +54,68 @@ const GenresSection = () => {
     queryKey: ["novels-by-genre", activeGenre, languageFilter],
     queryFn: async () => {
       if (!activeGenre) return [];
-      const { data, error } = await supabase
+      
+      // Step 1: Get novel IDs for this genre
+      const { data: novelGenresData, error: ngError } = await supabase
         .from("novel_genres")
-        .select(`
-          novel:novels!inner (
-            id, title, cover_url, rating, status, slug, updated_at,
-            chapters_count:chapters(count),
-            latest_chapters:chapters(created_at, language)
-          )
-        `)
-        .eq("novel.is_published", true)
-        .neq("novel_id", "00000000-0000-0000-0000-000000000000")
+        .select("novel_id")
         .eq("genre_id", activeGenre)
-        .eq("novel.chapters.language", "id") // Only count 'id' language chapters
-        .eq("novel.latest_chapters.language", "id") // Only fetch 'id' for latest
-        .order("created_at", { foreignTable: "novel.latest_chapters", ascending: false })
-        .limit(1, { foreignTable: "novel.latest_chapters" })
+        .neq("novel_id", "00000000-0000-0000-0000-000000000000");
+
+      if (ngError) throw ngError;
+      if (!novelGenresData || novelGenresData.length === 0) return [];
+
+      const novelIds = novelGenresData.map(ng => ng.novel_id);
+
+      // Step 2: Get novels data
+      const { data: novelsData, error: novelsError } = await supabase
+        .from("novels")
+        .select("id, title, cover_url, rating, status, slug, updated_at")
+        .eq("is_published", true)
+        .in("id", novelIds)
         .limit(8);
 
-      if (error) throw error;
-      if (!data) return [];
+      if (novelsError) throw novelsError;
+      if (!novelsData) return [];
 
-      // Extract the novel objects from the junction result
-      let formattedNovels = data.map((item: any) => {
-        const novel = item.novel;
-        if (!novel) return null;
+      // Step 3: Get chapter counts and latest dates separately
+      const { data: chaptersData, error: chaptersError } = await supabase
+        .from("chapters")
+        .select("novel_id, created_at")
+        .eq("language", "id")
+        .in("novel_id", novelsData.map(n => n.id))
+        .order("created_at", { ascending: false });
 
-        const countArr = novel.chapters_count || [];
-        const chapters_count = countArr?.[0]?.count || 0;
+      if (chaptersError) throw chaptersError;
 
-        const latestArr = novel.latest_chapters || [];
-        const latest_date = latestArr.length > 0 ? latestArr[0].created_at : null;
+      // Process chapter data
+      const novelStats = (chaptersData || []).reduce((acc, ch) => {
+        if (!acc[ch.novel_id]) {
+          acc[ch.novel_id] = {
+            count: 0,
+            latest_date: ch.created_at
+          };
+        }
+        acc[ch.novel_id].count++;
+        return acc;
+      }, {} as Record<string, { count: number; latest_date: string }>);
 
-        return {
+      // Combine and filter
+      const formattedNovels = novelsData
+        .map(novel => ({
           ...novel,
-          chapters_count: chapters_count,
-          latest_chapter_date: latest_date || null,
-          has_id: chapters_count > 0
-        };
-      }).filter(Boolean);
+          chapters_count: novelStats[novel.id]?.count || 0,
+          latest_chapter_date: novelStats[novel.id]?.latest_date || null,
+          has_id: (novelStats[novel.id]?.count || 0) > 0
+        }))
+        .filter(n => n.has_id)
+        .sort((a, b) => {
+          const dateA = a.latest_chapter_date ? new Date(a.latest_chapter_date).getTime() : 0;
+          const dateB = b.latest_chapter_date ? new Date(b.latest_chapter_date).getTime() : 0;
+          return dateB - dateA;
+        });
 
-      // Hanya tampilkan yang mempunyai chapter indonesia
-      return formattedNovels.filter((n: any) => n.has_id);
+      return formattedNovels;
     },
     enabled: !!activeGenre,
     staleTime: 3 * 60 * 1000, // Cache 3 minutes - novels by genre

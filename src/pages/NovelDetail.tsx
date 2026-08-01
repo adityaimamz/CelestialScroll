@@ -100,12 +100,11 @@ const NovelDetail = () => {
 
   const fetchNovelAndChapters = async (slug: string) => {
     try {
-      // 1. Fetch Novel by Slug
+      // 1. Fetch Novel by Slug (without LATERAL join)
       const { data: novelData, error: novelError } = await supabase
         .from("novels")
-        .select("*, indocount:chapters(count)")
+        .select("*")
         .eq("slug", slug)
-        .eq("indocount.language", "id")
         .maybeSingle();
 
       if (novelError) throw novelError;
@@ -133,7 +132,19 @@ const NovelDetail = () => {
       }
 
       setNovel({ ...novelData, views: novelData.views + 1 });
-      setIndonesianChapterCount(novelData.indocount?.[0]?.count || 0);
+
+      // 2. Fetch Indonesian chapter count separately
+      const { count: indoCount, error: indoCountError } = await supabase
+        .from("chapters")
+        .select("*", { count: "exact", head: true })
+        .eq("novel_id", novelData.id)
+        .eq("language", "id");
+
+      if (indoCountError) {
+        console.error("Failed to get Indonesian chapter count:", indoCountError);
+      }
+
+      setIndonesianChapterCount(indoCount || 0);
 
       // Increment Views in DB
       const { error: viewError } = await supabase.rpc('increment_novel_views', { _novel_id: novelData.id });

@@ -30,6 +30,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 type Chapter = Tables<"chapters">;
 type Novel = Tables<"novels">;
+type ReaderNovel = Pick<Novel, "id" | "title" | "is_published" | "slug">;
 
 type ChapterListItem = Pick<Chapter, "id" | "title" | "chapter_number">;
 
@@ -64,7 +65,7 @@ const ChapterReader = () => {
     }
   }, [readerLanguage, searchParams, setSearchParams]);
 
-  const [novel, setNovel] = useState<Novel | null>(null);
+  const [novel, setNovel] = useState<ReaderNovel | null>(null);
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [chaptersList, setChaptersList] = useState<ChapterListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +103,7 @@ const ChapterReader = () => {
       // 1. Fetch Novel
       const { data: novelData, error: novelError } = await supabase
         .from("novels")
-        .select("*")
+        .select("id, title, is_published, slug")
         .eq("slug", slug)
         .maybeSingle();
 

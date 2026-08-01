@@ -55,33 +55,53 @@ const Bookmark = () => {
     queryKey: ["bookmarks", user?.id, languageFilter],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
+      
+      // Split query to avoid LATERAL join timeout
+      // Query 1: Get bookmarks with novels
+      const { data: bookmarksData, error: bookmarksError } = await supabase
         .from("bookmarks")
         .select(`
             id,
             created_at,
-            novels!inner (
-                *,
-                chapters (count)
-            )
+            novels!inner (*)
         `)
         .eq("user_id", user.id)
         .eq("novels.is_published", true)
-        .eq("novels.chapters.language", "id")
         .neq("novel_id", "00000000-0000-0000-0000-000000000000");
 
-      if (error) throw error;
-      if (!data) return [];
+      if (bookmarksError) throw bookmarksError;
+      if (!bookmarksData || bookmarksData.length === 0) return [];
 
-      return (data as unknown as BookmarkWithNovel[])
-        .filter(item => item.novels) // Filter out if novel was deleted
-        .map(item => ({
-          ...item.novels!,
-          chapters_count: item.novels!.chapters?.[0]?.count || 0,
-          bookmark_created_at: item.created_at
-        }));
+      // Filter out deleted novels
+      const validBookmarks = (bookmarksData as unknown as BookmarkWithNovel[])
+        .filter(item => item.novels);
+
+      // Query 2: Get chapter counts for bookmarked novels
+      const novelIds = validBookmarks.map(b => b.novels!.id);
+      const { data: chaptersData, error: chaptersError } = await supabase
+        .from("chapters")
+        .select("novel_id")
+        .in("novel_id", novelIds)
+        .eq("language", "id");
+
+      if (chaptersError) throw chaptersError;
+
+      // Count chapters per novel
+      const chapterCounts = new Map<string, number>();
+      chaptersData?.forEach(ch => {
+        chapterCounts.set(ch.novel_id, (chapterCounts.get(ch.novel_id) || 0) + 1);
+      });
+
+      // Combine results
+      return validBookmarks.map(item => ({
+        ...item.novels!,
+        chapters_count: chapterCounts.get(item.novels!.id) || 0,
+        bookmark_created_at: item.created_at
+      }));
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Cache 5 minutes - bookmarks don't change often
+    gcTime: 15 * 60 * 1000, // Keep in memory 15 minutes
   });
 
   // Handle errors

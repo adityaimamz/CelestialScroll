@@ -235,7 +235,7 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
     if (commentIds.length > 0) {
       const { data: votesData } = await supabase
         .from("comment_votes" as any)
-        .select("*")
+        .select("comment_id, user_id, vote_type")
         .in("comment_id", commentIds);
 
       votesData?.forEach((v: any) => {
@@ -368,7 +368,7 @@ const CommentsSection = ({ novelId, chapterId }: CommentsSectionProps) => {
       // Check if vote exists
       const { data, error: queryError } = await supabase
         .from("comment_votes" as any)
-        .select("*")
+        .select("id, vote_type")
         .eq("user_id", user.id)
         .eq("comment_id", commentId)
         .maybeSingle();
