@@ -17,7 +17,7 @@ const PopularSection = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("novels")
-        .select("*, chapters(count)")
+        .select("id, title, cover_url, rating, slug, views, chapters(count)")
         .order("views", { ascending: false })
         .eq("is_published", true)
         .neq("id", "00000000-0000-0000-0000-000000000000")

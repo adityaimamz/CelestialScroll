@@ -23,7 +23,7 @@ const NewReleasesSection = ({ languageFilter = "all" }: NewReleasesSectionProps)
       let query = supabase
         .from("novels")
         .select(`
-          *,
+          id, title, cover_url, rating, status, slug, updated_at,
           chapters_count:chapters(count),
           latest_chapters:chapters(created_at, language)
         `)

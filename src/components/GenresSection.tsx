@@ -56,7 +56,7 @@ const GenresSection = () => {
         .from("novel_genres")
         .select(`
           novel:novels!inner (
-            *,
+            id, title, cover_url, rating, status, slug, updated_at,
             chapters_count:chapters(count),
             latest_chapters:chapters(created_at, language)
           )

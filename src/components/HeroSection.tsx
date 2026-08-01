@@ -26,7 +26,7 @@ const HeroSection = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("novels")
-        .select("*, chapters(count)")
+        .select("id, title, description, cover_url, rating, status, slug, chapters(count)")
         .limit(10)
         .eq("chapters.language", "id")
         .neq("id", "00000000-0000-0000-0000-000000000000");

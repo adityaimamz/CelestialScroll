@@ -32,7 +32,7 @@ const TopSeriesSection = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("novels")
-        .select("*")
+        .select("id, title, description, cover_url, rating, genres, slug")
         .order("rating", { ascending: false })
         .eq("is_published", true)
         .neq("id", "00000000-0000-0000-0000-000000000000")
