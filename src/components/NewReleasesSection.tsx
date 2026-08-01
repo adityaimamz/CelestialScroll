@@ -66,6 +66,8 @@ const NewReleasesSection = ({ languageFilter = "all" }: NewReleasesSectionProps)
 
       return formattedNovels.slice(0, 6);
     },
+    staleTime: 2 * 60 * 1000, // Cache 2 minutes - new releases
+    gcTime: 5 * 60 * 1000, // Keep in memory 5 minutes
   });
 
   if (isLoading) {

@@ -58,6 +58,8 @@ const RecentUpdatesSection = ({ languageFilter = "all" }: RecentUpdatesSectionPr
       if (error) throw error;
       return (data as any) || [];
     },
+    staleTime: 2 * 60 * 1000, // Cache 2 minutes - recent updates
+    gcTime: 5 * 60 * 1000, // Keep in memory 5 minutes
   });
 
   if (isLoading) {

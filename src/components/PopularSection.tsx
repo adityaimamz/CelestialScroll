@@ -32,6 +32,8 @@ const PopularSection = () => {
         chapters_count: novel.chapters?.[0]?.count || 0,
       }));
     },
+    staleTime: 5 * 60 * 1000, // Cache 5 minutes - popular novels
+    gcTime: 10 * 60 * 1000, // Keep in memory 10 minutes
   });
 
   if (isLoading && novels.length === 0) {

@@ -41,6 +41,8 @@ const TopSeriesSection = () => {
       if (error) throw error;
       return data || [];
     },
+    staleTime: 5 * 60 * 1000, // Cache 5 minutes - top series
+    gcTime: 10 * 60 * 1000, // Keep in memory 10 minutes
   });
 
   if (isLoading) {

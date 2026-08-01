@@ -38,6 +38,8 @@ const GenresSection = () => {
 
       return sortedGenres;
     },
+    staleTime: 10 * 60 * 1000, // Cache 10 minutes - genres rarely change
+    gcTime: 30 * 60 * 1000, // Keep in memory 30 minutes
   });
 
   // Set default activeGenre when genres are loaded
@@ -96,6 +98,8 @@ const GenresSection = () => {
       return formattedNovels.filter((n: any) => n.has_id);
     },
     enabled: !!activeGenre,
+    staleTime: 3 * 60 * 1000, // Cache 3 minutes - novels by genre
+    gcTime: 10 * 60 * 1000, // Keep in memory 10 minutes
   });
 
   if (isGenresLoading) return null;

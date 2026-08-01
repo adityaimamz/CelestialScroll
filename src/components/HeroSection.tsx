@@ -41,6 +41,8 @@ const HeroSection = () => {
       }));
       return formattedNovels.slice(0, 5);
     },
+    staleTime: 10 * 60 * 1000, // Cache 10 minutes - featured novels
+    gcTime: 30 * 60 * 1000, // Keep in memory 30 minutes (garbage collection time)
   });
 
   if (isLoading) {
