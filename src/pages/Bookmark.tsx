@@ -17,6 +17,8 @@ import { BarLoader } from "@/components/ui/BarLoader";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+import { useQuery } from "@tanstack/react-query";
+
 // Defines the shape of data we get from the join
 type BookmarkWithNovel = {
   id: string;
@@ -44,26 +46,15 @@ const Bookmark = () => {
   const { toast } = useToast();
   const { t, languageFilter } = useLanguage();
 
-  const [bookmarks, setBookmarks] = useState<NovelDisplay[]>([]);
-  const [loading, setLoading] = useState(true);
-
   // Sorting & Pagination State
   const [sortBy, setSortBy] = useState<string>("time_added");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    if (user) {
-      fetchBookmarks();
-    } else {
-      setLoading(false); // Not logged in
-    }
-  }, [user, languageFilter]);
-
-  const fetchBookmarks = async () => {
-    setLoading(true);
-    try {
-      // Fetch all bookmarks with related novel data
+  const { data: bookmarks = [], isLoading, error } = useQuery<NovelDisplay[]>({
+    queryKey: ["bookmarks", user?.id, languageFilter],
+    queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from("bookmarks")
         .select(`
@@ -74,34 +65,36 @@ const Bookmark = () => {
                 chapters (count)
             )
         `)
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .eq("novels.is_published", true)
         .eq("novels.chapters.language", "id")
         .neq("novel_id", "00000000-0000-0000-0000-000000000000");
 
       if (error) throw error;
+      if (!data) return [];
 
-      // Transform data
-      const formattedData: NovelDisplay[] = (data as unknown as BookmarkWithNovel[])
+      return (data as unknown as BookmarkWithNovel[])
         .filter(item => item.novels) // Filter out if novel was deleted
         .map(item => ({
           ...item.novels!,
           chapters_count: item.novels!.chapters?.[0]?.count || 0,
           bookmark_created_at: item.created_at
         }));
+    },
+    enabled: !!user,
+  });
 
-      setBookmarks(formattedData);
-    } catch (error) {
+  // Handle errors
+  useEffect(() => {
+    if (error) {
       console.error("Error fetching bookmarks:", error);
       toast({
         title: "Error",
         description: "Failed to load bookmarks",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [error, toast]);
 
   // Client-side Sorting & Pagination Logic
   const getProcessedData = () => {
@@ -186,7 +179,7 @@ const Bookmark = () => {
       <div className="section-container py-8">
         <SectionHeader title={`${t("bookmarks.savedSeries")} (${bookmarks.length})`} />
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center py-20">
             <BarLoader />
           </div>

@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { HoverEffect } from "@/components/ui/card-hover-effect";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
 
 interface Genre {
   id: string;
@@ -18,28 +18,19 @@ interface Genre {
 
 const Genres = () => {
   const { t } = useLanguage();
-  const [genres, setGenres] = useState<Genre[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchGenres = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("genres")
-          .select("*, novel_genres(novels(is_published))")
-          .order("name");
+  const { data: genres = [], isLoading } = useQuery<Genre[]>({
+    queryKey: ["genres-page"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("genres")
+        .select("*, novel_genres(novels(is_published))")
+        .order("name");
 
-        if (error) throw error;
-        setGenres((data as any) || []);
-      } catch (error) {
-        console.error("Error fetching genres:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchGenres();
-  }, []);
+      if (error) throw error;
+      return (data as any) || [];
+    },
+  });
 
   if (isLoading) {
     return (

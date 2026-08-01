@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import NovelCard from "@/components/NovelCard";
 import SectionHeader from "@/components/SectionHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
 
 type Novel = Tables<"novels"> & {
   chapters_count?: number;
@@ -15,16 +15,11 @@ interface NewReleasesSectionProps {
 }
 
 const NewReleasesSection = ({ languageFilter = "all" }: NewReleasesSectionProps) => {
-  const [novels, setNovels] = useState<Novel[]>([]);
-  const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
-  useEffect(() => {
-    fetchNewReleases();
-  }, [languageFilter]);
-
-  const fetchNewReleases = async () => {
-    try {
+  const { data: novels = [], isLoading } = useQuery({
+    queryKey: ["new-releases", languageFilter],
+    queryFn: async () => {
       let query = supabase
         .from("novels")
         .select(`
@@ -41,45 +36,39 @@ const NewReleasesSection = ({ languageFilter = "all" }: NewReleasesSectionProps)
         .limit(1, { foreignTable: "latest_chapters" });
 
       const { data, error } = await query;
-
       if (error) throw error;
+      if (!data) return [];
 
-      if (data) {
-        let formattedNovels = data.map((novel: any) => {
-          const countArr = novel.chapters_count || [];
-          const chapters_count = countArr?.[0]?.count || 0;
+      let formattedNovels = data.map((novel: any) => {
+        const countArr = novel.chapters_count || [];
+        const chapters_count = countArr?.[0]?.count || 0;
 
-          const latestArr = novel.latest_chapters || [];
-          const latest_date = latestArr.length > 0 ? latestArr[0].created_at : null;
+        const latestArr = novel.latest_chapters || [];
+        const latest_date = latestArr.length > 0 ? latestArr[0].created_at : null;
 
-          return {
-            ...novel,
-            chapters_count: chapters_count,
-            latest_chapter_date: latest_date || null,
-            has_id: chapters_count > 0
-          };
-        });
+        return {
+          ...novel,
+          chapters_count: chapters_count,
+          latest_chapter_date: latest_date || null,
+          has_id: chapters_count > 0
+        };
+      });
 
-        // Tampilkan semua novel yang memiliki chapter indonesia
-        formattedNovels = formattedNovels.filter((n: any) => n.has_id);
+      // Tampilkan semua novel yang memiliki chapter indonesia
+      formattedNovels = formattedNovels.filter((n: any) => n.has_id);
 
-        // Resort by latest chapter date desc
-        formattedNovels = formattedNovels.sort((a: any, b: any) => {
-          const dateA = a.latest_chapter_date ? new Date(a.latest_chapter_date).getTime() : new Date(a.created_at).getTime();
-          const dateB = b.latest_chapter_date ? new Date(b.latest_chapter_date).getTime() : new Date(b.created_at).getTime();
-          return dateB - dateA;
-        });
+      // Resort by latest chapter date desc
+      formattedNovels = formattedNovels.sort((a: any, b: any) => {
+        const dateA = a.latest_chapter_date ? new Date(a.latest_chapter_date).getTime() : new Date(a.created_at).getTime();
+        const dateB = b.latest_chapter_date ? new Date(b.latest_chapter_date).getTime() : new Date(b.created_at).getTime();
+        return dateB - dateA;
+      });
 
-        setNovels(formattedNovels.slice(0, 6)); // limit to 6
-      }
-    } catch (error) {
-      console.error("Error fetching new releases:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return formattedNovels.slice(0, 6);
+    },
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <section className="section-spacing section-container flex justify-center py-10">
         <BarLoader />

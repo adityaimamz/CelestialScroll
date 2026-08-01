@@ -30,6 +30,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/components/auth/AuthProvider";
 import CommentsSection from "@/components/CommentsSection";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Novel = Tables<"novels">;
 type Chapter = Tables<"chapters"> & { views: number };
@@ -40,6 +41,7 @@ const NovelDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, languageFilter } = useLanguage();
+  const queryClient = useQueryClient();
 
   const [chapterLangFilter, setChapterLangFilter] = useState(languageFilter);
 
@@ -190,11 +192,13 @@ const NovelDetail = () => {
         await supabase.from("bookmarks").delete().eq("user_id", user.id).eq("novel_id", novel.id);
         setIsFavorite(false);
         await fetchBookmarkCount(); // Re-fetch from DB
+        queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
         toast({ title: t("novelDetail.removed"), description: t("novelDetail.removedMessage") });
       } else {
         await supabase.from("bookmarks").insert({ user_id: user.id, novel_id: novel.id });
         setIsFavorite(true);
         await fetchBookmarkCount(); // Re-fetch from DB
+        queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
         toast({ title: t("novelDetail.added"), description: t("novelDetail.addedMessage") });
       }
     } catch (error) {

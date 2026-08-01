@@ -1,30 +1,29 @@
-import { useEffect, useState } from "react";
 import { Megaphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
 
 type Announcement = Tables<"announcements">;
 
 const AnnouncementsSection = () => {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const { t } = useLanguage();
 
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
-      const { data } = await supabase
+  const { data: announcements = [], isLoading } = useQuery({
+    queryKey: ["announcements"],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("announcements")
         .select("*")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
-      if (data) setAnnouncements(data);
-    };
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
-    fetchAnnouncements();
-  }, []);
-
-  if (announcements.length === 0) return null;
+  if (isLoading || announcements.length === 0) return null;
 
   return (
     <section className="section-container py-6" id="announcements">

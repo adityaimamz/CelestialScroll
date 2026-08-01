@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +5,7 @@ import { Tables } from "@/integrations/supabase/types";
 import SectionHeader from "@/components/SectionHeader";
 import { BarLoader } from "./ui/BarLoader";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
 
 type Novel = Tables<"novels">;
 
@@ -25,34 +25,25 @@ import {
 } from "@/components/ui/carousel";
 
 const TopSeriesSection = () => {
-  const [novels, setNovels] = useState<Novel[]>([]);
-  const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
-  useEffect(() => {
-    fetchTopSeries();
-  }, []);
-
-  const fetchTopSeries = async () => {
-    try {
+  const { data: novels = [], isLoading } = useQuery({
+    queryKey: ["top-series"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("novels")
         .select("*")
         .order("rating", { ascending: false })
         .eq("is_published", true)
         .neq("id", "00000000-0000-0000-0000-000000000000")
-        .limit(6); // Increased limit slightly since it's scrollable
+        .limit(6);
 
       if (error) throw error;
-      setNovels(data || []);
-    } catch (error) {
-      console.error("Error fetching top series:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <section className="section-spacing section-container min-h-[400px] flex justify-center py-10">
         <BarLoader />

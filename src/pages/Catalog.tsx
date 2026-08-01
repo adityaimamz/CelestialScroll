@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
 type Novel = Tables<"novels"> & {
   chapters_count?: number;
@@ -30,16 +31,14 @@ const Catalog = () => {
   const genreParam = searchParams.get("genre");
 
   const [novels, setNovels] = useState<Novel[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState("All");
   const [sortBy, setSortBy] = useState("Popular");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
     if (genreParam) {
-      // Find matching genre case-insensitive or just use capitalize
-      // Handle slugs with hyphens (e.g., martial-arts -> martial arts)
       const normalizedGenre = genreParam.replace(/-/g, " ");
       const matchedGenre = genres.find(g => g.toLowerCase() === normalizedGenre.toLowerCase()) ||
         normalizedGenre.charAt(0).toUpperCase() + normalizedGenre.slice(1);
@@ -53,23 +52,24 @@ const Catalog = () => {
   const [hasMore, setHasMore] = useState(true);
   const NOVELS_PER_PAGE = 12;
 
+  // Debounce search input
   useEffect(() => {
-    // Debounce search to avoid too many requests
     const timer = setTimeout(() => {
-      // Reset pagination when filters change
-      setPage(0);
-      setNovels([]);
-      setHasMore(true);
-      fetchNovels(0);
+      setDebouncedSearchQuery(searchQuery);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [selectedGenre, sortBy, searchQuery, languageFilter]);
+  }, [searchQuery]);
 
-  const fetchNovels = async (pageNum: number) => {
-    if (pageNum === 0) setLoading(true);
+  // Reset page when filter variables change
+  useEffect(() => {
+    setPage(0);
+    setHasMore(true);
+  }, [selectedGenre, sortBy, debouncedSearchQuery, languageFilter]);
 
-    try {
+  const { data: queryData, isLoading, isFetching, error } = useQuery({
+    queryKey: ["catalog", selectedGenre, sortBy, debouncedSearchQuery, languageFilter, page],
+    queryFn: async () => {
       let query = supabase
         .from("novels")
         .select("*, chapters(count)")
@@ -77,17 +77,14 @@ const Catalog = () => {
         .eq("chapters.language", "id")
         .neq("id", "00000000-0000-0000-0000-000000000000");
 
-      // Search
-      if (searchQuery) {
-        query = query.ilike("title", `%${searchQuery}%`);
+      if (debouncedSearchQuery) {
+        query = query.ilike("title", `%${debouncedSearchQuery}%`);
       }
 
-      // Filter
       if (selectedGenre !== "All") {
         query = query.contains("genres", [selectedGenre]);
       }
 
-      // Sort
       switch (sortBy) {
         case "Popular":
           query = query.order("views", { ascending: false });
@@ -105,39 +102,52 @@ const Catalog = () => {
           query = query.order("views", { ascending: false });
       }
 
-      // Pagination
-      query = query.range(pageNum * NOVELS_PER_PAGE, (pageNum + 1) * NOVELS_PER_PAGE - 1);
+      query = query.range(page * NOVELS_PER_PAGE, (page + 1) * NOVELS_PER_PAGE - 1);
 
       const { data, error } = await query;
-
       if (error) throw error;
+      return data || [];
+    },
+    placeholderData: keepPreviousData,
+  });
 
-      if (data) {
-        if (data.length < NOVELS_PER_PAGE) {
-          setHasMore(false);
-        }
-
-        const novelsWithChapterCount = data.map(novel => ({
-          ...novel,
-          chapters_count: novel.chapters?.[0]?.count || 0,
-        }));
-
-        setNovels(prev => pageNum === 0 ? novelsWithChapterCount : [...prev, ...novelsWithChapterCount]);
-      } else {
-        if (pageNum === 0) setNovels([]);
+  // Sync queryData to novels state for load-more functionality
+  useEffect(() => {
+    if (queryData) {
+      if (queryData.length < NOVELS_PER_PAGE) {
         setHasMore(false);
+      } else {
+        setHasMore(true);
       }
-    } catch (error) {
+
+      const novelsWithChapterCount = queryData.map(novel => ({
+        ...novel,
+        chapters_count: novel.chapters?.[0]?.count || 0,
+      }));
+
+      setNovels(prev => {
+        if (page === 0) {
+          return novelsWithChapterCount;
+        } else {
+          const existingIds = new Set(prev.map(n => n.id));
+          const filteredNew = novelsWithChapterCount.filter(n => !existingIds.has(n.id));
+          return [...prev, ...filteredNew];
+        }
+      });
+    }
+  }, [queryData, page]);
+
+  // Handle errors
+  useEffect(() => {
+    if (error) {
       console.error("Error fetching novels:", error);
       toast({
         title: "Error",
         description: "Failed to load novels",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [error, toast]);
 
   const handleGenreSelect = (genre: string) => {
     setSelectedGenre(genre);
@@ -208,7 +218,7 @@ const Catalog = () => {
       <div className="section-container py-8">
         <SectionHeader title={`${t("catalog.allSeries")} (${novels.length})`} />
 
-        {loading && page === 0 ? (
+        {isLoading && page === 0 ? (
           <div className="flex justify-center py-20">
             <BarLoader />
           </div>
@@ -223,7 +233,6 @@ const Catalog = () => {
                   rating={novel.rating || 0}
                   status={novel.status as any}
                   chapters={novel.chapters_count || 0}
-                  // genre={novel.genres?.[0] || "Unknown"}
                   size="auto"
                   id={novel.id}
                   slug={novel.slug}
@@ -237,13 +246,11 @@ const Catalog = () => {
                   variant="outline"
                   size="lg"
                   onClick={() => {
-                    const nextPage = page + 1;
-                    setPage(nextPage);
-                    fetchNovels(nextPage);
+                    setPage(prev => prev + 1);
                   }}
-                  disabled={loading}
+                  disabled={isFetching}
                 >
-                  {loading ? <BarLoader /> : t("catalog.loadMore")}
+                  {isFetching ? <BarLoader /> : t("catalog.loadMore")}
                 </Button>
               </div>
             )}

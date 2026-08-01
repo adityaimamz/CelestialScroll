@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { Clock } from "lucide-react";
@@ -6,6 +5,7 @@ import { BarLoader } from "@/components/ui/BarLoader";
 import { supabase } from "@/integrations/supabase/client";
 import SectionHeader from "@/components/SectionHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
 
 interface ChapterUpdate {
   id: string;
@@ -24,16 +24,11 @@ interface RecentUpdatesSectionProps {
 }
 
 const RecentUpdatesSection = ({ languageFilter = "all" }: RecentUpdatesSectionProps) => {
-  const [updates, setUpdates] = useState<ChapterUpdate[]>([]);
-  const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
-  useEffect(() => {
-    fetchRecentUpdates();
-  }, [languageFilter]);
-
-  const fetchRecentUpdates = async () => {
-    try {
+  const { data: updates = [], isLoading } = useQuery({
+    queryKey: ["recent-updates", languageFilter],
+    queryFn: async () => {
       let query = supabase
         .from("chapters")
         .select(`
@@ -60,17 +55,12 @@ const RecentUpdatesSection = ({ languageFilter = "all" }: RecentUpdatesSectionPr
       }
 
       const { data, error } = await query.limit(8);
-
       if (error) throw error;
-      setUpdates((data as any) || []);
-    } catch (error) {
-      console.error("Error fetching updates:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data as any) || [];
+    },
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <section className="section-spacing section-container flex justify-center py-10">
         <BarLoader />

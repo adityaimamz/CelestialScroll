@@ -1,58 +1,40 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
 
 type Novel = Tables<"novels"> & {
   chapters_count?: number;
 };
 
 const PopularSection = () => {
-  const [novels, setNovels] = useState<Novel[]>([]);
-  const [timeFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
   const { t, languageFilter } = useLanguage();
 
-  useEffect(() => {
-    fetchPopularNovels();
-  }, [timeFilter, languageFilter]);
-
-  const fetchPopularNovels = async () => {
-    setLoading(true);
-    try {
-      // For now, we only have 'views' which is effectively "All Time"
-      // In a real app with 'novel_stats' table, we could filter by date.
-      let query = supabase
+  const { data: novels = [], isLoading } = useQuery({
+    queryKey: ["popular-novels", languageFilter],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("novels")
         .select("*, chapters(count)")
         .order("views", { ascending: false })
         .eq("is_published", true)
-        .neq("id", "00000000-0000-0000-0000-000000000000");
-
-      // Always count Indonesian chapters for the total chapter display
-      query = query.eq("chapters.language", "id");
-
-      const { data, error } = await query.limit(6);
+        .neq("id", "00000000-0000-0000-0000-000000000000")
+        .eq("chapters.language", "id")
+        .limit(6);
 
       if (error) throw error;
+      if (!data) return [];
 
-      if (data) {
-        const novelsWithChapterCount = data.map(novel => ({
-          ...novel,
-          chapters_count: novel.chapters?.[0]?.count || 0,
-        }));
-        setNovels(novelsWithChapterCount);
-      }
-    } catch (error) {
-      console.error("Error fetching popular novels:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data.map(novel => ({
+        ...novel,
+        chapters_count: novel.chapters?.[0]?.count || 0,
+      }));
+    },
+  });
 
-  if (loading && novels.length === 0) {
+  if (isLoading && novels.length === 0) {
     return <div className="w-full min-h-[500px] bg-card/50 animate-pulse rounded-lg" />;
   }
 

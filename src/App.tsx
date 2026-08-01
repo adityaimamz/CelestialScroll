@@ -49,7 +49,16 @@ const AdminLogs = lazy(() => import("./pages/admin/AdminLogs"));
 
 import { Analytics } from "@vercel/analytics/react"
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,      // 5 minutes
+      gcTime: 30 * 60 * 1000,         // 30 minutes
+      refetchOnWindowFocus: false,     // Disable refetching on window focus
+      retry: 1,                        // Retry failed queries once
+    },
+  },
+});
 
 const RouteFallback = () => (
   <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">

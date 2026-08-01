@@ -1,10 +1,9 @@
-
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
 
 // Define the type for the joined data
 type ReadingHistoryEntry = {
@@ -25,61 +24,45 @@ type ReadingHistoryEntry = {
 
 const RecentlyReadSection = () => {
     const { user } = useAuth();
-    const [recentlyRead, setRecentlyRead] = useState<ReadingHistoryEntry | null>(null);
-    const [loading, setLoading] = useState(true);
     const { t } = useLanguage();
 
-    useEffect(() => {
-        const fetchRecentlyRead = async () => {
-            if (!user) {
-                setLoading(false);
-                return;
+    const { data: recentlyRead = null, isLoading } = useQuery<ReadingHistoryEntry | null>({
+        queryKey: ["recently-read", user?.id],
+        queryFn: async () => {
+            if (!user) return null;
+            const { data, error } = await supabase
+                .from("reading_history")
+                .select(`
+                    read_at,
+                    chapter_id,
+                    novel_id,
+                    novels!inner (
+                      title,
+                      cover_url,
+                      slug
+                    ),
+                    chapters (
+                      chapter_number,
+                      title,
+                      language
+                    )
+                `)
+                .eq("novels.is_published", true)
+                .neq("novel_id", "00000000-0000-0000-0000-000000000000")
+                .eq("user_id", user.id)
+                .order("read_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (error && error.code !== 'PGRST116') {
+                throw error;
             }
+            return (data as unknown as ReadingHistoryEntry) || null;
+        },
+        enabled: !!user,
+    });
 
-            try {
-                const { data, error } = await supabase
-                    .from("reading_history")
-                    .select(`
-            read_at,
-            chapter_id,
-            novel_id,
-            novels!inner (
-              title,
-              cover_url,
-              slug
-            ),
-            chapters (
-              chapter_number,
-              title,
-              language
-            )
-          `)
-                    .eq("novels.is_published", true)
-                    .neq("novel_id", "00000000-0000-0000-0000-000000000000")
-                    .eq("user_id", user.id)
-                    .order("read_at", { ascending: false })
-                    .limit(1)
-                    .single();
-
-                if (error && error.code !== 'PGRST116') { // PGRST116 is "The result contains 0 rows"
-                    console.error("Error fetching reading history:", error);
-                }
-
-                if (data) {
-                    // Cast the data to our type. Supabase types can be tricky with joins.
-                    setRecentlyRead(data as unknown as ReadingHistoryEntry);
-                }
-            } catch (error) {
-                console.error("Unexpected error:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchRecentlyRead();
-    }, [user]);
-
-    if (loading) return null; // Or a skeleton if preferred
+    if (isLoading) return null; // Or a skeleton if preferred
     if (!recentlyRead || !recentlyRead.novels || !recentlyRead.chapters) return null;
 
     const { novels: novel, chapters: chapter } = recentlyRead;

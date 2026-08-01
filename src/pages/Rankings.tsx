@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery } from '@tanstack/react-query';
 
 type Novel = Tables<"novels"> & {
     chapters_count?: number;
@@ -12,16 +13,10 @@ type Novel = Tables<"novels"> & {
 
 const Rankings = () => {
     const { t } = useLanguage();
-    const [novels, setNovels] = useState<Novel[]>([]);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchRankings();
-    }, []);
-
-    const fetchRankings = async () => {
-        setLoading(true);
-        try {
+    const { data: novels = [], isLoading } = useQuery({
+        queryKey: ["rankings"],
+        queryFn: async () => {
             const { data, error } = await supabase
                 .from("novels")
                 .select("*, chapters(count)")
@@ -29,23 +24,17 @@ const Rankings = () => {
                 .eq("is_published", true)
                 .eq("chapters.language", "id")
                 .neq("id", "00000000-0000-0000-0000-000000000000")
-                .limit(50); // Fetch top 50
+                .limit(50);
 
             if (error) throw error;
+            if (!data) return [];
 
-            if (data) {
-                const novelsWithChapterCount = data.map(novel => ({
-                    ...novel,
-                    chapters_count: novel.chapters?.[0]?.count || 0,
-                }));
-                setNovels(novelsWithChapterCount);
-            }
-        } catch (error) {
-            console.error("Error fetching rankings:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+            return data.map(novel => ({
+                ...novel,
+                chapters_count: novel.chapters?.[0]?.count || 0,
+            }));
+        },
+    });
 
     return (
         <div className='bg-background text-foreground flex flex-col'>
@@ -66,7 +55,7 @@ const Rankings = () => {
 
             <main className='container mx-auto px-4 pb-12 flex-1'>
 
-                {loading ? (
+                {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
                         <p className="text-muted-foreground">{t("rankings.loading")}</p>

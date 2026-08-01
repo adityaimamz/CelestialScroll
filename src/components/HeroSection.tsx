@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,49 +12,38 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { BarLoader } from "@/components/ui/BarLoader";
+import { useQuery } from "@tanstack/react-query";
 
 type Novel = Tables<"novels"> & {
   chapters_count?: number;
 };
 
 const HeroSection = () => {
-  const [novels, setNovels] = useState<Novel[]>([]);
-  const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
-  useEffect(() => {
-    fetchFeaturedNovels();
-  }, []);
-
-  const fetchFeaturedNovels = async () => {
-    try {
-      // Fetch a batch of novels to randomize
+  const { data: novels = [], isLoading } = useQuery({
+    queryKey: ["hero-novels"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("novels")
         .select("*, chapters(count)")
-        .limit(10) // Fetch top 10 then we can shuffle or just display them
+        .limit(10)
         .eq("chapters.language", "id")
         .neq("id", "00000000-0000-0000-0000-000000000000");
 
       if (error) throw error;
+      if (!data) return [];
 
-      if (data) {
-        // Randomize the order of novels
-        const shuffled = data.sort(() => 0.5 - Math.random());
-        const formattedNovels = shuffled.map((novel: any) => ({
-          ...novel,
-          chapters_count: novel.chapters?.[0]?.count || 0,
-        }));
-        setNovels(formattedNovels.slice(0, 5)); // Take top 5 random ones
-      }
-    } catch (error) {
-      console.error("Error fetching hero novels:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const shuffled = data.sort(() => 0.5 - Math.random());
+      const formattedNovels = shuffled.map((novel: any) => ({
+        ...novel,
+        chapters_count: novel.chapters?.[0]?.count || 0,
+      }));
+      return formattedNovels.slice(0, 5);
+    },
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <section className="relative min-h-[500px] md:min-h-[600px] flex items-center justify-center bg-muted/20">
         <BarLoader />
