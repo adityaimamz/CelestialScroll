@@ -39,7 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Pencil, Trash2, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown, Loader2, FileText } from "lucide-react";
 import { BarLoader } from "@/components/ui/BarLoader";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -58,9 +58,29 @@ interface Chapter {
   id: string;
   chapter_number: number;
   title: string;
+  content?: string;
   published_at: string | null;
   created_at: string;
   language?: string;
+}
+
+function getContentSnippet(content?: string, keyword?: string): { before: string; match: string; after: string } | null {
+  if (!content || !keyword || !keyword.trim()) return null;
+  const cleaned = content.replace(/\s+/g, " ");
+  const lowerContent = cleaned.toLowerCase();
+  const lowerKeyword = keyword.trim().toLowerCase();
+  const index = lowerContent.indexOf(lowerKeyword);
+  if (index === -1) return null;
+
+  const snippetRadius = 45;
+  const start = Math.max(0, index - snippetRadius);
+  const end = Math.min(cleaned.length, index + keyword.trim().length + snippetRadius);
+
+  const before = (start > 0 ? "..." : "") + cleaned.slice(start, index);
+  const match = cleaned.slice(index, index + keyword.trim().length);
+  const after = cleaned.slice(index + keyword.trim().length, end) + (end < cleaned.length ? "..." : "");
+
+  return { before, match, after };
 }
 
 type SortConfig = {
@@ -76,6 +96,7 @@ export default function ChapterList() {
   const [chaptersLoading, setChaptersLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [searchInContent, setSearchInContent] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "chapter_number", direction: "desc" });
   const [activeTab, setActiveTab] = useState<string>("id");
@@ -141,6 +162,13 @@ export default function ChapterList() {
         const isNumber = /^\d+$/.test(searchTerm);
         if (isNumber) {
           query = query.eq("chapter_number", parseFloat(searchTerm));
+        } else if (searchInContent) {
+          const safeTerm = searchTerm.replace(/[,()]/g, "");
+          if (safeTerm) {
+            query = query.or(`title.ilike.%${safeTerm}%,content.ilike.%${safeTerm}%`);
+          } else {
+            query = query.ilike("title", `%${searchTerm}%`);
+          }
         } else {
           query = query.ilike("title", `%${searchTerm}%`);
         }
@@ -159,7 +187,7 @@ export default function ChapterList() {
     } finally {
       setChaptersLoading(false);
     }
-  }, [novelId, currentPage, chaptersPerPage, sortConfig, debouncedSearch, activeTab]);
+  }, [novelId, currentPage, chaptersPerPage, sortConfig, debouncedSearch, searchInContent, activeTab]);
 
   useEffect(() => {
     fetchChapters();
@@ -168,7 +196,7 @@ export default function ChapterList() {
   useEffect(() => {
     setCurrentPage(1);
     setSelectedChapters([]);
-  }, [debouncedSearch, sortConfig, activeTab, chaptersPerPage]);
+  }, [debouncedSearch, searchInContent, sortConfig, activeTab, chaptersPerPage]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -374,14 +402,29 @@ export default function ChapterList() {
           </TabsList>
         </Tabs>
 
-        <div className="relative max-w-sm w-full sm:w-auto">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Cari chapter..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex items-center gap-2 max-w-md w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={searchInContent ? "Cari judul & isi chapter..." : "Cari chapter..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
+          <Button
+            type="button"
+            variant={searchInContent ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setSearchInContent(!searchInContent)}
+            className={`h-9 gap-1.5 whitespace-nowrap transition-colors ${
+              searchInContent ? "border-primary/40 text-primary font-medium" : "text-muted-foreground"
+            }`}
+            title="Cari kata di dalam isi chapter"
+          >
+            <FileText className="h-4 w-4" />
+            <span>Konten</span>
+          </Button>
         </div>
       </div>
 
@@ -419,6 +462,9 @@ export default function ChapterList() {
                   <SortIcon columnKey="title" />
                 </div>
               </TableHead>
+              {searchInContent && debouncedSearch.trim() && (
+                <TableHead className="w-80">Preview Konten</TableHead>
+              )}
               <TableHead
                 className="cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => handleSort("published_at")}
@@ -434,46 +480,65 @@ export default function ChapterList() {
           <TableBody>
             {chapters.length === 0 && !chaptersLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={searchInContent && debouncedSearch.trim() ? 6 : 5} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? "Tidak ada chapter yang cocok" : "Belum ada chapter"}
                 </TableCell>
               </TableRow>
             ) : (
-              chapters.map((chapter) => (
-                <TableRow key={chapter.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedChapters.includes(chapter.id)}
-                      onCheckedChange={(checked) => handleSelectChapter(chapter.id, !!checked)}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{chapter.chapter_number}</TableCell>
-                  <TableCell>{chapter.title}</TableCell>
-                  <TableCell>
-                    {chapter.published_at
-                      ? format(new Date(chapter.published_at), "dd MMM yyyy")
-                      : "Draft"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link to={`/admin/novels/${novelId}/chapters/${chapter.id}/edit`}>
-                          <Pencil className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      {userRole === "admin" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteId(chapter.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+              chapters.map((chapter) => {
+                const snippet = searchInContent && debouncedSearch.trim()
+                  ? getContentSnippet(chapter.content, debouncedSearch)
+                  : null;
+
+                return (
+                  <TableRow key={chapter.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedChapters.includes(chapter.id)}
+                        onCheckedChange={(checked) => handleSelectChapter(chapter.id, !!checked)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{chapter.chapter_number}</TableCell>
+                    <TableCell>{chapter.title}</TableCell>
+                    {searchInContent && debouncedSearch.trim() && (
+                      <TableCell>
+                        {snippet ? (
+                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                            {snippet.before}
+                            <mark className="bg-primary/20 text-primary font-semibold rounded px-1">{snippet.match}</mark>
+                            {snippet.after}
+                          </p>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">Cocok di judul</span>
+                        )}
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      {chapter.published_at
+                        ? format(new Date(chapter.published_at), "dd MMM yyyy")
+                        : "Draft"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link to={`/admin/novels/${novelId}/chapters/${chapter.id}/edit`}>
+                            <Pencil className="h-4 w-4" />
+                          </Link>
                         </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                        {userRole === "admin" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeleteId(chapter.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
