@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Star, BookOpen, Clock, Tag, ChevronLeft, List, Info, PlayCircle, Search, ArrowUp, ArrowDown, Eye, Loader2, Pencil } from "lucide-react";
+import { Star, BookOpen, Clock, Tag, ChevronLeft, List, Info, PlayCircle, Search, ArrowUp, ArrowDown, Eye, Loader2 } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -31,8 +31,6 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import CommentsSection from "@/components/CommentsSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQueryClient } from "@tanstack/react-query";
-import { EpubImporter } from "@/components/EpubImporter";
-import { MarkdownImporter } from "@/components/MarkdownImporter";
 
 type Novel = Tables<"novels">;
 type Chapter = Tables<"chapters"> & { views: number };
@@ -511,19 +509,6 @@ const NovelDetail = () => {
               <Tag className={`w-4 h-4 md:w-5 md:h-5 ${isFavorite ? "fill-current" : ""}`} />
               {isFavorite ? t("novelDetail.saved") : t("novelDetail.addToLibrary")}
             </Button>
-            {isAdmin && novel && (
-              <Button
-                size="lg"
-                variant="secondary"
-                className="w-full sm:w-auto gap-2 text-sm md:text-base h-10 md:h-11 border border-primary/30"
-                asChild
-              >
-                <Link to={`/admin/novels/${novel.id}/edit`}>
-                  <Pencil className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                  Edit di NovelForm
-                </Link>
-              </Button>
-            )}
           </div>
         </div>
       </div>
@@ -578,12 +563,6 @@ const NovelDetail = () => {
                 </div>
 
                 <div className="flex flex-wrap w-full sm:w-auto gap-2 items-center">
-                  {isAdmin && novel && (
-                    <div className="flex items-center gap-2 mr-auto sm:mr-0">
-                      <EpubImporter novelId={novel.id} onImportSuccess={fetchChapters} />
-                      <MarkdownImporter novelId={novel.id} onImportSuccess={fetchChapters} />
-                    </div>
-                  )}
                   <div className="relative flex-1 sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
