@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, X, Plus, Pencil, Trash2, FileText, ArrowUpDown, ArrowUp, ArrowDown, Search, Loader2 } from "lucide-react";
+import { ArrowLeft, X, Plus, Pencil, Trash2, FileText, ArrowUpDown, ArrowUp, ArrowDown, Search, Loader2, Eye } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -546,20 +546,37 @@ export default function NovelForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="/admin/novels">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h2 className="text-3xl font-bold text-foreground">
-            {isEditing ? "Edit Novel" : "Tambah Novel Baru"}
-          </h2>
-          <p className="text-muted-foreground">
-            {isEditing ? "Kelola informasi dan chapter novel" : "Isi form untuk menambahkan novel baru"}
-          </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link to="/admin/novels">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div>
+            <h2 className="text-3xl font-bold text-foreground">
+              {isEditing ? "Edit Novel" : "Tambah Novel Baru"}
+            </h2>
+            <p className="text-muted-foreground">
+              {isEditing ? "Kelola informasi dan chapter novel" : "Isi form untuk menambahkan novel baru"}
+            </p>
+          </div>
         </div>
+
+        {isEditing && id && (
+          <div className="flex flex-wrap items-center gap-2">
+            {formData.slug && (
+              <Button variant="outline" asChild size="sm">
+                <Link to={`/series/${formData.slug}`} target="_blank">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Lihat Novel
+                </Link>
+              </Button>
+            )}
+            <EpubImporter novelId={id} onImportSuccess={fetchChapters} />
+            <MarkdownImporter novelId={id} onImportSuccess={fetchChapters} />
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="details" className="w-full">
