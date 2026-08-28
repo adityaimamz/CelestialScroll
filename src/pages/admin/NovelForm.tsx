@@ -53,6 +53,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { logAdminAction } from "@/services/adminLogger";
 import { EpubImporter } from "@/components/EpubImporter";
 import { MarkdownImporter } from "@/components/MarkdownImporter";
+import { MassReplaceModal } from "@/components/admin/MassReplaceModal";
 
 
 interface Genre {
@@ -603,6 +604,7 @@ export default function NovelForm() {
             )}
             <EpubImporter novelId={id} onImportSuccess={fetchChapters} />
             <MarkdownImporter novelId={id} onImportSuccess={fetchChapters} />
+            <MassReplaceModal novelId={id} defaultLanguage={activeChapterTab} onSuccess={fetchChapters} />
           </div>
         )}
       </div>
@@ -781,6 +783,7 @@ export default function NovelForm() {
                 )}
                 {id && <EpubImporter novelId={id} onImportSuccess={fetchChapters} />}
                 {id && <MarkdownImporter novelId={id} onImportSuccess={fetchChapters} />}
+                {id && <MassReplaceModal novelId={id} defaultLanguage={activeChapterTab} onSuccess={fetchChapters} />}
                 <Button asChild>
                   <Link to={`/admin/novels/${id}/chapters/new?lang=${activeChapterTab}`}>
                     <Plus className="mr-2 h-4 w-4" />

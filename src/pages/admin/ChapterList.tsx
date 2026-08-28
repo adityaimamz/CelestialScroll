@@ -47,6 +47,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { logAdminAction } from "@/services/adminLogger";
 import { EpubImporter } from "@/components/EpubImporter";
 import { MarkdownImporter } from "@/components/MarkdownImporter";
+import { MassReplaceModal } from "@/components/admin/MassReplaceModal";
 
 interface Novel {
   id: string;
@@ -384,6 +385,7 @@ export default function ChapterList() {
           )}
           {novelId && <EpubImporter novelId={novelId} onImportSuccess={fetchChapters} />}
           {novelId && <MarkdownImporter novelId={novelId} onImportSuccess={fetchChapters} />}
+          {novelId && <MassReplaceModal novelId={novelId} defaultLanguage={activeTab} onSuccess={fetchChapters} />}
           <Button asChild>
             <Link to={`/admin/novels/${novelId}/chapters/new?lang=${activeTab}`}>
               <Plus className="mr-2 h-4 w-4" />
