@@ -46,6 +46,7 @@ import { format } from "date-fns";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { logAdminAction } from "@/services/adminLogger";
 import { EpubImporter } from "@/components/EpubImporter";
+import { MarkdownImporter } from "@/components/MarkdownImporter";
 
 interface Novel {
   id: string;
@@ -354,6 +355,7 @@ export default function ChapterList() {
             </Button>
           )}
           {novelId && <EpubImporter novelId={novelId} onImportSuccess={fetchChapters} />}
+          {novelId && <MarkdownImporter novelId={novelId} onImportSuccess={fetchChapters} />}
           <Button asChild>
             <Link to={`/admin/novels/${novelId}/chapters/new?lang=${activeTab}`}>
               <Plus className="mr-2 h-4 w-4" />

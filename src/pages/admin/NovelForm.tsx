@@ -52,6 +52,7 @@ import { ImageUpload } from "@/components/ImageUpload";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { logAdminAction } from "@/services/adminLogger";
 import { EpubImporter } from "@/components/EpubImporter";
+import { MarkdownImporter } from "@/components/MarkdownImporter";
 
 
 interface Genre {
@@ -734,6 +735,7 @@ export default function NovelForm() {
                   </Button>
                 )}
                 {id && <EpubImporter novelId={id} onImportSuccess={fetchChapters} />}
+                {id && <MarkdownImporter novelId={id} onImportSuccess={fetchChapters} />}
                 <Button asChild>
                   <Link to={`/admin/novels/${id}/chapters/new?lang=${activeChapterTab}`}>
                     <Plus className="mr-2 h-4 w-4" />
