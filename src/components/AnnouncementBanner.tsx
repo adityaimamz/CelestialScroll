@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Megaphone, X, ChevronLeft, ChevronRight, Info, Calendar } from "lucide-react";
+import { Megaphone, X, ChevronLeft, ChevronRight, Info, Calendar, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -131,6 +133,11 @@ export default function AnnouncementBanner() {
     }
   };
 
+  const formatBannerSnippet = (text: string) => {
+    if (!text) return "";
+    return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
+  };
+
   return (
     <>
       <div
@@ -169,7 +176,7 @@ export default function AnnouncementBanner() {
                   </span>
                   <span className="hidden sm:inline text-primary font-semibold">—</span>
                   <span className="text-slate-200 font-medium truncate hidden md:inline group-hover:text-white transition-colors">
-                    {current.content}
+                    {formatBannerSnippet(current.content)}
                   </span>
                 </motion.div>
               </AnimatePresence>
@@ -262,8 +269,40 @@ export default function AnnouncementBanner() {
               </DialogHeader>
 
               <div className="py-3">
-                <DialogDescription className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin">
-                  {selectedAnnouncement.content}
+                <DialogDescription asChild>
+                  <div className="text-sm text-foreground/90 leading-relaxed max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        a: ({ node, ...props }) => (
+                          <a
+                            {...props}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:text-primary/80 underline font-semibold inline-flex items-center gap-1 transition-colors break-all"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {props.children}
+                            <ExternalLink className="w-3.5 h-3.5 inline shrink-0" />
+                          </a>
+                        ),
+                        p: ({ node, ...props }) => (
+                          <p className="mb-2.5 last:mb-0 leading-relaxed" {...props} />
+                        ),
+                        strong: ({ node, ...props }) => (
+                          <strong className="font-bold text-foreground" {...props} />
+                        ),
+                        ul: ({ node, ...props }) => (
+                          <ul className="list-disc list-inside mb-2 space-y-1" {...props} />
+                        ),
+                        ol: ({ node, ...props }) => (
+                          <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />
+                        ),
+                      }}
+                    >
+                      {selectedAnnouncement.content}
+                    </ReactMarkdown>
+                  </div>
                 </DialogDescription>
               </div>
 
