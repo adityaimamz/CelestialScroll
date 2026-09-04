@@ -13,6 +13,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuth } from "@/components/auth/AuthProvider";
 import CommentsSection from "@/components/CommentsSection";
+import ChapterReactions from "@/components/ChapterReactions";
 import ScrollButtons from "@/components/ScrollButtons";
 import { Flag } from "lucide-react";
 import {
@@ -480,8 +481,13 @@ const ChapterReader = () => {
           </ReactMarkdown>
         </article>
 
+        {/* Upvote & Reaksi Stiker Pembaca */}
+        <div className="mt-14">
+          <ChapterReactions key={chapter.id} chapterId={chapter.id} novelId={novel?.id} />
+        </div>
+
         {/* Report Button Area */}
-        <div className="mt-16 flex justify-center">
+        <div className="mt-8 flex justify-center">
           <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" className="text-muted-foreground hover:text-destructive gap-2 text-sm">
