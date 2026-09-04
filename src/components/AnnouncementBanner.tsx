@@ -106,7 +106,7 @@ export default function AnnouncementBanner() {
 
   const formatBannerSnippet = (text: string) => {
     if (!text) return "";
-    return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
+    return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1").replace(/\s+/g, " ").trim();
   };
 
   return (
@@ -132,7 +132,7 @@ export default function AnnouncementBanner() {
             </div>
 
             {/* Teks Pengumuman dengan Animasi Auto-Slide */}
-            <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden relative h-5">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0 overflow-hidden relative h-5">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={current.id}
@@ -140,13 +140,13 @@ export default function AnnouncementBanner() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: direction > 0 ? -10 : 10 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="flex items-center gap-2 w-full truncate"
+                  className="flex items-center gap-1.5 sm:gap-2 w-full min-w-0 truncate"
                 >
-                  <span className="font-bold text-white tracking-wide truncate group-hover:text-primary-foreground/90 transition-colors flex-shrink-0 max-w-[140px] sm:max-w-[240px]">
+                  <span className="font-bold text-white tracking-wide truncate group-hover:text-primary-foreground/90 transition-colors shrink-0 max-w-[90px] xs:max-w-[130px] sm:max-w-[220px]">
                     {current.title}
                   </span>
-                  <span className="hidden sm:inline text-primary font-semibold">—</span>
-                  <span className="text-slate-200 font-medium truncate hidden md:inline group-hover:text-white transition-colors">
+                  <span className="text-primary font-semibold shrink-0 select-none">—</span>
+                  <span className="text-slate-200 font-medium truncate flex-1 min-w-0 group-hover:text-white transition-colors">
                     {formatBannerSnippet(current.content)}
                   </span>
                 </motion.div>
