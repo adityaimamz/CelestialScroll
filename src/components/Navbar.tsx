@@ -103,7 +103,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 glass-surface border-b border-border">
+    <nav className="w-full glass-surface border-b border-border relative z-20">
       <div className="section-container">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}

@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import HeroSection from "@/components/HeroSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const AnnouncementsSection = lazy(() => import("@/components/AnnouncementsSection"));
+
 const TopSeriesSection = lazy(() => import("@/components/TopSeriesSection"));
 const PopularSection = lazy(() => import("@/components/PopularSection"));
 const NewReleasesSection = lazy(() => import("@/components/NewReleasesSection"));
@@ -66,7 +66,6 @@ const Index = () => {
 
       {deferSections ? (
         <Suspense fallback={<SectionFallback />}>
-          <AnnouncementsSection />
           <RecentlyReadSection />
           <TopSeriesSection />
 

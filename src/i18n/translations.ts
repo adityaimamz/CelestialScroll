@@ -65,6 +65,13 @@ export const translations: Translations = {
 
     // Announcements
     "announcements.title": "Pengumuman",
+    "announcements.badge": "Pengumuman",
+    "announcements.viewDetail": "Lihat Detail",
+    "announcements.dismiss": "Tutup pengumuman",
+    "announcements.previous": "Pengumuman sebelumnya",
+    "announcements.next": "Pengumuman berikutnya",
+    "announcements.dialogTitle": "Detail Pengumuman",
+    "announcements.close": "Tutup",
 
     // Request
     "request.title": "Novel yang kamu cari tidak ada?",
@@ -390,6 +397,13 @@ export const translations: Translations = {
 
     // Announcements Section
     "announcements.title": "Announcements",
+    "announcements.badge": "Announcement",
+    "announcements.viewDetail": "View Detail",
+    "announcements.dismiss": "Dismiss announcement",
+    "announcements.previous": "Previous announcement",
+    "announcements.next": "Next announcement",
+    "announcements.dialogTitle": "Announcement Details",
+    "announcements.close": "Close",
 
     // Request Section
     "request.title": "Looking for a novel not here?",
