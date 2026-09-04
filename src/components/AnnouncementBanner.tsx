@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { Megaphone, X, ChevronLeft, ChevronRight, Info, Calendar, ExternalLink } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Megaphone, ChevronLeft, ChevronRight, Info, Calendar, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
@@ -25,7 +25,6 @@ interface Announcement {
   created_at: string;
 }
 
-const STORAGE_KEY = "celestial_dismissed_announcements_v2";
 const AUTO_SLIDE_INTERVAL = 4000; // 4 detik per pengumuman
 
 export default function AnnouncementBanner() {
@@ -52,63 +51,35 @@ export default function AnnouncementBanner() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Ambil daftar id pengumuman yang sudah ditutup user di sesi ini
-  const [dismissedIds, setDismissedIds] = useState<string[]>(() => {
-    try {
-      // Hapus data dismiss lama di localStorage agar semua pengumuman aktif tampil
-      localStorage.removeItem("celestial_dismissed_announcements");
-      const saved = sessionStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // Filter pengumuman yang belum di-dismiss
-  const visibleAnnouncements = useMemo(() => {
-    return announcements.filter((item) => !dismissedIds.includes(item.id));
-  }, [announcements, dismissedIds]);
-
   // Sesuaikan currentIndex jika jumlah pengumuman berubah
   useEffect(() => {
-    if (currentIndex >= visibleAnnouncements.length) {
+    if (currentIndex >= announcements.length) {
       setCurrentIndex(0);
     }
-  }, [visibleAnnouncements.length, currentIndex]);
+  }, [announcements.length, currentIndex]);
 
   const handleNext = useCallback(() => {
-    if (visibleAnnouncements.length <= 1) return;
+    if (announcements.length <= 1) return;
     setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % visibleAnnouncements.length);
-  }, [visibleAnnouncements.length]);
+    setCurrentIndex((prev) => (prev + 1) % announcements.length);
+  }, [announcements.length]);
 
   const handlePrev = useCallback(() => {
-    if (visibleAnnouncements.length <= 1) return;
+    if (announcements.length <= 1) return;
     setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + visibleAnnouncements.length) % visibleAnnouncements.length);
-  }, [visibleAnnouncements.length]);
+    setCurrentIndex((prev) => (prev - 1 + announcements.length) % announcements.length);
+  }, [announcements.length]);
 
   // Auto-slide loop dengan interval teratur
   useEffect(() => {
-    if (visibleAnnouncements.length <= 1 || isPaused || detailModalOpen) return;
+    if (announcements.length <= 1 || isPaused || detailModalOpen) return;
 
     const timer = setInterval(() => {
       handleNext();
     }, AUTO_SLIDE_INTERVAL);
 
     return () => clearInterval(timer);
-  }, [visibleAnnouncements.length, isPaused, detailModalOpen, handleNext]);
-
-  const handleDismiss = (id: string, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    const updated = [...dismissedIds, id];
-    setDismissedIds(updated);
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch (err) {
-      console.error("Gagal menyimpan riwayat dismiss:", err);
-    }
-  };
+  }, [announcements.length, isPaused, detailModalOpen, handleNext]);
 
   const handleOpenDetail = (announcement: Announcement, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -116,11 +87,11 @@ export default function AnnouncementBanner() {
     setDetailModalOpen(true);
   };
 
-  if (isLoading || visibleAnnouncements.length === 0) {
+  if (isLoading || announcements.length === 0) {
     return null;
   }
 
-  const current = visibleAnnouncements[currentIndex] || visibleAnnouncements[0];
+  const current = announcements[currentIndex] || announcements[0];
 
   const formatAnnouncementDate = (dateStr: string) => {
     try {
@@ -194,10 +165,10 @@ export default function AnnouncementBanner() {
             </button>
           </div>
 
-          {/* Sisi Kanan: Navigasi Slider & Tombol Tutup */}
+          {/* Sisi Kanan: Navigasi Slider */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {/* Navigasi multi-pengumuman jika ada lebih dari 1 */}
-            {visibleAnnouncements.length > 1 && (
+            {announcements.length > 1 && (
               <div className="flex items-center gap-1 bg-slate-800/90 rounded-full px-2 py-0.5 border border-slate-700 text-[11px] text-slate-200 shadow-xs">
                 <button
                   type="button"
@@ -211,7 +182,7 @@ export default function AnnouncementBanner() {
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
                 <span className="font-mono text-[10px] px-1 select-none font-semibold text-white">
-                  {currentIndex + 1}/{visibleAnnouncements.length}
+                  {currentIndex + 1}/{announcements.length}
                 </span>
                 <button
                   type="button"
@@ -226,17 +197,6 @@ export default function AnnouncementBanner() {
                 </button>
               </div>
             )}
-
-            {/* Tombol Dismiss / Tutup */}
-            <button
-              type="button"
-              onClick={(e) => handleDismiss(current.id, e)}
-              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all"
-              title={t("announcements.dismiss")}
-              aria-label={t("announcements.dismiss")}
-            >
-              <X className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </div>
@@ -306,19 +266,7 @@ export default function AnnouncementBanner() {
                 </DialogDescription>
               </div>
 
-              <DialogFooter className="flex flex-row justify-between items-center sm:justify-between gap-2 border-t border-border pt-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs text-muted-foreground hover:text-destructive"
-                  onClick={() => {
-                    handleDismiss(selectedAnnouncement.id);
-                    setDetailModalOpen(false);
-                  }}
-                >
-                  {t("announcements.dismiss")}
-                </Button>
+              <DialogFooter className="border-t border-border pt-3">
                 <Button
                   type="button"
                   variant="default"
