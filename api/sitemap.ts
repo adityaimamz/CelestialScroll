@@ -8,9 +8,8 @@ const supabase = createClient(supabaseUrl as string, supabaseKey as string);
 
 export default async function handler(req: Request, res: Response) {
     try {
-        const protocol = req.headers['x-forwarded-proto'] || 'https';
-        const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
-        const baseUrl = `${protocol}://${host}`;
+        // Gunakan canonical domain dari environment variable untuk mencegah host header injection / cache poisoning
+        const baseUrl = process.env.SITE_URL || process.env.VITE_SITE_URL || 'https://celestialscroll.com';
 
         // Fetch novels
         const { data: novels, error: novelsError } = await supabase
