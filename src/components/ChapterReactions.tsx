@@ -224,8 +224,8 @@ export default function ChapterReactions({ chapterId }: ChapterReactionsProps) {
         {totalReactions.toLocaleString()} {t("reactions.count")}
       </p>
 
-      {/* Grid / Row Stiker Chibi */}
-      <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-5 overflow-x-auto pt-6 pb-3 px-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      {/* Grid / Row Stiker Chibi: 3x2 di Mobile, 1 Baris di Desktop */}
+      <div className="grid grid-cols-3 sm:flex sm:items-center sm:justify-center gap-y-7 gap-x-2 sm:gap-4 md:gap-5 max-w-[340px] sm:max-w-none mx-auto pt-6 pb-3 px-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {REACTIONS.map((item) => {
           const isSelected = userReaction === item.type;
           const count = counts[item.type] || 0;
