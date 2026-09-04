@@ -3,22 +3,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type ReactionType = "mantap" | "suka" | "apasih" | "ngakak" | "nyesek" | "gantung";
   
 interface ReactionDef {
   type: ReactionType;
-  label: string;
+  labelKey: string;
   badgeBorder: string;
 }
 
 const REACTIONS: ReactionDef[] = [
-  { type: "mantap", label: "Mantap", badgeBorder: "#3b82f6" },
-  { type: "suka", label: "Suka", badgeBorder: "#ec4899" },
-  { type: "apasih", label: "Apasih", badgeBorder: "#a855f7" },
-  { type: "ngakak", label: "Ngakak", badgeBorder: "#eab308" },
-  { type: "nyesek", label: "Nyesek", badgeBorder: "#06b6d4" },
-  { type: "gantung", label: "Gantung", badgeBorder: "#f97316" },
+  { type: "mantap", labelKey: "reactions.mantap", badgeBorder: "#3b82f6" },
+  { type: "suka", labelKey: "reactions.suka", badgeBorder: "#ec4899" },
+  { type: "apasih", labelKey: "reactions.apasih", badgeBorder: "#a855f7" },
+  { type: "ngakak", labelKey: "reactions.ngakak", badgeBorder: "#eab308" },
+  { type: "nyesek", labelKey: "reactions.nyesek", badgeBorder: "#06b6d4" },
+  { type: "gantung", labelKey: "reactions.gantung", badgeBorder: "#f97316" },
 ];
 
 const getZeroCounts = (): Record<ReactionType, number> => ({
@@ -38,6 +39,7 @@ interface ChapterReactionsProps {
 export default function ChapterReactions({ chapterId }: ChapterReactionsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Persistent Client ID untuk voting anonim/tamu
   const [clientId] = useState<string>(() => {
@@ -209,10 +211,10 @@ export default function ChapterReactions({ chapterId }: ChapterReactionsProps) {
     <div className="w-full max-w-2xl mx-auto my-12 text-center select-none">
       {/* Header */}
       <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-wider uppercase">
-        Upvote
+        {t("reactions.upvote")}
       </h3>
       <p className="text-xs sm:text-sm font-semibold text-muted-foreground mt-1 mb-6">
-        {totalReactions.toLocaleString()} Reactions
+        {totalReactions.toLocaleString()} {t("reactions.count")}
       </p>
 
       {/* Grid / Row Stiker Chibi */}
@@ -256,7 +258,7 @@ export default function ChapterReactions({ chapterId }: ChapterReactionsProps) {
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src = "/placeholder.svg";
                     }}
-                    alt={item.label}
+                    alt={t(item.labelKey)}
                     className="w-full h-full object-contain filter drop-shadow-md pointer-events-none"
                     loading="lazy"
                   />
@@ -271,7 +273,7 @@ export default function ChapterReactions({ chapterId }: ChapterReactionsProps) {
                     : "font-semibold text-foreground/80 group-hover:text-primary"
                 }`}
               >
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </div>
           );

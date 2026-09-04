@@ -199,6 +199,16 @@ export const translations: Translations = {
     "reader.prev": "Sebelumnya",
     "reader.next": "Selanjutnya",
 
+    // Chapter Reactions
+    "reactions.upvote": "Upvote",
+    "reactions.count": "Reaksi",
+    "reactions.mantap": "Mantap",
+    "reactions.suka": "Suka",
+    "reactions.apasih": "Apasih",
+    "reactions.ngakak": "Ngakak",
+    "reactions.nyesek": "Nyesek",
+    "reactions.gantung": "Gantung",
+
     // Not Found
     "notFound.title": "Ups! Halaman tidak ditemukan",
     "notFound.return": "Kembali ke Beranda",
@@ -532,6 +542,16 @@ export const translations: Translations = {
     "reader.submitReport": "Submit Report",
     "reader.prev": "Prev",
     "reader.next": "Next",
+
+    // Chapter Reactions
+    "reactions.upvote": "Upvote",
+    "reactions.count": "Reactions",
+    "reactions.mantap": "Awesome",
+    "reactions.suka": "Love",
+    "reactions.apasih": "Huh?",
+    "reactions.ngakak": "LOL",
+    "reactions.nyesek": "Sad",
+    "reactions.gantung": "Cliffhanger",
 
     // Not Found
     "notFound.title": "Oops! Page not found",
