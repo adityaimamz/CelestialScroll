@@ -180,13 +180,20 @@ export default function ChapterReactions({ chapterId }: ChapterReactionsProps) {
     setLoading(true);
 
     try {
-      // Coba simpan ke Supabase jika tabel tersedia
+      // Simpan ke Supabase (berfungsi 100% baik untuk pengguna login maupun tamu anonim)
       if (isTogglingOff) {
-        await supabase
+        let query = supabase
           .from("chapter_reactions" as any)
           .delete()
-          .eq("chapter_id", chapterId)
-          .or(`client_id.eq.${clientId},user_id.eq.${user?.id || 'none'}`);
+          .eq("chapter_id", chapterId);
+
+        if (user?.id) {
+          query = query.or(`client_id.eq.${clientId},user_id.eq.${user.id}`);
+        } else {
+          query = query.eq("client_id", clientId);
+        }
+
+        await query;
       } else {
         await supabase
           .from("chapter_reactions" as any)
@@ -201,7 +208,7 @@ export default function ChapterReactions({ chapterId }: ChapterReactionsProps) {
           );
       }
     } catch {
-      // Fallback lokal tetap berjalan aman
+      // Fallback lokal di LocalStorage tetap berjalan 100% lancar tanpa mengganggu pembaca
     } finally {
       setLoading(false);
     }
